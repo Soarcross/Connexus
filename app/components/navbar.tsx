@@ -1,30 +1,181 @@
-"use client";
-import Link from "next/link";
+"use client"
 
-export default function Navbar() {
+import { useState } from "react"
+import { useRouter, usePathname } from "next/navigation"
+import { getSupaBrowserClient } from "@/lib/supabase/client"
+import { Input } from "@/app/components/ui/input"
+import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/app/components/ui/dropdown-menu"
+import { Home, Users, Briefcase, Info, Mail, Search, LogOut, User, Menu, X } from "lucide-react"
+import Link from "next/link"
+import Image from "next/image"
+
+type Props = {
+    userId: string
+    avatarUrl: string | null
+    fullName: string | null
+    isAdmin: boolean
+}
+
+const NAV_LINKS = [
+    { label: "Home", href: "/", icon: Home },
+    { label: "People", href: "/people", icon: Users },
+    { label: "Opportunities", href: "/opportunities", icon: Briefcase },
+    { label: "About", href: "/about", icon: Info },
+    { label: "Contact", href: "/contact", icon: Mail },
+]
+
+export function Navbar({ userId, avatarUrl, fullName, isAdmin }: Props) {
+    const router = useRouter()
+    const pathname = usePathname()
+    const [search, setSearch] = useState("")
+    const [mobileOpen, setMobileOpen] = useState(false)
+
+    async function handleLogout() {
+        const supabase = getSupaBrowserClient()
+        await supabase.auth.signOut()
+        router.push("/login")
+        router.refresh()
+    }
+
+    function handleSearch(e: React.FormEvent) {
+        e.preventDefault()
+        if (search.trim()) {
+            router.push(`/people?search=${encodeURIComponent(search.trim())}`)
+        }
+    }
+
     return (
-        <nav className="flex items-center justify-between px-6 py-3 bg-white border-b shadow-sm">
+        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-4">
 
-            {/* Logo */}
-            <div className="text-lg font-semibold">
-                <Link href="/">Stuy Connections</Link>
+                {/* Logo */}
+                <Link href="/" className="flex items-center gap-2 shrink-0">
+                    <Image
+                        src="/Stuy_connections_logo.png"
+                        alt="Stuy Connections"
+                        width={32}
+                        height={32}
+                        className="rounded-md"
+                    />
+                    <span className="font-bold text-base hidden sm:block">
+                        Stuy Connections
+                    </span>
+                </Link>
+
+                {/* Desktop Nav Links */}
+                <nav className="hidden md:flex items-center gap-1 ml-2">
+                    {NAV_LINKS.map(({ label, href, icon: Icon }) => (
+                        <Link
+                            key={href}
+                            href={href}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors
+                                ${pathname === href
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                }`}
+                        >
+                            <Icon className="size-4" />
+                            {label}
+                        </Link>
+                    ))}
+                </nav>
+
+                {/* Search */}
+                <form onSubmit={handleSearch} className="flex-1 max-w-xs hidden sm:flex">
+                    <div className="relative w-full">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search people..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="pl-8 h-9 text-sm"
+                        />
+                    </div>
+                </form>
+
+                <div className="ml-auto flex items-center gap-2">
+                    {/* Account Dropdown */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                                <Avatar className="size-8 cursor-pointer">
+                                    <AvatarImage src={avatarUrl ?? ""} />
+                                    <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                                        {fullName?.[0] ?? "?"}
+                                    </AvatarFallback>
+                                </Avatar>
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem onClick={() => router.push(`/profile/${userId}`)}>
+                                <User className="size-4 mr-2" />
+                                My Profile
+                            </DropdownMenuItem>
+                            {isAdmin && (
+                                <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => router.push("/admin")}>
+                                        Admin Dashboard
+                                    </DropdownMenuItem>
+                                </>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                                <LogOut className="size-4 mr-2" />
+                                Log out
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {/* Mobile menu toggle */}
+                    <button
+                        className="md:hidden p-1.5 rounded-md hover:bg-muted transition-colors"
+                        onClick={() => setMobileOpen(!mobileOpen)}
+                    >
+                        {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+                    </button>
+                </div>
             </div>
 
-            {/* Search */}
-            <div className="flex-1 flex justify-center">
-                <input
-                    type="text"
-                    placeholder="Search..."
-                    className="w-72 px-3 py-1 border rounded-md"
-                />
-            </div>
-
-            {/* Links */}
-            <div className="flex gap-6 text-sm">
-                <Link href="/profile">Profile</Link>
-                <Link href="/settings">Settings</Link>
-            </div>
-
-        </nav>
-    );
+            {/* Mobile Nav */}
+            {mobileOpen && (
+                <div className="md:hidden border-t bg-background px-4 py-3 flex flex-col gap-1">
+                    {/* Mobile Search */}
+                    <form onSubmit={handleSearch} className="mb-2">
+                        <div className="relative">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search people..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="pl-8 h-9 text-sm"
+                            />
+                        </div>
+                    </form>
+                    {NAV_LINKS.map(({ label, href, icon: Icon }) => (
+                        <Link
+                            key={href}
+                            href={href}
+                            onClick={() => setMobileOpen(false)}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
+                                ${pathname === href
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                }`}
+                        >
+                            <Icon className="size-4" />
+                            {label}
+                        </Link>
+                    ))}
+                </div>
+            )}
+        </header>
+    )
 }
