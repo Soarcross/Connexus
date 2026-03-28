@@ -9,6 +9,7 @@ import { Button } from "@/app/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
 import { Input } from "@/app/components/ui/input"
 import { Textarea } from "@/app/components/ui/textarea"
+import { MessageCircle } from "lucide-react"
 import { Camera, Pencil, X, Check, ArrowRight, Plus } from "lucide-react"
 
 type Profile = {
@@ -39,7 +40,7 @@ const LOOKING_FOR_OPTIONS = [
     "Internships", "Jobs", "Mentorship", "Networking", "Collaborators"
 ]
 
-export function ProfileView({ profile, isOwnProfile }: Props) {
+export function ProfileView({ profile, isOwnProfile, userId }: Props) {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -57,6 +58,41 @@ export function ProfileView({ profile, isOwnProfile }: Props) {
     const [clubRoleInput, setClubRoleInput] = useState("")
 
     const [snapshot, setSnapshot] = useState<Record<string, unknown>>({})
+
+    async function handleStartConversation() {
+        if (!userId) return  // guard against null
+
+        const supabase = getSupaBrowserClient()
+
+        // check if conversation already exists
+        const { data: existing } = await supabase
+            .from("conversations")
+            .select("id")
+            .or(`and(participant_1.eq.${userId},participant_2.eq.${profile.id}),and(participant_1.eq.${profile.id},participant_2.eq.${userId})`)
+            .maybeSingle()  // use maybeSingle instead of single so it doesn't error if not found
+
+        if (existing) {
+            router.push(`/messages/${existing.id}`)
+            return
+        }
+
+        // create new conversation
+        const { data: newConv, error } = await supabase
+            .from("conversations")
+            .insert({
+                participant_1: userId,
+                participant_2: profile.id,
+            })
+            .select("id")
+            .single()
+
+        if (error) {
+            setError("Failed to start conversation. Please try again.")
+            return
+        }
+
+        router.push(`/messages/${newConv.id}`)
+    }
 
     function startEditing(section: string) {
         setSnapshot({
@@ -268,7 +304,7 @@ export function ProfileView({ profile, isOwnProfile }: Props) {
                             )}
                         </div>
 
-                        <div className="flex-1 flex flex-col gap-1">
+                        <div className="flex-1 flex flex-col gap-2">
                             {editingSection === "header" ? (
                                 <div className="flex flex-col gap-2">
                                     <Input
@@ -294,6 +330,17 @@ export function ProfileView({ profile, isOwnProfile }: Props) {
                                         Stuyvesant High School
                                         {gradYear ? ` · Class of ${gradYear}` : ""}
                                     </p>
+                                    {!isOwnProfile && userId && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="gap-2 w-fit mt-1"
+                                            onClick={handleStartConversation}
+                                        >
+                                            <MessageCircle className="size-4" />
+                                            Message {fullName?.split(" ")[0]}
+                                        </Button>
+                                    )}
                                 </>
                             )}
                         </div>
@@ -427,7 +474,6 @@ export function ProfileView({ profile, isOwnProfile }: Props) {
                     {isOwnProfile && <EditButtons section="clubRoles" />}
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
-                    {/* always show existing roles */}
                     {clubRoles.length > 0 && (
                         <div className="flex flex-wrap gap-2">
                             {clubRoles.map(role => (
@@ -442,9 +488,7 @@ export function ProfileView({ profile, isOwnProfile }: Props) {
                             ))}
                         </div>
                     )}
-
                     {editingSection === "clubRoles" ? (
-                        // add role input with + button
                         <div className="flex gap-2">
                             <Input
                                 placeholder="e.g. President of Math Team"
@@ -489,3 +533,4 @@ export function ProfileView({ profile, isOwnProfile }: Props) {
         </div>
     )
 }
+
