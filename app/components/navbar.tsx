@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
 import { Input } from "@/app/components/ui/input"
@@ -12,7 +12,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu"
-import { Home, Users, Briefcase, Info, Mail, Search, LogOut, User, Menu, X } from "lucide-react"
+import { Home, Users, Briefcase, Info, Mail, Search, LogOut, User, Menu, X, MessageCircle } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -36,6 +36,43 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin }: Props) {
     const pathname = usePathname()
     const [search, setSearch] = useState("")
     const [mobileOpen, setMobileOpen] = useState(false)
+    const [unreadCount, setUnreadCount] = useState(0)
+
+    // fetch unread message count and subscribe to realtime updates
+    useEffect(() => {
+        const supabase = getSupaBrowserClient()
+
+        async function fetchUnreadCount() {
+            const { count } = await supabase
+                .from("messages")
+                .select("id", { count: "exact", head: true })
+                .eq("read", false)
+                .neq("sender_id", userId)
+
+            setUnreadCount(count ?? 0)
+        }
+
+        fetchUnreadCount()
+
+        // subscribe to new messages in realtime
+        const channel = supabase
+            .channel("unread-messages")
+            .on(
+                "postgres_changes",
+                { event: "INSERT", schema: "public", table: "messages" },
+                () => fetchUnreadCount()
+            )
+            .on(
+                "postgres_changes",
+                { event: "UPDATE", schema: "public", table: "messages" },
+                () => fetchUnreadCount()
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [userId])
 
     async function handleLogout() {
         const supabase = getSupaBrowserClient()
@@ -101,6 +138,20 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin }: Props) {
                 </form>
 
                 <div className="ml-auto flex items-center gap-2">
+
+                    {/* Messages Icon */}
+                    <Link
+                        href="/messages"
+                        className="relative p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                    >
+                        <MessageCircle className="size-5" />
+                        {unreadCount > 0 && (
+                            <span className="absolute -top-0.5 -right-0.5 size-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                                {unreadCount > 9 ? "9+" : unreadCount}
+                            </span>
+                        )}
+                    </Link>
+
                     {/* Account Dropdown */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -147,7 +198,6 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin }: Props) {
             {/* Mobile Nav */}
             {mobileOpen && (
                 <div className="md:hidden border-t bg-background px-4 py-3 flex flex-col gap-1">
-                    {/* Mobile Search */}
                     <form onSubmit={handleSearch} className="mb-2">
                         <div className="relative">
                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -174,6 +224,19 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin }: Props) {
                             {label}
                         </Link>
                     ))}
+                    <Link
+                        href="/messages"
+                        onClick={() => setMobileOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    >
+                        <MessageCircle className="size-4" />
+                        Messages
+                        {unreadCount > 0 && (
+                            <span className="ml-auto size-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
+                                {unreadCount > 9 ? "9+" : unreadCount}
+                            </span>
+                        )}
+                    </Link>
                 </div>
             )}
         </header>
