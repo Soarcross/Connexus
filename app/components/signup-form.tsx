@@ -26,6 +26,7 @@ export function SignupForm({
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+
   async function handleEmailSignup(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -43,23 +44,28 @@ export function SignupForm({
     setLoading(true)
     const supabase = getSupaBrowserClient()
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: name },       // stored in auth.users user_metadata
+        data: { full_name: name },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     })
 
-    setLoading(false)
-
     if (error) {
       setError(error.message)
+      setLoading(false)
       return
     }
 
-    // Supabase sends a confirmation email — redirect to a page that tells the user to check their inbox
+    if (!data.user) {
+      setError("An account with this email may already exist. Check your inbox.")
+      setLoading(false)
+      return
+    }
+
+    setLoading(false)
     router.push("/verify-email")
   }
 
