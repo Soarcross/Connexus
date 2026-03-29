@@ -67,7 +67,7 @@ export default async function MessagesPage() {
                 <p className="text-muted-foreground">Your conversations with other members.</p>
             </div>
             <ConversationList
-                conversations={conversationsWithProfiles}
+                conversations={conversationsWithProfiles as any}
                 currentUserId={user.id}
             />
         </div>
