@@ -1,6 +1,6 @@
-import { createServerClient } from "@supabase/ssr"
+import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-
+import type { Database } from "@/types/supabase"; // adjust path if needed
 
 function getEnvironmentVariables() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -9,7 +9,7 @@ function getEnvironmentVariables() {
     if (!supabaseUrl || !supabaseAnonKey) {
         throw new Error(
             "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY"
-        )
+        );
     }
 
     return { supabaseUrl, supabaseAnonKey };
@@ -19,7 +19,7 @@ export async function createSupabaseServerClient() {
     const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables();
     const cookieStore = await cookies();
 
-    return createServerClient(supabaseUrl, supabaseAnonKey, {
+    return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
         cookies: {
             getAll() {
                 return cookieStore.getAll();
@@ -30,9 +30,9 @@ export async function createSupabaseServerClient() {
                         cookieStore.set(name, value, options)
                     );
                 } catch (error) {
-                    console.log(error)
+                    console.log(error);
                 }
-            }
-        }
+            },
+        },
     });
 }

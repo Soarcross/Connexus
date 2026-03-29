@@ -1,12 +1,12 @@
 "use client";
+
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/supabase";
 
-type SupabaseSchema = Record<string, never>;
+let client: SupabaseClient<Database> | null = null;
 
-let client: SupabaseClient<SupabaseSchema> | null = null;
-
-export function getSupaBrowserClient(): SupabaseClient<SupabaseSchema> {
+export function getSupaBrowserClient(): SupabaseClient<Database> {
     if (client) {
         return client;
     }
@@ -17,9 +17,9 @@ export function getSupaBrowserClient(): SupabaseClient<SupabaseSchema> {
     if (!supabaseUrl || !supabaseAnonKey) {
         throw new Error(
             "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY"
-        )
-    };
+        );
+    }
 
-    client = createBrowserClient<SupabaseSchema>(supabaseUrl, supabaseAnonKey);
+    client = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
     return client;
 }
