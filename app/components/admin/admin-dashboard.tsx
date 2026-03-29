@@ -468,33 +468,41 @@ export function AdminDashboard({
                                 {submissionsByType.length === 0 ? (
                                     <p className="text-sm text-muted-foreground text-center py-8">No submissions yet</p>
                                 ) : (
-                                    <div className="flex flex-col items-center gap-4 w-full">
-                                        <ResponsiveContainer width="100%" height={160}>
-                                            <PieChart>
-                                                <Pie
-                                                    data={submissionsByType}
-                                                    dataKey="value"
-                                                    nameKey="name"
-                                                    cx="50%"
-                                                    cy="50%"
-                                                    outerRadius={70}
-                                                >
-                                                    {submissionsByType.map((_, index) => (
-                                                        <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                                                    ))}
-                                                </Pie>
-                                                <ChartTooltip content={<ChartTooltipContent />} />
-                                            </PieChart>
-                                        </ResponsiveContainer>
-                                        <div className="flex flex-wrap gap-3 justify-center">
-                                            {submissionsByType.map((s, i) => (
-                                                <div key={s.name} className="flex items-center gap-1.5">
-                                                    <div className="size-3 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                                                    <span className="text-xs text-muted-foreground">{s.name} ({s.value})</span>
-                                                </div>
-                                            ))}
+                                    <ChartContainer config={barChartConfig} className="w-full">
+                                        <div className="flex flex-col items-center gap-4 w-full">
+                                            <ResponsiveContainer width="100%" height={160}>
+                                                <PieChart>
+                                                    <Pie
+                                                        data={submissionsByType}
+                                                        dataKey="value"
+                                                        nameKey="name"
+                                                        cx="50%"
+                                                        cy="50%"
+                                                        outerRadius={70}
+                                                    >
+                                                        {submissionsByType.map((_, index) => (
+                                                            <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                                                        ))}
+                                                    </Pie>
+                                                    <ChartTooltip content={<ChartTooltipContent />} />
+                                                </PieChart>
+                                            </ResponsiveContainer>
+
+                                            <div className="flex flex-wrap gap-3 justify-center">
+                                                {submissionsByType.map((s, i) => (
+                                                    <div key={s.name} className="flex items-center gap-1.5">
+                                                        <div
+                                                            className="size-3 rounded-full"
+                                                            style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}
+                                                        />
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {s.name} ({s.value})
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
-                                    </div>
+                                    </ChartContainer>
                                 )}
                             </CardContent>
                         </Card>

@@ -4,10 +4,16 @@ import { NextRequest, NextResponse } from "next/server"
 export async function GET(request: NextRequest) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get("code")
+    const next = searchParams.get("next")
 
     if (code) {
         const supabase = await createSupabaseServerClient()
         await supabase.auth.exchangeCodeForSession(code)
+
+        // if there's a next param (e.g. password reset) redirect there
+        if (next) {
+            return NextResponse.redirect(`${origin}${next}`)
+        }
 
         const { data: { user } } = await supabase.auth.getUser()
 
@@ -18,16 +24,13 @@ export async function GET(request: NextRequest) {
                 .eq("id", user.id)
                 .single()
 
-            // incomplete profile → go to profile page to fill it out
-            if (!profile?.grad_year || !profile?.interests?.length) {
+            if (!profile?.grad_year || !(profile as any)?.interests?.length) {
                 return NextResponse.redirect(`${origin}/profile/${user.id}`)
             }
 
-            // complete profile → go to home
             return NextResponse.redirect(`${origin}/`)
         }
     }
 
-    // something went wrong → back to login
     return NextResponse.redirect(`${origin}/login`)
 }

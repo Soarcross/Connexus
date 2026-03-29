@@ -26,6 +26,9 @@ export default async function AdminPage() {
         { count: totalOpportunities },
         { count: totalMessages },
         { count: totalConversations },
+        { data: teamMembers },
+        { data: partners },
+        { data: aboutContent },
     ] = await Promise.all([
         supabase
             .from("opportunities")
@@ -57,6 +60,9 @@ export default async function AdminPage() {
         supabase
             .from("conversations")
             .select("id", { count: "exact", head: true }),
+        supabase.from("team_members").select("*").order("order_index"),
+        supabase.from("partners").select("*").order("order_index"),
+        supabase.from("about_content").select("*").single(),
     ])
 
     return (
@@ -77,6 +83,9 @@ export default async function AdminPage() {
                     totalMessages: totalMessages ?? 0,
                     totalConversations: totalConversations ?? 0,
                 }}
+                teamMembers={(teamMembers ?? []) as any}
+                partners={(partners ?? []) as any}
+                aboutContent={aboutContent as any}
             />
         </div>
     )
