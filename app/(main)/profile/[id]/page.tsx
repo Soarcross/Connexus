@@ -7,14 +7,14 @@ type Props = {
     params: Promise<{ id: string }>
 }
 
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export default async function ProfilePage({ params }: Props) {
     const { id } = await params
     const supabase = await createSupabaseServerClient()
+
+    const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
     // get the logged in user so we know if this is their own profile
     const { data: { user } } = await supabase.auth.getUser()

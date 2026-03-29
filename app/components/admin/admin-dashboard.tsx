@@ -339,26 +339,37 @@ export function AdminDashboard({
 
     async function handleSaveAboutContent() {
         const supabase = getSupaBrowserClient()
-
-        // Ensure initialAboutContent and its id exist
-        if (!initialAboutContent?.id) {
-            setError("No content selected to update.")
-            return
-        }
+        setError(null)
 
         try {
-            const { error } = await supabase
-                .from("about_content")
-                .update({
-                    mission: missionEdit,
-                    contact_email: contactEmailEdit,
-                    contact_phone: contactPhoneEdit,
-                    updated_at: new Date().toISOString(),
-                })
-                .eq("id", initialAboutContent.id) // guaranteed to exist now
+            if (initialAboutContent?.id) {
+                // Row exists — update it
+                const { error } = await supabase
+                    .from("about_content")
+                    .update({
+                        mission: missionEdit,
+                        contact_email: contactEmailEdit,
+                        contact_phone: contactPhoneEdit,
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq("id", initialAboutContent.id)
 
-            if (error) throw error
+                if (error) throw error
+            } else {
+                // No row yet — insert one
+                const { error } = await supabase
+                    .from("about_content")
+                    .insert({
+                        mission: missionEdit,
+                        contact_email: contactEmailEdit,
+                        contact_phone: contactPhoneEdit,
+                    })
+
+                if (error) throw error
+            }
+
             showSuccess("About content updated!")
+            router.refresh()
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to update.")
         }
