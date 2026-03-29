@@ -8,7 +8,6 @@ export default async function MessagesPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect("/login")
 
-    // fetch all conversations the user is part of
     const { data: conversations } = await supabase
         .from("conversations")
         .select(`
@@ -21,33 +20,26 @@ export default async function MessagesPage() {
         .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
         .order("last_message_at", { ascending: false })
 
-    // get the other participant's profile for each conversation
     const conversationsWithProfiles = await Promise.all(
         (conversations ?? []).map(async (conv) => {
             const otherId = conv.participant_1 === user.id
                 ? conv.participant_2
                 : conv.participant_1
 
-            if (!otherId) {
-                return; // or show an error, or redirect
-            }
-
-            const profile = await supabase
+            const { data: profile } = await supabase
                 .from("profiles")
                 .select("id, full_name, avatar_url")
                 .eq("id", otherId)
-                .single();
+                .single()
 
-            // get the last message
             const { data: lastMessage } = await supabase
                 .from("messages")
                 .select("content, created_at, read, sender_id")
                 .eq("conversation_id", conv.id)
                 .order("created_at", { ascending: false })
                 .limit(1)
-                .single()
+                .maybeSingle()
 
-            // get unread count
             const { count: unreadCount } = await supabase
                 .from("messages")
                 .select("id", { count: "exact", head: true })
@@ -56,8 +48,12 @@ export default async function MessagesPage() {
                 .neq("sender_id", user.id)
 
             return {
-                ...conv,
-                otherProfile: profile,
+                id: conv.id,
+                participant_1: conv.participant_1,
+                participant_2: conv.participant_2,
+                last_message_at: conv.last_message_at,
+                created_at: conv.created_at,
+                otherProfile: profile ?? null,
                 lastMessage: lastMessage ?? null,
                 unreadCount: unreadCount ?? 0,
             }
