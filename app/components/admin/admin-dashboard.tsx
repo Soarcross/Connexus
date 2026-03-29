@@ -44,7 +44,7 @@ type User = {
     full_name: string | null
     avatar_url: string | null
     grad_year: number | null
-    is_admin: boolean
+    is_admin: boolean | null
     created_at: string
 }
 

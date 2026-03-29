@@ -67,10 +67,10 @@ export default async function AdminPage() {
             </div>
             <AdminDashboard
                 opportunities={opportunities ?? []}
-                users={users ?? []}
-                submissions={submissions ?? []}
-                messagesPerDay={messagesPerDay ?? []}
-                usersPerDay={usersPerDay ?? []}
+                users={users?.map(u => ({ ...u, is_admin: u.is_admin ?? false })) ?? [] as any}
+                submissions={(submissions ?? []) as any}
+                messagesPerDay={(messagesPerDay ?? []) as any}
+                usersPerDay={(usersPerDay ?? []) as any}
                 stats={{
                     totalUsers: totalUsers ?? 0,
                     totalOpportunities: totalOpportunities ?? 0,
