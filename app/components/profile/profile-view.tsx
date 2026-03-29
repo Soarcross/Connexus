@@ -9,7 +9,7 @@ import { Button } from "@/app/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
 import { Input } from "@/app/components/ui/input"
 import { Textarea } from "@/app/components/ui/textarea"
-import { MessageCircle } from "lucide-react"
+import { MessageCircle, Mail } from "lucide-react"  // ← add Mail
 import { Camera, Pencil, X, Check, ArrowRight, Plus } from "lucide-react"
 
 type Profile = {
@@ -21,6 +21,7 @@ type Profile = {
     interests: string[] | null
     looking_for: string[] | null
     club_roles: string[] | null
+    email?: string | null
 }
 
 type Props = {
@@ -331,15 +332,31 @@ export function ProfileView({ profile, isOwnProfile, userId }: Props) {
                                         {gradYear ? ` · Class of ${gradYear}` : ""}
                                     </p>
                                     {!isOwnProfile && userId && (
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="gap-2 w-fit mt-1"
-                                            onClick={handleStartConversation}
-                                        >
-                                            <MessageCircle className="size-4" />
-                                            Message {fullName?.split(" ")[0]}
-                                        </Button>
+                                        <div className="flex gap-2 mt-1">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="gap-2"
+                                                onClick={handleStartConversation}
+                                            >
+                                                <MessageCircle className="size-4" />
+                                                Message {fullName?.split(" ")[0]}
+                                            </Button>
+
+                                            {profile.email && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="gap-2"
+                                                    asChild
+                                                >
+                                                    <a href={`mailto:${profile.email}`}>
+                                                        <Mail className="size-4" />
+                                                        Email
+                                                    </a>
+                                                </Button>
+                                            )}
+                                        </div>
                                     )}
                                 </>
                             )}

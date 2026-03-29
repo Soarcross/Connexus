@@ -1,10 +1,16 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
 import { notFound } from "next/navigation"
 import { ProfileView } from "@/app/components/profile/profile-view"
 
 type Props = {
     params: Promise<{ id: string }>
 }
+
+const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export default async function ProfilePage({ params }: Props) {
     const { id } = await params
@@ -25,13 +31,16 @@ export default async function ProfilePage({ params }: Props) {
         notFound()
     }
 
+    // fetch the email of the profile being viewed from auth.users
+    const { data: { user: profileUser } } = await supabaseAdmin.auth.admin.getUserById(id)
+
     const isOwnProfile = user?.id === profile.id
 
     return (
         <div className="min-h-svh bg-background">
             <div className="max-w-2xl mx-auto px-6 py-12">
                 <ProfileView
-                    profile={profile}
+                    profile={{ ...profile, email: profileUser?.email ?? null }}
                     isOwnProfile={isOwnProfile}
                     userId={user?.id ?? null}
                 />
