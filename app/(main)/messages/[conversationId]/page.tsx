@@ -28,11 +28,15 @@ export default async function ConversationPage({ params }: Props) {
         ? conversation.participant_2
         : conversation.participant_1
 
-    const { data: otherProfile } = await supabase
+    if (!otherId) {
+        return; // or show an error, or redirect
+    }
+
+    const profile = await supabase
         .from("profiles")
         .select("id, full_name, avatar_url")
         .eq("id", otherId)
-        .single()
+        .single();
 
     // fetch messages
     const { data: messages } = await supabase
