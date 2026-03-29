@@ -350,7 +350,11 @@ export function ProfileView({ profile, isOwnProfile, userId }: Props) {
                                                     className="gap-2"
                                                     asChild
                                                 >
-                                                    <a href={`mailto:${profile.email}`}>
+                                                    <a
+                                                        href={`https://mail.google.com/mail/?view=cm&to=${profile.email}&su=Hey ${fullName?.split(" ")[0]}!`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                    >
                                                         <Mail className="size-4" />
                                                         Email
                                                     </a>
