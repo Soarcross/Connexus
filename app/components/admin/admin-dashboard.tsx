@@ -71,6 +71,27 @@ type Stats = {
     totalConversations: number
 }
 
+type TeamMember = {
+    id: string
+    name: string
+    role: string
+    avatar_url: string | null
+    bio: string | null
+}
+
+type Partner = {
+    id: string
+    name: string
+    logo_url: string | null
+    website: string | null
+}
+
+type AboutContent = {
+    id: string
+    title: string
+    body: string
+}
+
 type Props = {
     opportunities: Opportunity[]
     users: User[]
@@ -78,6 +99,9 @@ type Props = {
     messagesPerDay: DayCount[]
     usersPerDay: DayCount[]
     stats: Stats
+    teamMembers: TeamMember[]
+    partners: Partner[]
+    aboutContent: AboutContent[]
 }
 
 const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering"]
@@ -116,7 +140,10 @@ export function AdminDashboard({
     submissions: initialSubmissions,
     messagesPerDay,
     usersPerDay,
-    stats
+    stats,
+    teamMembers: initialTeamMembers,
+    partners: initialPartners,
+    aboutContent: initialAboutContent
 }: Props) {
     const router = useRouter()
     const [opportunities, setOpportunities] = useState<Opportunity[]>(initialOpportunities)
@@ -128,6 +155,9 @@ export function AdminDashboard({
     const [showForm, setShowForm] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [form, setForm] = useState(EMPTY_FORM)
+    const [teamMembers, setTeamMembers] = useState<TeamMember[]>(initialTeamMembers)
+    const [partners, setPartners] = useState<Partner[]>(initialPartners)
+    const [aboutContent, setAboutContent] = useState<AboutContent[]>(initialAboutContent)
 
     // chart data
     const opportunitiesByCategory = CATEGORIES.map(cat => ({

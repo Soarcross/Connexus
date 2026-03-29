@@ -60,9 +60,18 @@ export default async function AdminPage() {
         supabase
             .from("conversations")
             .select("id", { count: "exact", head: true }),
-        supabase.from("team_members").select("*").order("order_index"),
-        supabase.from("partners").select("*").order("order_index"),
-        supabase.from("about_content").select("*").single(),
+        supabase
+            .from("team_members")
+            .select("*")
+            .order("order_index"),
+        supabase
+            .from("partners")
+            .select("*")
+            .order("order_index"),
+        supabase
+            .from("about_content")
+            .select("*")
+            .single(),
     ])
 
     return (
@@ -73,10 +82,10 @@ export default async function AdminPage() {
             </div>
             <AdminDashboard
                 opportunities={opportunities ?? []}
-                users={users?.map(u => ({ ...u, is_admin: u.is_admin ?? false })) ?? [] as any}
-                submissions={(submissions ?? []) as any}
-                messagesPerDay={(messagesPerDay ?? []) as any}
-                usersPerDay={(usersPerDay ?? []) as any}
+                users={(users ?? []).map(u => ({ ...u, is_admin: u.is_admin ?? false })) as any}
+                submissions={submissions ?? [] as any}
+                messagesPerDay={messagesPerDay ?? [] as any}
+                usersPerDay={usersPerDay ?? [] as any}
                 stats={{
                     totalUsers: totalUsers ?? 0,
                     totalOpportunities: totalOpportunities ?? 0,
@@ -85,7 +94,7 @@ export default async function AdminPage() {
                 }}
                 teamMembers={(teamMembers ?? []) as any}
                 partners={(partners ?? []) as any}
-                aboutContent={aboutContent as any}
+                aboutContent={(aboutContent ? [aboutContent] : []) as any}
             />
         </div>
     )
