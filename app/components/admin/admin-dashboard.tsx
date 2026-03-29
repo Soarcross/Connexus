@@ -339,6 +339,13 @@ export function AdminDashboard({
 
     async function handleSaveAboutContent() {
         const supabase = getSupaBrowserClient()
+
+        // Ensure initialAboutContent and its id exist
+        if (!initialAboutContent?.id) {
+            setError("No content selected to update.")
+            return
+        }
+
         try {
             const { error } = await supabase
                 .from("about_content")
@@ -347,8 +354,9 @@ export function AdminDashboard({
                     contact_email: contactEmailEdit,
                     contact_phone: contactPhoneEdit,
                     updated_at: new Date().toISOString(),
-                } as any)
-                .eq("id", initialAboutContent?.id)
+                })
+                .eq("id", initialAboutContent.id) // guaranteed to exist now
+
             if (error) throw error
             showSuccess("About content updated!")
         } catch (err) {
