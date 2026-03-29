@@ -32,7 +32,7 @@ export default async function ConversationPage({ params }: Props) {
         return; // or show an error, or redirect
     }
 
-    const profile = await supabase
+    const { data: otherProfile } = await supabase
         .from("profiles")
         .select("id, full_name, avatar_url")
         .eq("id", otherId)
