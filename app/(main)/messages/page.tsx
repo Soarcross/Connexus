@@ -28,11 +28,15 @@ export default async function MessagesPage() {
                 ? conv.participant_2
                 : conv.participant_1
 
-            const { data: profile } = await supabase
+            if (!otherId) {
+                return; // or show an error, or redirect
+            }
+
+            const profile = await supabase
                 .from("profiles")
                 .select("id, full_name, avatar_url")
                 .eq("id", otherId)
-                .single()
+                .single();
 
             // get the last message
             const { data: lastMessage } = await supabase
