@@ -33,7 +33,7 @@ const INTEREST_OPTIONS = [
     "Software Engineering", "Finance", "Medicine", "Law",
     "Research", "Design", "Entrepreneurship", "Data Science",
     "Cybersecurity", "Journalism", "Education", "Consulting",
-    "Architecture", "Biology", "Physics", "Mathematics"
+    "Architecture", "Biology", "Physics", "Mathematics", "Leadership"
 ]
 
 const LOOKING_FOR_OPTIONS = [
@@ -470,7 +470,7 @@ export function ProfileView({ profile, isOwnProfile, userId }: Props) {
             {/* Club Roles */}
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-base">Club Roles & Titles</CardTitle>
+                    <CardTitle className="text-base">Extracirricular Roles & Titles</CardTitle>
                     {isOwnProfile && <EditButtons section="clubRoles" />}
                 </CardHeader>
                 <CardContent className="flex flex-col gap-4">
