@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app
 import { Button } from "@/app/components/ui/button"
 import { Briefcase, GraduationCap, FlaskConical, Trophy, Heart, BookOpen, ArrowRight } from "lucide-react"
 import Link from "next/link"
+import { PeopleCarousel } from "@/app/components/home/people-carousel"
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   Internships: <Briefcase className="size-4" />,
@@ -18,8 +19,52 @@ const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competit
 
 export default async function HomePage() {
   const supabase = await createSupabaseServerClient()
-  const opportunitiesByCategory: Record<string, any[]> = {}
 
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // fetch current user's profile for matching
+  const { data: currentProfile } = await supabase
+    .from("profiles")
+    .select("interests, looking_for, club_roles")
+    .eq("id", user?.id ?? "")
+    .single()
+
+  // fetch all other profiles for recommendations
+  const { data: allProfiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, avatar_url, grad_year, interests, looking_for, club_roles, bio")
+    .neq("id", user?.id ?? "")
+    .not("full_name", "is", null)
+
+  // score each profile by how many interests/looking_for/club_roles overlap
+  const scored = (allProfiles ?? []).map(profile => {
+    let score = 0
+
+    const myInterests = currentProfile?.interests ?? []
+    const myLookingFor = currentProfile?.looking_for ?? []
+    const myClubRoles = currentProfile?.club_roles ?? []
+
+    myInterests.forEach(i => {
+      if (profile.interests?.includes(i)) score += 2
+    })
+    myLookingFor.forEach(l => {
+      if (profile.looking_for?.includes(l)) score += 1
+    })
+    myClubRoles.forEach(r => {
+      if (profile.club_roles?.some((cr: string) => cr.toLowerCase().includes(r.toLowerCase()))) score += 1
+    })
+
+    return { ...profile, score }
+  })
+
+  // sort by score descending, take top 9
+  const recommendations = scored
+    .filter(p => p.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 9)
+
+  // fetch opportunities
+  const opportunitiesByCategory: Record<string, any[]> = {}
   await Promise.all(
     CATEGORIES.map(async (category) => {
       const { data } = await supabase
@@ -46,6 +91,22 @@ export default async function HomePage() {
         </p>
       </div>
 
+      {/* People Recommendations */}
+      {recommendations.length > 0 && (
+        <section className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">People You May Know</h2>
+            <Link href="/people">
+              <Button variant="ghost" size="sm" className="gap-1">
+                See all <ArrowRight className="size-4" />
+              </Button>
+            </Link>
+          </div>
+          <PeopleCarousel people={recommendations} currentUserId={user?.id ?? ""} />
+        </section>
+      )}
+
+      {/* Opportunities */}
       <section className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Opportunities of the Month</h2>
@@ -88,15 +149,11 @@ export default async function HomePage() {
                             </Badge>
                           </div>
                           {opp.organization && (
-                            <CardDescription className="text-xs">
-                              {opp.organization}
-                            </CardDescription>
+                            <CardDescription className="text-xs">{opp.organization}</CardDescription>
                           )}
                         </CardHeader>
                         <CardContent className="flex flex-col gap-3">
-                          <p className="text-xs text-muted-foreground line-clamp-2">
-                            {opp.description}
-                          </p>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{opp.description}</p>
                           <div className="flex items-center justify-between">
                             {opp.deadline && (
                               <span className="text-xs text-muted-foreground">
