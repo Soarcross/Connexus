@@ -122,6 +122,11 @@ export function ProfileView({ profile, isOwnProfile, userId }: Props) {
         const file = e.target.files?.[0]
         if (!file) return
 
+        if (file.size > 2 * 1024 * 1024) {
+            setError("Image must be under 2MB.")
+            return
+        }
+
         setAvatarUrl(URL.createObjectURL(file)) // show preview immediately
         setLoading(true)
         const supabase = getSupaBrowserClient()
