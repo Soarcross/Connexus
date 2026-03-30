@@ -122,22 +122,28 @@ export function ProfileView({ profile, isOwnProfile, userId }: Props) {
         const file = e.target.files?.[0]
         if (!file) return
 
-        if (file.size > 2 * 1024 * 1024) {
-            setError("Image must be under 2MB.")
-            return
-        }
-
-        setAvatarUrl(URL.createObjectURL(file)) // show preview immediately
+        setAvatarUrl(URL.createObjectURL(file))
         setLoading(true)
         const supabase = getSupaBrowserClient()
 
         try {
             const fileExt = file.name.split(".").pop()
-            const filePath = `${profile.id}/avatar.${fileExt}`
+            const filePath = `${profile.id}/avatar-${Date.now()}.${fileExt}`
 
+            // delete old avatar files to free up storage
+            const { data: existingFiles } = await supabase.storage
+                .from("avatars")
+                .list(profile.id)
+
+            if (existingFiles && existingFiles.length > 0) {
+                const filesToDelete = existingFiles.map(f => `${profile.id}/${f.name}`)
+                await supabase.storage.from("avatars").remove(filesToDelete)
+            }
+
+            // upload new avatar
             const { error: uploadError } = await supabase.storage
                 .from("avatars")
-                .upload(filePath, file, { upsert: true })
+                .upload(filePath, file)
 
             if (uploadError) throw uploadError
 
