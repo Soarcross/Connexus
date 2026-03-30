@@ -91,21 +91,6 @@ export default async function HomePage() {
         </p>
       </div>
 
-      {/* People Recommendations */}
-      {recommendations.length > 0 && (
-        <section className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">People You May Know</h2>
-            <Link href="/people">
-              <Button variant="ghost" size="sm" className="gap-1">
-                See all <ArrowRight className="size-4" />
-              </Button>
-            </Link>
-          </div>
-          <PeopleCarousel people={recommendations} currentUserId={user?.id ?? ""} />
-        </section>
-      )}
-
       {/* Opportunities */}
       <section className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
@@ -176,6 +161,21 @@ export default async function HomePage() {
               )
             })}
           </div>
+        )}
+
+        {/* People Recommendations */}
+        {recommendations.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">Suggested Connections</h2>
+              <Link href="/people">
+                <Button variant="ghost" size="sm" className="gap-1">
+                  See all <ArrowRight className="size-4" />
+                </Button>
+              </Link>
+            </div>
+            <PeopleCarousel people={recommendations} currentUserId={user?.id ?? ""} />
+          </section>
         )}
       </section>
     </div>
