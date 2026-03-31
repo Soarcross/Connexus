@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
 import { Input } from "@/app/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
+import { ThemeToggle } from "@/app/components/theme-toggle"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -138,6 +139,7 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin }: Props) {
                 </form>
 
                 <div className="ml-auto flex items-center gap-2">
+                    <ThemeToggle />
 
                     {/* Messages Icon */}
                     <Link
