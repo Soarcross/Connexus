@@ -49,6 +49,7 @@
 }
 
 :root {
+  --opp-card-bg: #ffffff;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -85,6 +86,7 @@
 }
 
 .dark {
+  --opp-card-bg: #27272a;
   --background: oklch(0.18 0.02 280);
   /* purplish-grey dark background */
   --foreground: oklch(0.93 0.01 280);
