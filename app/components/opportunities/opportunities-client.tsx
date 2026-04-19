@@ -36,6 +36,15 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
 
 const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering"]
 
+const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
+    Internships:  { bg: "#3b82f6", text: "#ffffff" },
+    Jobs:         { bg: "#22c55e", text: "#ffffff" },
+    Research:     { bg: "#a855f7", text: "#ffffff" },
+    Scholarships: { bg: "#f59e0b", text: "#ffffff" },
+    Competitions: { bg: "#ef4444", text: "#ffffff" },
+    Volunteering: { bg: "#14b8a6", text: "#ffffff" },
+}
+
 const FIELDS = [
     "Computer Science", "Law", "Medicine", "Finance",
     "Engineering", "Research", "Business", "Design",
@@ -195,17 +204,18 @@ export function OpportunitiesClient({ opportunities }: Props) {
                         return (
                             <div key={category} className="flex flex-col gap-4">
                                 <div className="flex items-center gap-2">
-                                    <div className="size-7 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+                                    <div className="size-7 rounded-md flex items-center justify-center" style={{ backgroundColor: CATEGORY_COLORS[category]?.bg + "22", color: CATEGORY_COLORS[category]?.bg }}>
                                         {CATEGORY_ICONS[category]}
                                     </div>
                                     <h2 className="font-semibold text-lg">{category}</h2>
                                     <span className="text-sm text-muted-foreground">({opps.length})</span>
                                 </div>
-                                <div className="grid gap-4 sm:grid-cols-2">
+                                <div className="grid gap-6 sm:grid-cols-2">
                                     {opps.map(opp => (
                                         <Card
                                             key={opp.id}
-                                            className={`transition-colors hover:border-primary/50 ${opp.is_featured ? "border-primary/30 bg-primary/5" : ""}`}
+                                            className="transition-colors hover:border-primary/50"
+                                            style={{ backgroundColor: "var(--opp-card-bg)", border: "2px solid black" }}
                                         >
                                             <CardHeader className="pb-2">
                                                 <div className="flex items-start justify-between gap-2">
@@ -216,11 +226,9 @@ export function OpportunitiesClient({ opportunities }: Props) {
                                                         {opp.is_featured && (
                                                             <Badge className="text-xs">Featured</Badge>
                                                         )}
-                                                        {opp.field && (
-                                                            <Badge variant="outline" className="text-xs">
-                                                                {opp.field}
-                                                            </Badge>
-                                                        )}
+                                                        <Badge variant="secondary" className="text-xs" style={{ backgroundColor: CATEGORY_COLORS[opp.category]?.bg, color: CATEGORY_COLORS[opp.category]?.text }}>
+                                                            {opp.category}
+                                                        </Badge>
                                                     </div>
                                                 </div>
                                                 {opp.organization && (
@@ -244,7 +252,7 @@ export function OpportunitiesClient({ opportunities }: Props) {
                                                     )}
                                                     {opp.url && (
                                                         <a href={opp.url} target="_blank" rel="noopener noreferrer">
-                                                            <Button size="sm" variant="outline" className="text-xs h-7 gap-1">
+                                                            <Button size="sm" variant="outline" className="text-xs h-7 gap-1 transition-all duration-300 border-black text-black hover:bg-black hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-black">
                                                                 Apply
                                                                 <ExternalLink className="size-3" />
                                                             </Button>

@@ -240,12 +240,13 @@ export function PeopleClient({ profiles, initialSearch }: Props) {
                     {filtered.map(profile => (
                         <Card
                             key={profile.id}
-                            className="cursor-pointer hover:border-primary/50 transition-colors"
+                            className="cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_4px_10px_rgba(0,0,0,0.35)] hover:bg-accent dark:hover:border-primary/50 dark:hover:shadow-none dark:hover:bg-accent"
+                            style={{ border: "2px solid black" }}
                             onClick={() => router.push(`/profile/${profile.id}`)}
                         >
                             <CardContent className="pt-6 flex flex-col gap-4">
                                 <div className="flex items-center gap-3">
-                                    <Avatar className="size-12">
+                                    <Avatar className="size-12 border border-black/30 dark:border-0">
                                         <AvatarImage src={profile.avatar_url ?? ""} />
                                         <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                                             {profile.full_name?.[0] ?? "?"}
