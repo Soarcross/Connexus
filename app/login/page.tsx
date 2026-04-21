@@ -1,7 +1,5 @@
-import { GalleryVerticalEnd } from "lucide-react"
-
 import { LoginForm } from "../components/login-form"
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { WireframeGlobe } from "../components/login/wireframe-globe"
 
 export default function LoginPage() {
     return (
@@ -19,12 +17,8 @@ export default function LoginPage() {
                     </div>
                 </div>
             </div>
-            <div className="relative hidden bg-muted lg:block">
-                <img
-                    src="/placeholder.svg"
-                    alt="Image"
-                    className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-                />
+            <div className="relative hidden bg-[#0d0f1a] lg:block">
+                <WireframeGlobe />
             </div>
         </div>
     )

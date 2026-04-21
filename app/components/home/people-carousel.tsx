@@ -49,6 +49,7 @@ export function PeopleCarousel({ people, currentUserId }: Props) {
                     <Card
                         key={person.id}
                         className="cursor-pointer hover:border-primary/50 transition-colors"
+                        style={{ backgroundColor: "var(--opp-card-bg)", border: "2px solid black" }}
                         onClick={() => router.push(`/profile/${person.id}`)}
                     >
                         <CardContent className="pt-6 flex flex-col items-center gap-3 text-center">
@@ -64,27 +65,18 @@ export function PeopleCarousel({ people, currentUserId }: Props) {
                                     {person.grad_year ? `Class of ${person.grad_year}` : "Stuyvesant"}
                                 </p>
                             </div>
-                            {person.interests && person.interests.length > 0 && (
+                            {person.club_roles && person.club_roles.length > 0 && (
                                 <div className="flex flex-wrap gap-1 justify-center">
-                                    {person.interests.slice(0, 2).map(interest => (
-                                        <Badge key={interest} variant="secondary" className="text-xs">
-                                            {interest}
+                                    {person.club_roles.slice(0, 2).map(role => (
+                                        <Badge key={role} variant="secondary" className="text-xs">
+                                            {role}
                                         </Badge>
                                     ))}
-                                    {person.interests.length > 2 && (
+                                    {person.club_roles.length > 2 && (
                                         <Badge variant="outline" className="text-xs">
-                                            +{person.interests.length - 2}
+                                            +{person.club_roles.length - 2}
                                         </Badge>
                                     )}
-                                </div>
-                            )}
-                            {person.looking_for && person.looking_for.length > 0 && (
-                                <div className="flex flex-wrap gap-1 justify-center">
-                                    {person.looking_for.slice(0, 2).map(l => (
-                                        <Badge key={l} variant="outline" className="text-xs text-primary border-primary/30">
-                                            {l}
-                                        </Badge>
-                                    ))}
                                 </div>
                             )}
                         </CardContent>

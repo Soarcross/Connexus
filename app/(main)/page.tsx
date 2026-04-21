@@ -47,22 +47,18 @@ export default async function HomePage() {
     .neq("id", user?.id ?? "")
     .not("full_name", "is", null)
 
-  // score each profile by how many interests/looking_for/club_roles overlap
+  // score each profile primarily by extracurricular (club_roles) overlap, then interests
   const scored = (allProfiles ?? []).map(profile => {
     let score = 0
 
     const myInterests = currentProfile?.interests ?? []
-    const myLookingFor = currentProfile?.looking_for ?? []
     const myClubRoles = currentProfile?.club_roles ?? []
 
-    myInterests.forEach(i => {
-      if (profile.interests?.includes(i)) score += 2
-    })
-    myLookingFor.forEach(l => {
-      if (profile.looking_for?.includes(l)) score += 1
-    })
     myClubRoles.forEach(r => {
-      if (profile.club_roles?.some((cr: string) => cr.toLowerCase().includes(r.toLowerCase()))) score += 1
+      if (profile.club_roles?.some((cr: string) => cr.toLowerCase().includes(r.toLowerCase()))) score += 3
+    })
+    myInterests.forEach(i => {
+      if (profile.interests?.includes(i)) score += 1
     })
 
     return { ...profile, score }
@@ -179,11 +175,11 @@ export default async function HomePage() {
 
         {/* People Recommendations */}
         {recommendations.length > 0 && (
-          <section className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Suggested Connections</h2>
-              <Link href="/people">
-                <Button variant="ghost" size="sm" className="gap-1">
+          <section className="relative z-10 flex flex-col gap-6">
+            <div className="flex flex-col items-center gap-2 sm:relative sm:flex-row sm:justify-center">
+              <h2 className="text-3xl font-bold tracking-tight px-6 py-3 rounded-xl backdrop-blur-2xl bg-white/20 dark:bg-black/20">Suggested Connections</h2>
+              <Link href="/people" className="sm:absolute sm:right-0">
+                <Button variant="ghost" size="sm" className="gap-1 backdrop-blur-2xl bg-white/20 dark:bg-black/20 rounded-xl hover:bg-black hover:text-white dark:hover:bg-black dark:hover:text-white">
                   See all <ArrowRight className="size-4" />
                 </Button>
               </Link>

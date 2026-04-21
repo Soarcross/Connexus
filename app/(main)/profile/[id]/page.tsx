@@ -36,6 +36,17 @@ export default async function ProfilePage({ params }: Props) {
 
     const isOwnProfile = user?.id === profile.id
 
+    // fetch the current viewer's interests to compute overlap
+    let currentUserInterests: string[] = []
+    if (user && !isOwnProfile) {
+        const { data: myProfile } = await supabase
+            .from("profiles")
+            .select("interests")
+            .eq("id", user.id)
+            .single()
+        currentUserInterests = myProfile?.interests ?? []
+    }
+
     return (
         <div className="min-h-svh bg-background">
             <div className="max-w-2xl mx-auto px-6 py-12">
@@ -43,6 +54,7 @@ export default async function ProfilePage({ params }: Props) {
                     profile={{ ...profile, email: profileUser?.email ?? null }}
                     isOwnProfile={isOwnProfile}
                     userId={user?.id ?? null}
+                    currentUserInterests={currentUserInterests}
                 />
             </div>
         </div>
