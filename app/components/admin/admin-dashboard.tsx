@@ -171,6 +171,8 @@ export function AdminDashboard({
     const [showTeamForm, setShowTeamForm] = useState(false)
     const [editingTeamId, setEditingTeamId] = useState<string | null>(null)
     const [teamForm, setTeamForm] = useState({ name: "", role: "", bio: "", image_url: "" })
+    const [profileSearch, setProfileSearch] = useState("")
+    const [selectedProfileForTeam, setSelectedProfileForTeam] = useState<User | null>(null)
 
     // partner form
     const [showPartnerForm, setShowPartnerForm] = useState(false)
@@ -376,24 +378,41 @@ export function AdminDashboard({
     }
 
     async function handleSaveTeamMember() {
-        if (!teamForm.name || !teamForm.role) {
-            setError("Name and role are required.")
+        if (!teamForm.role) {
+            setError("Role is required.")
+            return
+        }
+        if (!editingTeamId && !selectedProfileForTeam) {
+            setError("Please select a profile.")
             return
         }
         const supabase = getSupaBrowserClient()
         try {
             if (editingTeamId) {
-                const { data, error } = await supabase.from("team_members").update(teamForm as any).eq("id", editingTeamId).select().single()
+                const updatePayload: Record<string, unknown> = { role: teamForm.role }
+                if (selectedProfileForTeam) {
+                    updatePayload.name = selectedProfileForTeam.full_name ?? teamForm.name
+                    updatePayload.image_url = selectedProfileForTeam.avatar_url ?? null
+                }
+                const { data, error } = await supabase.from("team_members").update(updatePayload as any).eq("id", editingTeamId).select().single()
                 if (error) throw error
                 setTeamMembers(prev => prev.map(t => t.id === editingTeamId ? data : t))
             } else {
-                const { data, error } = await supabase.from("team_members").insert(teamForm as any).select().single()
+                const payload = {
+                    name: selectedProfileForTeam!.full_name ?? "",
+                    role: teamForm.role,
+                    bio: null,
+                    image_url: selectedProfileForTeam!.avatar_url ?? null,
+                }
+                const { data, error } = await supabase.from("team_members").insert(payload as any).select().single()
                 if (error) throw error
                 setTeamMembers(prev => [...prev, data])
             }
             setShowTeamForm(false)
             setEditingTeamId(null)
             setTeamForm({ name: "", role: "", bio: "", image_url: "" })
+            setSelectedProfileForTeam(null)
+            setProfileSearch("")
             showSuccess("Team member saved!")
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to save.")
@@ -867,6 +886,8 @@ export function AdminDashboard({
                             <Button size="sm" className="gap-2" onClick={() => {
                                 setTeamForm({ name: "", role: "", bio: "", image_url: "" })
                                 setEditingTeamId(null)
+                                setSelectedProfileForTeam(null)
+                                setProfileSearch("")
                                 setShowTeamForm(true)
                             }}>
                                 <Plus className="size-4" />Add Member
@@ -876,29 +897,126 @@ export function AdminDashboard({
                         {showTeamForm && (
                             <Card className="border-primary/30">
                                 <CardContent className="pt-4 flex flex-col gap-4">
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        <div className="flex flex-col gap-2">
-                                            <label className="text-sm font-medium">Name *</label>
-                                            <Input value={teamForm.name} onChange={(e) => setTeamForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. John Doe" />
+                                    {/* When editing: show role + optional profile sync */}
+                                    {editingTeamId ? (
+                                        <div className="flex flex-col gap-4">
+                                            <div className="flex flex-col gap-2">
+                                                <label className="text-sm font-medium">Role *</label>
+                                                <Input value={teamForm.role} onChange={(e) => setTeamForm(f => ({ ...f, role: e.target.value }))} placeholder="e.g. Co-Founder & CEO" />
+                                            </div>
+                                            <div className="flex flex-col gap-2">
+                                                <label className="text-sm font-medium text-muted-foreground">Sync profile picture from account</label>
+                                                {!selectedProfileForTeam ? (
+                                                    <>
+                                                        <Input
+                                                            value={profileSearch}
+                                                            onChange={(e) => setProfileSearch(e.target.value)}
+                                                            placeholder="Search by name to link account..."
+                                                        />
+                                                        {profileSearch && (
+                                                            <div className="flex flex-col gap-1 max-h-36 overflow-y-auto border rounded-md p-1">
+                                                                {initialUsers
+                                                                    .filter(u => u.full_name && u.full_name.toLowerCase().includes(profileSearch.toLowerCase()))
+                                                                    .slice(0, 10)
+                                                                    .map(u => (
+                                                                        <button
+                                                                            key={u.id}
+                                                                            type="button"
+                                                                            className="flex items-center gap-3 px-3 py-2 rounded hover:bg-accent text-left transition-colors"
+                                                                            onClick={() => setSelectedProfileForTeam(u)}
+                                                                        >
+                                                                            <Avatar className="size-7 shrink-0">
+                                                                                <AvatarImage src={u.avatar_url ?? ""} />
+                                                                                <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">{u.full_name?.[0]}</AvatarFallback>
+                                                                            </Avatar>
+                                                                            <span className="text-sm truncate">{u.full_name}</span>
+                                                                        </button>
+                                                                    ))
+                                                                }
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                ) : (
+                                                    <div className="flex items-center gap-3 p-2 border rounded-md bg-accent/30">
+                                                        <Avatar className="size-8 shrink-0">
+                                                            <AvatarImage src={selectedProfileForTeam.avatar_url ?? ""} />
+                                                            <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">{selectedProfileForTeam.full_name?.[0]}</AvatarFallback>
+                                                        </Avatar>
+                                                        <span className="text-sm flex-1">{selectedProfileForTeam.full_name}</span>
+                                                        <Button size="sm" variant="ghost" onClick={() => { setSelectedProfileForTeam(null); setProfileSearch("") }}>
+                                                            <X className="size-4" />
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="flex flex-col gap-2">
-                                            <label className="text-sm font-medium">Role *</label>
-                                            <Input value={teamForm.role} onChange={(e) => setTeamForm(f => ({ ...f, role: e.target.value }))} placeholder="e.g. Co-Founder & CEO" />
-                                        </div>
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-medium">Bio</label>
-                                        <Textarea value={teamForm.bio} onChange={(e) => setTeamForm(f => ({ ...f, bio: e.target.value }))} placeholder="Short bio..." rows={2} />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-medium">Photo URL</label>
-                                        <Input value={teamForm.image_url} onChange={(e) => setTeamForm(f => ({ ...f, image_url: e.target.value }))} placeholder="https://..." />
-                                    </div>
+                                    ) : (
+                                        <>
+                                            {/* Profile picker */}
+                                            {!selectedProfileForTeam ? (
+                                                <div className="flex flex-col gap-2">
+                                                    <label className="text-sm font-medium">Select Account *</label>
+                                                    <Input
+                                                        value={profileSearch}
+                                                        onChange={(e) => setProfileSearch(e.target.value)}
+                                                        placeholder="Search by name..."
+                                                    />
+                                                    <div className="flex flex-col gap-1 max-h-48 overflow-y-auto border rounded-md p-1">
+                                                        {initialUsers
+                                                            .filter(u => u.full_name && u.full_name.toLowerCase().includes(profileSearch.toLowerCase()))
+                                                            .slice(0, 20)
+                                                            .map(u => (
+                                                                <button
+                                                                    key={u.id}
+                                                                    type="button"
+                                                                    className="flex items-center gap-3 px-3 py-2 rounded hover:bg-accent text-left transition-colors"
+                                                                    onClick={() => setSelectedProfileForTeam(u)}
+                                                                >
+                                                                    <Avatar className="size-8 shrink-0">
+                                                                        <AvatarImage src={u.avatar_url ?? ""} />
+                                                                        <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">{u.full_name?.[0]}</AvatarFallback>
+                                                                    </Avatar>
+                                                                    <div className="flex flex-col min-w-0">
+                                                                        <span className="text-sm font-medium truncate">{u.full_name}</span>
+                                                                        {u.grad_year && <span className="text-xs text-muted-foreground">Class of {u.grad_year}</span>}
+                                                                    </div>
+                                                                </button>
+                                                            ))
+                                                        }
+                                                        {initialUsers.filter(u => u.full_name && u.full_name.toLowerCase().includes(profileSearch.toLowerCase())).length === 0 && (
+                                                            <p className="text-xs text-muted-foreground text-center py-3">No accounts found</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    {/* Selected profile preview */}
+                                                    <div className="flex items-center gap-3 p-3 border rounded-md bg-accent/30">
+                                                        <Avatar className="size-10 shrink-0">
+                                                            <AvatarImage src={selectedProfileForTeam.avatar_url ?? ""} />
+                                                            <AvatarFallback className="text-sm bg-primary/10 text-primary font-semibold">{selectedProfileForTeam.full_name?.[0]}</AvatarFallback>
+                                                        </Avatar>
+                                                        <div className="flex flex-col min-w-0 flex-1">
+                                                            <span className="text-sm font-semibold">{selectedProfileForTeam.full_name}</span>
+                                                            {selectedProfileForTeam.grad_year && <span className="text-xs text-muted-foreground">Class of {selectedProfileForTeam.grad_year}</span>}
+                                                        </div>
+                                                        <Button size="sm" variant="ghost" onClick={() => { setSelectedProfileForTeam(null); setProfileSearch("") }}>
+                                                            <X className="size-4" />
+                                                        </Button>
+                                                    </div>
+                                                    <div className="flex flex-col gap-2">
+                                                        <label className="text-sm font-medium">Role *</label>
+                                                        <Input value={teamForm.role} onChange={(e) => setTeamForm(f => ({ ...f, role: e.target.value }))} placeholder="e.g. Co-Founder & CEO" />
+                                                    </div>
+                                                </>
+                                            )}
+                                        </>
+                                    )}
                                     <div className="flex gap-2">
-                                        <Button onClick={handleSaveTeamMember} className="gap-2">
+                                        <Button onClick={handleSaveTeamMember} className="gap-2" disabled={!editingTeamId && !selectedProfileForTeam}>
                                             <Check className="size-4" />{editingTeamId ? "Save Changes" : "Add Member"}
                                         </Button>
-                                        <Button variant="outline" onClick={() => setShowTeamForm(false)}>
+                                        <Button variant="outline" onClick={() => { setShowTeamForm(false); setSelectedProfileForTeam(null); setProfileSearch("") }}>
                                             <X className="size-4 mr-2" />Cancel
                                         </Button>
                                     </div>
@@ -928,6 +1046,8 @@ export function AdminDashboard({
                                                 <Button size="icon" variant="ghost" onClick={() => {
                                                     setTeamForm({ name: member.name, role: member.role, bio: member.bio ?? "", image_url: member.image_url ?? "" })
                                                     setEditingTeamId(member.id)
+                                                    setSelectedProfileForTeam(null)
+                                                    setProfileSearch("")
                                                     setShowTeamForm(true)
                                                 }}>
                                                     <Pencil className="size-4" />

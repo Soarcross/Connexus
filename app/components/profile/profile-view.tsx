@@ -9,7 +9,7 @@ import { Button } from "@/app/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
 import { Input } from "@/app/components/ui/input"
 import { Textarea } from "@/app/components/ui/textarea"
-import { MessageCircle, Mail } from "lucide-react"  // ← add Mail
+import { MessageCircle, Mail, Sparkles } from "lucide-react"
 import { Camera, Pencil, X, Check, ArrowRight, Plus } from "lucide-react"
 
 type Profile = {
@@ -28,6 +28,7 @@ type Props = {
     profile: Profile
     isOwnProfile: boolean
     userId: string | null
+    currentUserInterests?: string[]
 }
 
 const INTEREST_OPTIONS = [
@@ -41,7 +42,7 @@ const LOOKING_FOR_OPTIONS = [
     "Internships", "Jobs", "Mentorship", "Networking", "Collaborators", "Leadership"
 ]
 
-export function ProfileView({ profile, isOwnProfile, userId }: Props) {
+export function ProfileView({ profile, isOwnProfile, userId, currentUserInterests = [] }: Props) {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -271,6 +272,8 @@ export function ProfileView({ profile, isOwnProfile, userId }: Props) {
         )
     }
 
+    const commonInterests = currentUserInterests.filter(i => profile.interests?.includes(i))
+
     return (
         <div className="flex flex-col gap-6">
 
@@ -284,6 +287,27 @@ export function ProfileView({ profile, isOwnProfile, userId }: Props) {
                 <div className="bg-primary/10 text-primary text-sm rounded-lg px-4 py-3 text-center">
                     Profile updated successfully!
                 </div>
+            )}
+
+            {/* Common Interests Banner */}
+            {!isOwnProfile && commonInterests.length > 0 && (
+                <Card className="border-primary/40 bg-primary/5">
+                    <CardContent className="py-4 flex flex-col gap-3">
+                        <div className="flex items-center gap-2 text-primary">
+                            <Sparkles className="size-4 shrink-0" />
+                            <span className="text-sm font-semibold">
+                                {commonInterests.length} interest{commonInterests.length > 1 ? "s" : ""} in common
+                            </span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {commonInterests.map(interest => (
+                                <Badge key={interest} className="bg-primary/15 text-primary border border-primary/30 hover:bg-primary/20">
+                                    {interest}
+                                </Badge>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
             )}
 
             {/* Header Card */}

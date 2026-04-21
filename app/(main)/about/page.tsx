@@ -18,6 +18,14 @@ export default async function AboutPage() {
         supabase.from("partners").select("*").order("order_index"),
     ])
 
+    // ensure image_url is a full public URL (some rows may store just the storage path)
+    const resolveUrl = (url: string | null) => {
+        if (!url) return null
+        if (url.startsWith("http")) return url
+        const { data } = supabase.storage.from("avatars").getPublicUrl(url)
+        return data.publicUrl
+    }
+
     return (
         <>
             <AuroraBackground />
@@ -47,7 +55,7 @@ export default async function AboutPage() {
                                 <Card key={member.id} className="hover:border-primary/50 transition-colors">
                                     <CardContent className="pt-6 flex flex-col items-center gap-4 text-center">
                                         <Avatar className="size-20">
-                                            <AvatarImage src={member.image_url ?? ""} />
+                                            <AvatarImage src={resolveUrl(member.image_url) ?? ""} />
                                             <AvatarFallback className="text-xl bg-primary/10 text-primary font-semibold">
                                                 {member.name?.[0]}
                                             </AvatarFallback>
