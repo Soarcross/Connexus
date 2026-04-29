@@ -106,7 +106,7 @@ type Props = {
     aboutContent: AboutContent | null
 }
 
-const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering"]
+const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering", "Programs"]
 const FIELDS = [
     "Computer Science", "Law", "Medicine", "Finance",
     "Engineering", "Research", "Business", "Design",
@@ -313,6 +313,23 @@ export function AdminDashboard({
             showSuccess(`Admin access ${!user.is_admin ? "granted" : "removed"} for ${user.full_name}.`)
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to update.")
+        }
+    }
+
+    async function handleRemoveUser(user: User) {
+        if (!confirm(`Permanently remove ${user.full_name ?? "this user"}? This cannot be undone.`)) return
+        try {
+            const res = await fetch("/api/admin/remove-user", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: user.id }),
+            })
+            const json = await res.json()
+            if (!res.ok) throw new Error(json.error ?? "Failed to remove user.")
+            setUsers(prev => prev.filter(u => u.id !== user.id))
+            showSuccess(`${user.full_name ?? "User"} has been removed.`)
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to remove user.")
         }
     }
 
@@ -745,6 +762,9 @@ export function AdminDashboard({
                                             {user.is_admin ? "Remove Admin" : "Make Admin"}
                                         </Button>
                                         <Button size="sm" variant="ghost" onClick={() => router.push(`/profile/${user.id}`)}>View</Button>
+                                        <Button size="sm" variant="destructive" onClick={() => handleRemoveUser(user)}>
+                                            <Trash2 className="size-4" />
+                                        </Button>
                                     </div>
                                 </CardContent>
                             </Card>
