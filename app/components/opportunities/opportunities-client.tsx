@@ -5,7 +5,7 @@ import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app/components/ui/card"
 import { Input } from "@/app/components/ui/input"
-import { Briefcase, GraduationCap, FlaskConical, Trophy, Heart, BookOpen, Search, X, ExternalLink } from "lucide-react"
+import { Briefcase, GraduationCap, FlaskConical, Trophy, Heart, BookOpen, Search, X, ExternalLink, ChevronDown, ChevronUp, Layers } from "lucide-react"
 
 type Opportunity = {
     id: string
@@ -32,9 +32,10 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
     Scholarships: <BookOpen className="size-4" />,
     Competitions: <Trophy className="size-4" />,
     Volunteering: <Heart className="size-4" />,
+    Programs: <Layers className="size-4" />,
 }
 
-const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering"]
+const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering", "Programs"]
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
     Internships:  { bg: "#3b82f6", text: "#ffffff" },
@@ -43,6 +44,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
     Scholarships: { bg: "#f59e0b", text: "#ffffff" },
     Competitions: { bg: "#ef4444", text: "#ffffff" },
     Volunteering: { bg: "#14b8a6", text: "#ffffff" },
+    Programs:     { bg: "#f97316", text: "#ffffff" },
 }
 
 const FIELDS = [
@@ -57,6 +59,15 @@ export function OpportunitiesClient({ opportunities }: Props) {
     const [selectedCategories, setSelectedCategories] = useState<string[]>([])
     const [selectedFields, setSelectedFields] = useState<string[]>([])
     const [showFeaturedOnly, setShowFeaturedOnly] = useState(false)
+    const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+
+    function toggleExpanded(id: string) {
+        setExpandedIds(prev => {
+            const next = new Set(prev)
+            next.has(id) ? next.delete(id) : next.add(id)
+            return next
+        })
+    }
 
     function toggleCategory(category: string) {
         setSelectedCategories(prev =>
@@ -239,9 +250,26 @@ export function OpportunitiesClient({ opportunities }: Props) {
                                                 )}
                                             </CardHeader>
                                             <CardContent className="flex flex-col gap-3">
-                                                <p className="text-xs text-muted-foreground line-clamp-3">
-                                                    {opp.description}
-                                                </p>
+                                                {opp.field && (
+                                                    <Badge variant="outline" className="text-xs w-fit">{opp.field}</Badge>
+                                                )}
+                                                <div>
+                                                    <p className={`text-xs text-muted-foreground ${expandedIds.has(opp.id) ? "" : "line-clamp-3"}`}>
+                                                        {opp.description}
+                                                    </p>
+                                                    {opp.description.length > 180 && (
+                                                        <button
+                                                            onClick={() => toggleExpanded(opp.id)}
+                                                            className="mt-1 text-xs text-primary flex items-center gap-0.5 hover:underline"
+                                                        >
+                                                            {expandedIds.has(opp.id) ? (
+                                                                <><ChevronUp className="size-3" />Show less</>
+                                                            ) : (
+                                                                <><ChevronDown className="size-3" />View full description</>
+                                                            )}
+                                                        </button>
+                                                    )}
+                                                </div>
                                                 <div className="flex items-center justify-between gap-2">
                                                     {opp.deadline ? (
                                                         <span className="text-xs text-muted-foreground">
