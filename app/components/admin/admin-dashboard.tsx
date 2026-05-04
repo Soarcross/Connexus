@@ -94,6 +94,26 @@ type AboutContent = {
     contact_phone: string | null
 }
 
+type CommunityPost = {
+    id: string
+    title: string
+    description: string
+    category: string
+    field: string | null
+    organization: string | null
+    url: string | null
+    deadline: string | null
+    qualification: string
+    status: string
+    rejection_reason: string | null
+    created_at: string
+    profiles: {
+        id: string
+        full_name: string | null
+        avatar_url: string | null
+    } | null
+}
+
 type Props = {
     opportunities: Opportunity[]
     users: User[]
@@ -104,6 +124,7 @@ type Props = {
     teamMembers: TeamMember[]
     partners: Partner[]
     aboutContent: AboutContent | null
+    communityPosts: CommunityPost[]
 }
 
 const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering", "Programs"]
@@ -146,6 +167,7 @@ export function AdminDashboard({
     teamMembers: initialTeamMembers,
     partners: initialPartners,
     aboutContent: initialAboutContent,
+    communityPosts: initialCommunityPosts,
 }: Props) {
     const router = useRouter()
     const [opportunities, setOpportunities] = useState<Opportunity[]>(initialOpportunities)
@@ -153,6 +175,7 @@ export function AdminDashboard({
     const [submissions, setSubmissions] = useState<Submission[]>(initialSubmissions)
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>(initialTeamMembers)
     const [partners, setPartners] = useState<Partner[]>(initialPartners)
+    const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(initialCommunityPosts)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<string | null>(null)
@@ -178,6 +201,9 @@ export function AdminDashboard({
     const [showPartnerForm, setShowPartnerForm] = useState(false)
     const [editingPartnerId, setEditingPartnerId] = useState<string | null>(null)
     const [partnerForm, setPartnerForm] = useState({ name: "", description: "", logo_url: "", website_url: "" })
+
+    // community posts
+    const [rejectionReason, setRejectionReason] = useState<Record<string, string>>({})
 
     const opportunitiesByCategory = CATEGORIES.map(cat => ({
         category: cat.slice(0, 4),
@@ -359,10 +385,8 @@ export function AdminDashboard({
     async function handleSaveAboutContent() {
         const supabase = getSupaBrowserClient()
         setError(null)
-
         try {
             if (initialAboutContent?.id) {
-                // Row exists — update it
                 const { error } = await supabase
                     .from("about_content")
                     .update({
@@ -372,10 +396,8 @@ export function AdminDashboard({
                         updated_at: new Date().toISOString(),
                     })
                     .eq("id", initialAboutContent.id)
-
                 if (error) throw error
             } else {
-                // No row yet — insert one
                 const { error } = await supabase
                     .from("about_content")
                     .insert({
@@ -383,10 +405,8 @@ export function AdminDashboard({
                         contact_email: contactEmailEdit,
                         contact_phone: contactPhoneEdit,
                     })
-
                 if (error) throw error
             }
-
             showSuccess("About content updated!")
             router.refresh()
         } catch (err) {
@@ -487,13 +507,48 @@ export function AdminDashboard({
         }
     }
 
+    async function handleApprovePost(id: string) {
+        const supabase = getSupaBrowserClient()
+        try {
+            const { error } = await supabase
+                .from("community_posts")
+                .update({ status: "Approved" } as any)
+                .eq("id", id)
+            if (error) throw error
+            setCommunityPosts(prev => prev.map(p => p.id === id ? { ...p, status: "Approved" } : p))
+            showSuccess("Post approved!")
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to approve.")
+        }
+    }
+
+    async function handleRejectPost(id: string) {
+        const reason = rejectionReason[id]?.trim()
+        if (!reason) {
+            setError("Please provide a rejection reason.")
+            return
+        }
+        const supabase = getSupaBrowserClient()
+        try {
+            const { error } = await supabase
+                .from("community_posts")
+                .update({ status: "Rejected", rejection_reason: reason } as any)
+                .eq("id", id)
+            if (error) throw error
+            setCommunityPosts(prev => prev.map(p => p.id === id ? { ...p, status: "Rejected", rejection_reason: reason } : p))
+            showSuccess("Post rejected.")
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to reject.")
+        }
+    }
+
     return (
         <div className="flex flex-col gap-4">
             {error && <div className="bg-destructive/10 text-destructive text-sm rounded-lg px-4 py-3">{error}</div>}
             {success && <div className="bg-primary/10 text-primary text-sm rounded-lg px-4 py-3">{success}</div>}
 
             <Tabs defaultValue="stats">
-                <TabsList className="grid grid-cols-6 w-full">
+                <TabsList className="grid grid-cols-7 w-full">
                     <TabsTrigger value="stats">Statistics</TabsTrigger>
                     <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
                     <TabsTrigger value="users">Users</TabsTrigger>
@@ -506,6 +561,14 @@ export function AdminDashboard({
                             </span>
                         )}
                     </TabsTrigger>
+                    <TabsTrigger value="posts">
+                        Posts
+                        {communityPosts.filter(p => p.status === "Pending").length > 0 && (
+                            <span className="ml-1.5 size-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold inline-flex items-center justify-center">
+                                {communityPosts.filter(p => p.status === "Pending").length}
+                            </span>
+                        )}
+                    </TabsTrigger>
                     <TabsTrigger value="about">About</TabsTrigger>
                 </TabsList>
 
@@ -514,42 +577,33 @@ export function AdminDashboard({
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <Card>
                             <CardContent className="pt-6 flex flex-col gap-2">
-                                <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                                    <Users className="size-5" />
-                                </div>
+                                <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><Users className="size-5" /></div>
                                 <p className="text-3xl font-bold">{stats.totalUsers}</p>
                                 <p className="text-sm text-muted-foreground">Total Users</p>
                             </CardContent>
                         </Card>
                         <Card>
                             <CardContent className="pt-6 flex flex-col gap-2">
-                                <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                                    <Briefcase className="size-5" />
-                                </div>
+                                <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><Briefcase className="size-5" /></div>
                                 <p className="text-3xl font-bold">{stats.totalOpportunities}</p>
                                 <p className="text-sm text-muted-foreground">Opportunities</p>
                             </CardContent>
                         </Card>
                         <Card>
                             <CardContent className="pt-6 flex flex-col gap-2">
-                                <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                                    <MessageCircle className="size-5" />
-                                </div>
+                                <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><MessageCircle className="size-5" /></div>
                                 <p className="text-3xl font-bold">{stats.totalConversations}</p>
                                 <p className="text-sm text-muted-foreground">Conversations</p>
                             </CardContent>
                         </Card>
                         <Card>
                             <CardContent className="pt-6 flex flex-col gap-2">
-                                <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                                    <BarChart3 className="size-5" />
-                                </div>
+                                <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><BarChart3 className="size-5" /></div>
                                 <p className="text-3xl font-bold">{stats.totalMessages}</p>
                                 <p className="text-sm text-muted-foreground">Messages Sent</p>
                             </CardContent>
                         </Card>
                     </div>
-
                     <div className="grid gap-4 sm:grid-cols-2">
                         <Card>
                             <CardHeader><CardTitle className="text-base">New Users (Last 30 Days)</CardTitle></CardHeader>
@@ -634,10 +688,7 @@ export function AdminDashboard({
                 <TabsContent value="opportunities" className="mt-6 flex flex-col gap-4">
                     <div className="flex items-center justify-between">
                         <p className="text-sm text-muted-foreground">{opportunities.length} total opportunities</p>
-                        <Button onClick={startAdd} className="gap-2">
-                            <Plus className="size-4" />
-                            Add Opportunity
-                        </Button>
+                        <Button onClick={startAdd} className="gap-2"><Plus className="size-4" />Add Opportunity</Button>
                     </div>
                     {showForm && (
                         <Card className="border-primary/30">
@@ -696,12 +747,9 @@ export function AdminDashboard({
                                 </div>
                                 <div className="flex gap-2 pt-2">
                                     <Button onClick={handleSaveOpportunity} disabled={loading} className="gap-2">
-                                        <Check className="size-4" />
-                                        {editingId ? "Save Changes" : "Add Opportunity"}
+                                        <Check className="size-4" />{editingId ? "Save Changes" : "Add Opportunity"}
                                     </Button>
-                                    <Button variant="outline" onClick={cancelForm}>
-                                        <X className="size-4 mr-2" />Cancel
-                                    </Button>
+                                    <Button variant="outline" onClick={cancelForm}><X className="size-4 mr-2" />Cancel</Button>
                                 </div>
                             </CardContent>
                         </Card>
@@ -856,50 +904,119 @@ export function AdminDashboard({
                     )}
                 </TabsContent>
 
+                {/* Posts Tab */}
+                <TabsContent value="posts" className="mt-6 flex flex-col gap-4">
+                    <p className="text-sm text-muted-foreground">
+                        {communityPosts.filter(p => p.status === "Pending").length} pending ·{" "}
+                        {communityPosts.filter(p => p.status === "Approved").length} approved ·{" "}
+                        {communityPosts.filter(p => p.status === "Rejected").length} rejected
+                    </p>
+                    {communityPosts.length === 0 ? (
+                        <Card>
+                            <CardContent className="py-12 text-center text-muted-foreground text-sm">
+                                No community posts yet.
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <div className="flex flex-col gap-4">
+                            {communityPosts.map(post => (
+                                <Card
+                                    key={post.id}
+                                    className={
+                                        post.status === "Pending"
+                                            ? "border-primary/30 bg-primary/5"
+                                            : post.status === "Rejected"
+                                            ? "opacity-60"
+                                            : ""
+                                    }
+                                >
+                                    <CardContent className="py-4 flex flex-col gap-3">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex flex-col gap-1 min-w-0">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <p className="text-sm font-semibold">{post.title}</p>
+                                                    <Badge
+                                                        variant={post.status === "Approved" ? "default" : post.status === "Rejected" ? "destructive" : "outline"}
+                                                        className="text-xs"
+                                                    >
+                                                        {post.status}
+                                                    </Badge>
+                                                    <Badge variant="outline" className="text-xs">{post.category}</Badge>
+                                                    {post.field && <Badge variant="secondary" className="text-xs">{post.field}</Badge>}
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar className="size-5">
+                                                        <AvatarImage src={post.profiles?.avatar_url ?? ""} />
+                                                        <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                                                            {post.profiles?.full_name?.[0] ?? "?"}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {post.profiles?.full_name ?? "Unknown"} · {new Date(post.created_at).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <p className="text-xs text-muted-foreground line-clamp-2">{post.description}</p>
+
+                                        <div className="bg-muted rounded-md px-3 py-2">
+                                            <p className="text-xs font-medium mb-1">Why they think it qualifies:</p>
+                                            <p className="text-xs text-muted-foreground">{post.qualification}</p>
+                                        </div>
+
+                                        {post.status === "Rejected" && post.rejection_reason && (
+                                            <p className="text-xs text-destructive">Rejection reason: {post.rejection_reason}</p>
+                                        )}
+
+                                        {post.status === "Pending" && (
+                                            <div className="flex flex-col gap-2">
+                                                <Input
+                                                    placeholder="Rejection reason (required to reject)"
+                                                    value={rejectionReason[post.id] ?? ""}
+                                                    onChange={(e) => setRejectionReason(prev => ({ ...prev, [post.id]: e.target.value }))}
+                                                    className="text-xs"
+                                                />
+                                                <div className="flex gap-2">
+                                                    <Button size="sm" className="gap-1 flex-1" onClick={() => handleApprovePost(post.id)}>
+                                                        <Check className="size-3.5" />Approve
+                                                    </Button>
+                                                    <Button size="sm" variant="destructive" className="gap-1 flex-1" onClick={() => handleRejectPost(post.id)}>
+                                                        <X className="size-3.5" />Reject
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
+                </TabsContent>
+
                 {/* About Tab */}
                 <TabsContent value="about" className="mt-6 flex flex-col gap-8">
-
-                    {/* Mission & Contact */}
                     <Card>
-                        <CardHeader>
-                            <CardTitle className="text-base">Mission & Contact Info</CardTitle>
-                        </CardHeader>
+                        <CardHeader><CardTitle className="text-base">Mission & Contact Info</CardTitle></CardHeader>
                         <CardContent className="flex flex-col gap-4">
                             <div className="flex flex-col gap-2">
                                 <label className="text-sm font-medium">Mission Statement</label>
-                                <Textarea
-                                    value={missionEdit}
-                                    onChange={(e) => setMissionEdit(e.target.value)}
-                                    placeholder="Describe the mission of Stuy Connections..."
-                                    rows={4}
-                                />
+                                <Textarea value={missionEdit} onChange={(e) => setMissionEdit(e.target.value)} placeholder="Describe the mission of Stuy Connections..." rows={4} />
                             </div>
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div className="flex flex-col gap-2">
                                     <label className="text-sm font-medium">Contact Email</label>
-                                    <Input
-                                        value={contactEmailEdit}
-                                        onChange={(e) => setContactEmailEdit(e.target.value)}
-                                        placeholder="contact@stuyconnections.com"
-                                        type="email"
-                                    />
+                                    <Input value={contactEmailEdit} onChange={(e) => setContactEmailEdit(e.target.value)} placeholder="contact@stuyconnections.com" type="email" />
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <label className="text-sm font-medium">Contact Phone</label>
-                                    <Input
-                                        value={contactPhoneEdit}
-                                        onChange={(e) => setContactPhoneEdit(e.target.value)}
-                                        placeholder="+1 (212) 555-0000"
-                                    />
+                                    <Input value={contactPhoneEdit} onChange={(e) => setContactPhoneEdit(e.target.value)} placeholder="+1 (212) 555-0000" />
                                 </div>
                             </div>
-                            <Button onClick={handleSaveAboutContent} className="w-fit">
-                                Save Changes
-                            </Button>
+                            <Button onClick={handleSaveAboutContent} className="w-fit">Save Changes</Button>
                         </CardContent>
                     </Card>
 
-                    {/* Team Members */}
                     <div className="flex flex-col gap-4">
                         <div className="flex items-center justify-between">
                             <p className="font-semibold">Team Members ({teamMembers.length})</p>
@@ -913,11 +1030,9 @@ export function AdminDashboard({
                                 <Plus className="size-4" />Add Member
                             </Button>
                         </div>
-
                         {showTeamForm && (
                             <Card className="border-primary/30">
                                 <CardContent className="pt-4 flex flex-col gap-4">
-                                    {/* When editing: show role + optional profile sync */}
                                     {editingTeamId ? (
                                         <div className="flex flex-col gap-4">
                                             <div className="flex flex-col gap-2">
@@ -928,31 +1043,18 @@ export function AdminDashboard({
                                                 <label className="text-sm font-medium text-muted-foreground">Sync profile picture from account</label>
                                                 {!selectedProfileForTeam ? (
                                                     <>
-                                                        <Input
-                                                            value={profileSearch}
-                                                            onChange={(e) => setProfileSearch(e.target.value)}
-                                                            placeholder="Search by name to link account..."
-                                                        />
+                                                        <Input value={profileSearch} onChange={(e) => setProfileSearch(e.target.value)} placeholder="Search by name to link account..." />
                                                         {profileSearch && (
                                                             <div className="flex flex-col gap-1 max-h-36 overflow-y-auto border rounded-md p-1">
-                                                                {initialUsers
-                                                                    .filter(u => u.full_name && u.full_name.toLowerCase().includes(profileSearch.toLowerCase()))
-                                                                    .slice(0, 10)
-                                                                    .map(u => (
-                                                                        <button
-                                                                            key={u.id}
-                                                                            type="button"
-                                                                            className="flex items-center gap-3 px-3 py-2 rounded hover:bg-accent text-left transition-colors"
-                                                                            onClick={() => setSelectedProfileForTeam(u)}
-                                                                        >
-                                                                            <Avatar className="size-7 shrink-0">
-                                                                                <AvatarImage src={u.avatar_url ?? ""} />
-                                                                                <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">{u.full_name?.[0]}</AvatarFallback>
-                                                                            </Avatar>
-                                                                            <span className="text-sm truncate">{u.full_name}</span>
-                                                                        </button>
-                                                                    ))
-                                                                }
+                                                                {initialUsers.filter(u => u.full_name && u.full_name.toLowerCase().includes(profileSearch.toLowerCase())).slice(0, 10).map(u => (
+                                                                    <button key={u.id} type="button" className="flex items-center gap-3 px-3 py-2 rounded hover:bg-accent text-left transition-colors" onClick={() => setSelectedProfileForTeam(u)}>
+                                                                        <Avatar className="size-7 shrink-0">
+                                                                            <AvatarImage src={u.avatar_url ?? ""} />
+                                                                            <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">{u.full_name?.[0]}</AvatarFallback>
+                                                                        </Avatar>
+                                                                        <span className="text-sm truncate">{u.full_name}</span>
+                                                                    </button>
+                                                                ))}
                                                             </div>
                                                         )}
                                                     </>
@@ -963,46 +1065,30 @@ export function AdminDashboard({
                                                             <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">{selectedProfileForTeam.full_name?.[0]}</AvatarFallback>
                                                         </Avatar>
                                                         <span className="text-sm flex-1">{selectedProfileForTeam.full_name}</span>
-                                                        <Button size="sm" variant="ghost" onClick={() => { setSelectedProfileForTeam(null); setProfileSearch("") }}>
-                                                            <X className="size-4" />
-                                                        </Button>
+                                                        <Button size="sm" variant="ghost" onClick={() => { setSelectedProfileForTeam(null); setProfileSearch("") }}><X className="size-4" /></Button>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
                                     ) : (
                                         <>
-                                            {/* Profile picker */}
                                             {!selectedProfileForTeam ? (
                                                 <div className="flex flex-col gap-2">
                                                     <label className="text-sm font-medium">Select Account *</label>
-                                                    <Input
-                                                        value={profileSearch}
-                                                        onChange={(e) => setProfileSearch(e.target.value)}
-                                                        placeholder="Search by name..."
-                                                    />
+                                                    <Input value={profileSearch} onChange={(e) => setProfileSearch(e.target.value)} placeholder="Search by name..." />
                                                     <div className="flex flex-col gap-1 max-h-48 overflow-y-auto border rounded-md p-1">
-                                                        {initialUsers
-                                                            .filter(u => u.full_name && u.full_name.toLowerCase().includes(profileSearch.toLowerCase()))
-                                                            .slice(0, 20)
-                                                            .map(u => (
-                                                                <button
-                                                                    key={u.id}
-                                                                    type="button"
-                                                                    className="flex items-center gap-3 px-3 py-2 rounded hover:bg-accent text-left transition-colors"
-                                                                    onClick={() => setSelectedProfileForTeam(u)}
-                                                                >
-                                                                    <Avatar className="size-8 shrink-0">
-                                                                        <AvatarImage src={u.avatar_url ?? ""} />
-                                                                        <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">{u.full_name?.[0]}</AvatarFallback>
-                                                                    </Avatar>
-                                                                    <div className="flex flex-col min-w-0">
-                                                                        <span className="text-sm font-medium truncate">{u.full_name}</span>
-                                                                        {u.grad_year && <span className="text-xs text-muted-foreground">Class of {u.grad_year}</span>}
-                                                                    </div>
-                                                                </button>
-                                                            ))
-                                                        }
+                                                        {initialUsers.filter(u => u.full_name && u.full_name.toLowerCase().includes(profileSearch.toLowerCase())).slice(0, 20).map(u => (
+                                                            <button key={u.id} type="button" className="flex items-center gap-3 px-3 py-2 rounded hover:bg-accent text-left transition-colors" onClick={() => setSelectedProfileForTeam(u)}>
+                                                                <Avatar className="size-8 shrink-0">
+                                                                    <AvatarImage src={u.avatar_url ?? ""} />
+                                                                    <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">{u.full_name?.[0]}</AvatarFallback>
+                                                                </Avatar>
+                                                                <div className="flex flex-col min-w-0">
+                                                                    <span className="text-sm font-medium truncate">{u.full_name}</span>
+                                                                    {u.grad_year && <span className="text-xs text-muted-foreground">Class of {u.grad_year}</span>}
+                                                                </div>
+                                                            </button>
+                                                        ))}
                                                         {initialUsers.filter(u => u.full_name && u.full_name.toLowerCase().includes(profileSearch.toLowerCase())).length === 0 && (
                                                             <p className="text-xs text-muted-foreground text-center py-3">No accounts found</p>
                                                         )}
@@ -1010,7 +1096,6 @@ export function AdminDashboard({
                                                 </div>
                                             ) : (
                                                 <>
-                                                    {/* Selected profile preview */}
                                                     <div className="flex items-center gap-3 p-3 border rounded-md bg-accent/30">
                                                         <Avatar className="size-10 shrink-0">
                                                             <AvatarImage src={selectedProfileForTeam.avatar_url ?? ""} />
@@ -1020,9 +1105,7 @@ export function AdminDashboard({
                                                             <span className="text-sm font-semibold">{selectedProfileForTeam.full_name}</span>
                                                             {selectedProfileForTeam.grad_year && <span className="text-xs text-muted-foreground">Class of {selectedProfileForTeam.grad_year}</span>}
                                                         </div>
-                                                        <Button size="sm" variant="ghost" onClick={() => { setSelectedProfileForTeam(null); setProfileSearch("") }}>
-                                                            <X className="size-4" />
-                                                        </Button>
+                                                        <Button size="sm" variant="ghost" onClick={() => { setSelectedProfileForTeam(null); setProfileSearch("") }}><X className="size-4" /></Button>
                                                     </div>
                                                     <div className="flex flex-col gap-2">
                                                         <label className="text-sm font-medium">Role *</label>
@@ -1043,7 +1126,6 @@ export function AdminDashboard({
                                 </CardContent>
                             </Card>
                         )}
-
                         <div className="flex flex-col gap-3">
                             {teamMembers.length === 0 ? (
                                 <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No team members added yet.</CardContent></Card>
@@ -1069,9 +1151,7 @@ export function AdminDashboard({
                                                     setSelectedProfileForTeam(null)
                                                     setProfileSearch("")
                                                     setShowTeamForm(true)
-                                                }}>
-                                                    <Pencil className="size-4" />
-                                                </Button>
+                                                }}><Pencil className="size-4" /></Button>
                                                 <Button size="icon" variant="ghost" onClick={() => handleDeleteTeamMember(member.id)} className="text-destructive hover:text-destructive">
                                                     <Trash2 className="size-4" />
                                                 </Button>
@@ -1083,7 +1163,6 @@ export function AdminDashboard({
                         </div>
                     </div>
 
-                    {/* Partners */}
                     <div className="flex flex-col gap-4">
                         <div className="flex items-center justify-between">
                             <p className="font-semibold">Partners ({partners.length})</p>
@@ -1095,7 +1174,6 @@ export function AdminDashboard({
                                 <Plus className="size-4" />Add Partner
                             </Button>
                         </div>
-
                         {showPartnerForm && (
                             <Card className="border-primary/30">
                                 <CardContent className="pt-4 flex flex-col gap-4">
@@ -1121,14 +1199,11 @@ export function AdminDashboard({
                                         <Button onClick={handleSavePartner} className="gap-2">
                                             <Check className="size-4" />{editingPartnerId ? "Save Changes" : "Add Partner"}
                                         </Button>
-                                        <Button variant="outline" onClick={() => setShowPartnerForm(false)}>
-                                            <X className="size-4 mr-2" />Cancel
-                                        </Button>
+                                        <Button variant="outline" onClick={() => setShowPartnerForm(false)}><X className="size-4 mr-2" />Cancel</Button>
                                     </div>
                                 </CardContent>
                             </Card>
                         )}
-
                         <div className="flex flex-col gap-3">
                             {partners.length === 0 ? (
                                 <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No partners added yet.</CardContent></Card>
@@ -1140,9 +1215,7 @@ export function AdminDashboard({
                                                 {partner.logo_url ? (
                                                     <img src={partner.logo_url} alt={partner.name} className="size-10 object-contain shrink-0" />
                                                 ) : (
-                                                    <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">
-                                                        {partner.name?.[0]}
-                                                    </div>
+                                                    <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">{partner.name?.[0]}</div>
                                                 )}
                                                 <div className="flex flex-col min-w-0">
                                                     <p className="text-sm font-semibold">{partner.name}</p>
@@ -1155,9 +1228,7 @@ export function AdminDashboard({
                                                     setPartnerForm({ name: partner.name, description: partner.description ?? "", logo_url: partner.logo_url ?? "", website_url: partner.website_url ?? "" })
                                                     setEditingPartnerId(partner.id)
                                                     setShowPartnerForm(true)
-                                                }}>
-                                                    <Pencil className="size-4" />
-                                                </Button>
+                                                }}><Pencil className="size-4" /></Button>
                                                 <Button size="icon" variant="ghost" onClick={() => handleDeletePartner(partner.id)} className="text-destructive hover:text-destructive">
                                                     <Trash2 className="size-4" />
                                                 </Button>

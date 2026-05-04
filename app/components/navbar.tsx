@@ -13,7 +13,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu"
-import { Home, Users, Briefcase, Info, Mail, Search, LogOut, User, Menu, X, MessageCircle } from "lucide-react"
+import { Home, Users, Briefcase, Info, Mail, Search, LogOut, User, Menu, X, MessageCircle, Newspaper } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -28,6 +28,7 @@ const NAV_LINKS = [
     { label: "Home", href: "/", icon: Home },
     { label: "People", href: "/people", icon: Users },
     { label: "Opportunities", href: "/opportunities", icon: Briefcase },
+    { label: "Community", href: "/community", icon: Newspaper },
     { label: "About", href: "/about", icon: Info },
     { label: "Contact", href: "/contact", icon: Mail },
 ]
@@ -39,7 +40,6 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin }: Props) {
     const [mobileOpen, setMobileOpen] = useState(false)
     const [unreadCount, setUnreadCount] = useState(0)
 
-    // fetch unread message count and subscribe to realtime updates
     useEffect(() => {
         const supabase = getSupaBrowserClient()
 
@@ -55,7 +55,6 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin }: Props) {
 
         fetchUnreadCount()
 
-        // subscribe to new messages in realtime
         const channel = supabase
             .channel("unread-messages")
             .on(
@@ -91,7 +90,7 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin }: Props) {
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-4">
+            <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-3">
 
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2 shrink-0">
@@ -102,43 +101,44 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin }: Props) {
                         height={32}
                         className="rounded-md"
                     />
-                    <span className="font-bold text-base hidden sm:block">
+                    <span className="font-bold text-base hidden lg:block">
                         Stuy Connections
                     </span>
                 </Link>
 
-                {/* Desktop Nav Links */}
-                <nav className="hidden md:flex items-center gap-1 ml-2">
+                {/* Desktop Nav Links — only show labels on large screens */}
+                <nav className="hidden md:flex items-center gap-0.5 shrink-0 ml-1">
                     {NAV_LINKS.map(({ label, href, icon: Icon }) => (
                         <Link
                             key={href}
                             href={href}
-                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap
                                 ${pathname === href
                                     ? "bg-primary/10 text-primary"
                                     : "text-muted-foreground hover:text-foreground hover:bg-muted"
                                 }`}
                         >
-                            <Icon className="size-4" />
-                            {label}
+                            <Icon className="size-4 shrink-0" />
+                            <span className="hidden lg:block">{label}</span>
                         </Link>
                     ))}
                 </nav>
 
-                {/* Search */}
-                <form onSubmit={handleSearch} className="flex-1 max-w-xs hidden sm:flex">
+                {/* Search — grows to fill remaining space */}
+                <form onSubmit={handleSearch} className="flex-1 min-w-0 hidden sm:flex">
                     <div className="relative w-full">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                         <Input
                             placeholder="Search people..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="pl-8 h-9 text-sm"
+                            className="pl-8 h-9 text-sm w-full"
                         />
                     </div>
                 </form>
 
-                <div className="ml-auto flex items-center gap-2">
+                {/* Right side actions */}
+                <div className="shrink-0 flex items-center gap-1.5">
                     <ThemeToggle />
 
                     {/* Messages Icon */}

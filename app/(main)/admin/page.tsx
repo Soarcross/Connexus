@@ -29,6 +29,7 @@ export default async function AdminPage() {
         { data: teamMembers },
         { data: partners },
         { data: aboutContent },
+        { data: communityPosts },
     ] = await Promise.all([
         supabase
             .from("opportunities")
@@ -72,6 +73,10 @@ export default async function AdminPage() {
             .from("about_content")
             .select("*")
             .single(),
+        supabase
+            .from("community_posts")
+            .select("*, profiles(id, full_name, avatar_url)")
+            .order("created_at", { ascending: false }),
     ])
 
     return (
@@ -81,11 +86,11 @@ export default async function AdminPage() {
                 <p className="text-muted-foreground">Manage opportunities, users and monitor activity.</p>
             </div>
             <AdminDashboard
-                opportunities={opportunities ?? []}
+                opportunities={(opportunities ?? []) as any}
                 users={(users ?? []).map(u => ({ ...u, is_admin: u.is_admin ?? false })) as any}
-                submissions={submissions ?? [] as any}
-                messagesPerDay={messagesPerDay ?? [] as any}
-                usersPerDay={usersPerDay ?? [] as any}
+                submissions={(submissions ?? []) as any}
+                messagesPerDay={(messagesPerDay ?? []) as any}
+                usersPerDay={(usersPerDay ?? []) as any}
                 stats={{
                     totalUsers: totalUsers ?? 0,
                     totalOpportunities: totalOpportunities ?? 0,
@@ -94,7 +99,8 @@ export default async function AdminPage() {
                 }}
                 teamMembers={(teamMembers ?? []) as any}
                 partners={(partners ?? []) as any}
-                aboutContent={(aboutContent ? [aboutContent] : []) as any}
+                aboutContent={aboutContent as any}
+                communityPosts={(communityPosts ?? []) as any}
             />
         </div>
     )
