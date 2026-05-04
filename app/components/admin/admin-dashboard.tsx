@@ -22,7 +22,7 @@ import {
 } from "recharts"
 import {
     Users, Briefcase, MessageCircle, BarChart3,
-    Plus, Pencil, Trash2, Check, X, Star, StarOff, CheckCircle2
+    Plus, Pencil, Trash2, Check, X, Star, StarOff, CheckCircle2, RefreshCw
 } from "lucide-react"
 
 type Opportunity = {
@@ -107,8 +107,27 @@ type CommunityPost = {
     status: string
     rejection_reason: string | null
     created_at: string
+    expires_at: string | null
+    image_url: string | null
     profiles: {
         id: string
+        full_name: string | null
+        avatar_url: string | null
+    } | null
+}
+
+type ExtensionRequest = {
+    id: string
+    post_id: string
+    user_id: string
+    reason: string
+    status: string
+    rejection_reason: string | null
+    created_at: string
+    community_posts: {
+        title: string
+    } | null
+    profiles: {
         full_name: string | null
         avatar_url: string | null
     } | null
@@ -125,6 +144,7 @@ type Props = {
     partners: Partner[]
     aboutContent: AboutContent | null
     communityPosts: CommunityPost[]
+    extensionRequests: ExtensionRequest[]
 }
 
 const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering", "Programs"]
@@ -168,6 +188,7 @@ export function AdminDashboard({
     partners: initialPartners,
     aboutContent: initialAboutContent,
     communityPosts: initialCommunityPosts,
+    extensionRequests: initialExtensionRequests,
 }: Props) {
     const router = useRouter()
     const [opportunities, setOpportunities] = useState<Opportunity[]>(initialOpportunities)
@@ -175,35 +196,34 @@ export function AdminDashboard({
     const [submissions, setSubmissions] = useState<Submission[]>(initialSubmissions)
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>(initialTeamMembers)
     const [partners, setPartners] = useState<Partner[]>(initialPartners)
-    const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(initialCommunityPosts)
+    const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(
+        (initialCommunityPosts ?? []) as CommunityPost[])
+    const [extensionRequests, setExtensionRequests] = useState<ExtensionRequest[]>(
+        (initialExtensionRequests ?? []) as ExtensionRequest[])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<string | null>(null)
 
-    // opportunity form
     const [showForm, setShowForm] = useState(false)
     const [editingId, setEditingId] = useState<string | null>(null)
     const [form, setForm] = useState(EMPTY_FORM)
 
-    // about content form
     const [missionEdit, setMissionEdit] = useState(initialAboutContent?.mission ?? "")
     const [contactEmailEdit, setContactEmailEdit] = useState(initialAboutContent?.contact_email ?? "")
     const [contactPhoneEdit, setContactPhoneEdit] = useState(initialAboutContent?.contact_phone ?? "")
 
-    // team member form
     const [showTeamForm, setShowTeamForm] = useState(false)
     const [editingTeamId, setEditingTeamId] = useState<string | null>(null)
     const [teamForm, setTeamForm] = useState({ name: "", role: "", bio: "", image_url: "" })
     const [profileSearch, setProfileSearch] = useState("")
     const [selectedProfileForTeam, setSelectedProfileForTeam] = useState<User | null>(null)
 
-    // partner form
     const [showPartnerForm, setShowPartnerForm] = useState(false)
     const [editingPartnerId, setEditingPartnerId] = useState<string | null>(null)
     const [partnerForm, setPartnerForm] = useState({ name: "", description: "", logo_url: "", website_url: "" })
 
-    // community posts
     const [rejectionReason, setRejectionReason] = useState<Record<string, string>>({})
+    const [extensionRejectionReason, setExtensionRejectionReason] = useState<Record<string, string>>({})
 
     const opportunitiesByCategory = CATEGORIES.map(cat => ({
         category: cat.slice(0, 4),
@@ -542,6 +562,54 @@ export function AdminDashboard({
         }
     }
 
+    async function handleApproveExtension(req: ExtensionRequest) {
+        const supabase = getSupaBrowserClient()
+        try {
+            // Extend the post by 1 month
+            const { error: postError } = await supabase
+                .from("community_posts")
+                .update({ expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() })
+                .eq("id", req.post_id)
+            if (postError) throw postError
+
+            // Mark request as approved
+            const { error: reqError } = await supabase
+                .from("extension_requests")
+                .update({ status: "Approved" } as any)
+                .eq("id", req.id)
+            if (reqError) throw reqError
+
+            setExtensionRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: "Approved" } : r))
+            showSuccess("Extension approved — post extended by 1 month!")
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to approve extension.")
+        }
+    }
+
+    async function handleRejectExtension(req: ExtensionRequest) {
+        const reason = extensionRejectionReason[req.id]?.trim()
+        if (!reason) {
+            setError("Please provide a rejection reason.")
+            return
+        }
+        const supabase = getSupaBrowserClient()
+        try {
+            const { error } = await supabase
+                .from("extension_requests")
+                .update({ status: "Rejected", rejection_reason: reason } as any)
+                .eq("id", req.id)
+            if (error) throw error
+            setExtensionRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: "Rejected", rejection_reason: reason } : r))
+            showSuccess("Extension rejected.")
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to reject extension.")
+        }
+    }
+
+    const pendingExtensions = extensionRequests.filter(r => r.status === "Pending")
+    const pendingPosts = communityPosts.filter(p => p.status === "Pending")
+    const totalPostsBadge = pendingPosts.length + pendingExtensions.length
+
     return (
         <div className="flex flex-col gap-4">
             {error && <div className="bg-destructive/10 text-destructive text-sm rounded-lg px-4 py-3">{error}</div>}
@@ -563,9 +631,9 @@ export function AdminDashboard({
                     </TabsTrigger>
                     <TabsTrigger value="posts">
                         Posts
-                        {communityPosts.filter(p => p.status === "Pending").length > 0 && (
+                        {totalPostsBadge > 0 && (
                             <span className="ml-1.5 size-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold inline-flex items-center justify-center">
-                                {communityPosts.filter(p => p.status === "Pending").length}
+                                {totalPostsBadge}
                             </span>
                         )}
                     </TabsTrigger>
@@ -905,21 +973,119 @@ export function AdminDashboard({
                 </TabsContent>
 
                 {/* Posts Tab */}
-                <TabsContent value="posts" className="mt-6 flex flex-col gap-4">
-                    <p className="text-sm text-muted-foreground">
-                        {communityPosts.filter(p => p.status === "Pending").length} pending ·{" "}
-                        {communityPosts.filter(p => p.status === "Approved").length} approved ·{" "}
-                        {communityPosts.filter(p => p.status === "Rejected").length} rejected
-                    </p>
-                    {communityPosts.length === 0 ? (
-                        <Card>
-                            <CardContent className="py-12 text-center text-muted-foreground text-sm">
-                                No community posts yet.
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        <div className="flex flex-col gap-4">
-                            {communityPosts.map(post => (
+                <TabsContent value="posts" className="mt-6 flex flex-col gap-6">
+
+                    {/* Extension Requests Section */}
+                    <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2">
+                            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Extension Requests</h2>
+                            {pendingExtensions.length > 0 && (
+                                <span className="size-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold inline-flex items-center justify-center">
+                                    {pendingExtensions.length}
+                                </span>
+                            )}
+                        </div>
+                        {extensionRequests.length === 0 ? (
+                            <Card>
+                                <CardContent className="py-8 text-center text-muted-foreground text-sm">
+                                    No extension requests yet.
+                                </CardContent>
+                            </Card>
+                        ) : (
+                            extensionRequests.map(req => (
+                                <Card
+                                    key={req.id}
+                                    className={
+                                        req.status === "Pending"
+                                            ? "border-primary/30 bg-primary/5"
+                                            : req.status === "Rejected"
+                                            ? "opacity-60"
+                                            : ""
+                                    }
+                                >
+                                    <CardContent className="py-4 flex flex-col gap-3">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex flex-col gap-1">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <p className="text-sm font-semibold">
+                                                        {req.community_posts?.title ?? "Unknown post"}
+                                                    </p>
+                                                    <Badge
+                                                        variant={req.status === "Approved" ? "default" : req.status === "Rejected" ? "destructive" : "outline"}
+                                                        className="text-xs"
+                                                    >
+                                                        {req.status}
+                                                    </Badge>
+                                                    <Badge variant="secondary" className="text-xs gap-1">
+                                                        <RefreshCw className="size-3" />
+                                                        Extension Request
+                                                    </Badge>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar className="size-5">
+                                                        <AvatarImage src={req.profiles?.avatar_url ?? ""} />
+                                                        <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                                                            {req.profiles?.full_name?.[0] ?? "?"}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {req.profiles?.full_name ?? "Unknown"} · {new Date(req.created_at).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-muted rounded-md px-3 py-2">
+                                            <p className="text-xs font-medium mb-1">Reason for extension:</p>
+                                            <p className="text-xs text-muted-foreground">{req.reason}</p>
+                                        </div>
+
+                                        {req.status === "Rejected" && req.rejection_reason && (
+                                            <p className="text-xs text-destructive">Rejection reason: {req.rejection_reason}</p>
+                                        )}
+
+                                        {req.status === "Pending" && (
+                                            <div className="flex flex-col gap-2">
+                                                <Input
+                                                    placeholder="Rejection reason (required to reject)"
+                                                    value={extensionRejectionReason[req.id] ?? ""}
+                                                    onChange={(e) => setExtensionRejectionReason(prev => ({ ...prev, [req.id]: e.target.value }))}
+                                                    className="text-xs"
+                                                />
+                                                <div className="flex gap-2">
+                                                    <Button size="sm" className="gap-1 flex-1" onClick={() => handleApproveExtension(req)}>
+                                                        <Check className="size-3.5" />Approve Extension
+                                                    </Button>
+                                                    <Button size="sm" variant="destructive" className="gap-1 flex-1" onClick={() => handleRejectExtension(req)}>
+                                                        <X className="size-3.5" />Reject
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
+                    </div>
+
+                    {/* Community Posts Section */}
+                    <div className="flex flex-col gap-3">
+                        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                            Community Posts
+                        </h2>
+                        <p className="text-xs text-muted-foreground">
+                            {pendingPosts.length} pending ·{" "}
+                            {communityPosts.filter(p => p.status === "Approved").length} approved ·{" "}
+                            {communityPosts.filter(p => p.status === "Rejected").length} rejected
+                        </p>
+                        {communityPosts.length === 0 ? (
+                            <Card>
+                                <CardContent className="py-12 text-center text-muted-foreground text-sm">
+                                    No community posts yet.
+                                </CardContent>
+                            </Card>
+                        ) : (
+                            communityPosts.map(post => (
                                 <Card
                                     key={post.id}
                                     className={
@@ -931,6 +1097,11 @@ export function AdminDashboard({
                                     }
                                 >
                                     <CardContent className="py-4 flex flex-col gap-3">
+                                        {post.image_url && (
+                                            <div className="w-full max-h-48 overflow-hidden rounded-md bg-muted">
+                                                <img src={post.image_url} alt={post.title} className="w-full object-cover" />
+                                            </div>
+                                        )}
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="flex flex-col gap-1 min-w-0">
                                                 <div className="flex items-center gap-2 flex-wrap">
@@ -989,9 +1160,9 @@ export function AdminDashboard({
                                         )}
                                     </CardContent>
                                 </Card>
-                            ))}
-                        </div>
-                    )}
+                            ))
+                        )}
+                    </div>
                 </TabsContent>
 
                 {/* About Tab */}

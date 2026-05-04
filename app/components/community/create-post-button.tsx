@@ -1,12 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Textarea } from "@/app/components/ui/textarea"
-import { Badge } from "@/app/components/ui/badge"
 import {
     Dialog,
     DialogContent,
@@ -14,20 +13,22 @@ import {
     DialogTitle,
     DialogDescription,
 } from "@/app/components/ui/dialog"
-import { Plus, Check } from "lucide-react"
+import { Plus, Check, ImagePlus, X } from "lucide-react"
 
-const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering"]
+const CATEGORIES = ["Clubs", "Events", "Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering"] as const
 const FIELDS = [
     "Computer Science", "Law", "Medicine", "Finance",
     "Engineering", "Research", "Business", "Design",
     "Journalism", "Education", "Biology", "Mathematics",
     "Cybersecurity", "Architecture", "Consulting", "Other"
-]
+] as const
+
+type Category = typeof CATEGORIES[number]
 
 const EMPTY_FORM = {
     title: "",
     description: "",
-    category: "Internships",
+    category: "Clubs" as Category,
     field: "",
     organization: "",
     location: "",
@@ -47,6 +48,31 @@ export function CreatePostButton({ userId }: Props) {
     const [error, setError] = useState<string | null>(null)
     const [submitted, setSubmitted] = useState(false)
     const [form, setForm] = useState(EMPTY_FORM)
+    const [imageFile, setImageFile] = useState<File | null>(null)
+    const [imagePreview, setImagePreview] = useState<string | null>(null)
+    const [dragging, setDragging] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    function handleImageSelect(file: File) {
+        if (!file.type.startsWith("image/")) {
+            setError("Please upload an image file.")
+            return
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            setError("Image must be under 5MB.")
+            return
+        }
+        setImageFile(file)
+        setImagePreview(URL.createObjectURL(file))
+        setError(null)
+    }
+
+    function handleDrop(e: React.DragEvent) {
+        e.preventDefault()
+        setDragging(false)
+        const file = e.dataTransfer.files[0]
+        if (file) handleImageSelect(file)
+    }
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
@@ -61,6 +87,22 @@ export function CreatePostButton({ userId }: Props) {
         const supabase = getSupaBrowserClient()
 
         try {
+            let image_url: string | null = null
+
+            if (imageFile) {
+                const ext = imageFile.name.split(".").pop()
+                const path = `${userId}/${Date.now()}.${ext}`
+                const { error: uploadError } = await supabase.storage
+                    .from("post-images")
+                    .upload(path, imageFile, { upsert: true })
+                if (uploadError) throw uploadError
+
+                const { data: publicUrlData } = supabase.storage
+                    .from("post-images")
+                    .getPublicUrl(path)
+                image_url = publicUrlData.publicUrl
+            }
+
             const { error } = await supabase
                 .from("community_posts")
                 .insert({
@@ -75,6 +117,7 @@ export function CreatePostButton({ userId }: Props) {
                     deadline: form.deadline || null,
                     qualification: form.qualification,
                     status: "Pending",
+                    image_url,
                 } as any)
 
             if (error) throw error
@@ -93,6 +136,8 @@ export function CreatePostButton({ userId }: Props) {
         setSubmitted(false)
         setForm(EMPTY_FORM)
         setError(null)
+        setImageFile(null)
+        setImagePreview(null)
     }
 
     return (
@@ -131,6 +176,55 @@ export function CreatePostButton({ userId }: Props) {
                                 <p className="text-sm text-destructive text-center">{error}</p>
                             )}
 
+                            {/* Image Upload */}
+                            <div className="flex flex-col gap-2">
+                                <label className="text-sm font-medium">Image</label>
+                                {imagePreview ? (
+                                    <div className="relative rounded-lg overflow-hidden border">
+                                        <img
+                                            src={imagePreview}
+                                            alt="Preview"
+                                            className="w-full max-h-48 object-cover"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => { setImageFile(null); setImagePreview(null) }}
+                                            className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                                        >
+                                            <X className="size-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div
+                                        onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+                                        onDragLeave={() => setDragging(false)}
+                                        onDrop={handleDrop}
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-6 cursor-pointer transition-colors ${
+                                            dragging
+                                                ? "border-primary bg-primary/5"
+                                                : "border-muted-foreground/30 hover:border-primary/50 hover:bg-muted/30"
+                                        }`}
+                                    >
+                                        <ImagePlus className="size-8 text-muted-foreground" />
+                                        <p className="text-sm text-muted-foreground text-center">
+                                            Drag & drop an image or <span className="text-primary font-medium">browse</span>
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">PNG, JPG, GIF up to 5MB</p>
+                                    </div>
+                                )}
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0]
+                                        if (file) handleImageSelect(file)
+                                    }}
+                                />
+                            </div>
+
                             <div className="flex flex-col gap-2">
                                 <label className="text-sm font-medium">Title *</label>
                                 <Input
@@ -157,7 +251,7 @@ export function CreatePostButton({ userId }: Props) {
                                     <label className="text-sm font-medium">Type *</label>
                                     <select
                                         value={form.category}
-                                        onChange={(e) => setForm(f => ({ ...f, category: e.target.value }))}
+                                        onChange={(e) => setForm(f => ({ ...f, category: e.target.value as Category }))}
                                         className="flex h-9 w-full rounded-md border border-input bg-background text-foreground px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                                     >
                                         {CATEGORIES.map(cat => (

@@ -16,68 +16,77 @@ export default async function AdminPage() {
 
     if (!(profile as any)?.is_admin) redirect("/")
 
-    const [
-        { data: opportunities },
-        { data: users },
-        { data: submissions },
-        { data: messagesPerDay },
-        { data: usersPerDay },
-        { count: totalUsers },
-        { count: totalOpportunities },
-        { count: totalMessages },
-        { count: totalConversations },
-        { data: teamMembers },
-        { data: partners },
-        { data: aboutContent },
-        { data: communityPosts },
-    ] = await Promise.all([
-        supabase
-            .from("opportunities")
-            .select("*")
-            .order("created_at", { ascending: false }),
-        supabase
-            .from("profiles")
-            .select("id, full_name, avatar_url, grad_year, is_admin, created_at")
-            .order("created_at", { ascending: false }),
-        supabase
-            .from("contact_submissions")
-            .select("*")
-            .order("created_at", { ascending: false }),
-        supabase
-            .from("messages_per_day")
-            .select("*"),
-        supabase
-            .from("users_per_day")
-            .select("*"),
-        supabase
-            .from("profiles")
-            .select("id", { count: "exact", head: true }),
-        supabase
-            .from("opportunities")
-            .select("id", { count: "exact", head: true }),
-        supabase
-            .from("messages")
-            .select("id", { count: "exact", head: true }),
-        supabase
-            .from("conversations")
-            .select("id", { count: "exact", head: true }),
-        supabase
-            .from("team_members")
-            .select("*")
-            .order("order_index"),
-        supabase
-            .from("partners")
-            .select("*")
-            .order("order_index"),
-        supabase
-            .from("about_content")
-            .select("*")
-            .single(),
-        supabase
-            .from("community_posts")
-            .select("*, profiles!community_posts_user_id_fkey(id, full_name, avatar_url)")
-            .order("created_at", { ascending: false }),
-    ])
+const { data: communityPosts } = await supabase
+    .from("community_posts")
+    .select("*, profiles(id, full_name, avatar_url)")
+    .order("created_at", { ascending: false })
+
+const { data: extensionRequests } = await supabase
+    .from("extension_requests")
+    .select(`
+        *,
+        community_posts (title),
+        profiles (full_name, avatar_url)
+    `)
+    .order("created_at", { ascending: false })
+
+const [
+    { data: opportunities },
+    { data: users },
+    { data: submissions },
+    { data: messagesPerDay },
+    { data: usersPerDay },
+    { count: totalUsers },
+    { count: totalOpportunities },
+    { count: totalMessages },
+    { count: totalConversations },
+    { data: teamMembers },
+    { data: partners },
+    { data: aboutContent },
+] = await Promise.all([
+    supabase
+        .from("opportunities")
+        .select("*")
+        .order("created_at", { ascending: false }),
+    supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url, grad_year, is_admin, created_at")
+        .order("created_at", { ascending: false }),
+    supabase
+        .from("contact_submissions")
+        .select("*")
+        .order("created_at", { ascending: false }),
+    supabase
+        .from("messages_per_day")
+        .select("*"),
+    supabase
+        .from("users_per_day")
+        .select("*"),
+    supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true }),
+    supabase
+        .from("opportunities")
+        .select("id", { count: "exact", head: true }),
+    supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true }),
+    supabase
+        .from("conversations")
+        .select("id", { count: "exact", head: true }),
+    supabase
+        .from("team_members")
+        .select("*")
+        .order("order_index"),
+    supabase
+        .from("partners")
+        .select("*")
+        .order("order_index"),
+    supabase
+        .from("about_content")
+        .select("*")
+        .maybeSingle(),
+])
 
     return (
         <div className="flex flex-col gap-6">
@@ -101,6 +110,7 @@ export default async function AdminPage() {
                 partners={(partners ?? []) as any}
                 aboutContent={aboutContent as any}
                 communityPosts={(communityPosts ?? []) as any}
+                extensionRequests={(extensionRequests ?? []) as any}
             />
         </div>
     )

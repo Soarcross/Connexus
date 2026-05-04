@@ -5,9 +5,12 @@ import { CreatePostButton } from "@/app/components/community/create-post-button"
 export default async function CommunityPage() {
     const supabase = await createSupabaseServerClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    console.log("USER:", user?.id)
+    console.log("USER ERROR:", userError)
 
-    const { data: posts } = await supabase
+    const { data: posts, error: postsError } = await supabase
         .from("community_posts")
         .select(`
             *,
@@ -21,8 +24,10 @@ export default async function CommunityPage() {
         .eq("status", "Approved")
         .order("created_at", { ascending: false })
 
-    // get current user's own posts too so they can see their pending ones
-    const { data: myPosts } = await supabase
+    console.log("POSTS:", JSON.stringify(posts))
+    console.log("POSTS ERROR:", JSON.stringify(postsError))
+
+    const { data: myPosts, error: myPostsError } = await supabase
         .from("community_posts")
         .select(`
             *,
@@ -34,8 +39,10 @@ export default async function CommunityPage() {
             )
         `)
         .eq("user_id", user?.id ?? "")
-        .neq("status", "Approved")
         .order("created_at", { ascending: false })
+
+    console.log("MY POSTS:", JSON.stringify(myPosts))
+    console.log("MY POSTS ERROR:", JSON.stringify(myPostsError))
 
     return (
         <div className="flex flex-col gap-6">
