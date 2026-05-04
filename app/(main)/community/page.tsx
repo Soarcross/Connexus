@@ -49,8 +49,8 @@ export default async function CommunityPage() {
                 <CreatePostButton userId={user?.id ?? ""} />
             </div>
             <PostsFeed
-                posts={posts ?? []}
-                myPosts={myPosts ?? []}
+                posts={(posts as any) ?? []}
+                myPosts={(myPosts as any) ?? []}
                 currentUserId={user?.id ?? ""}
             />
         </div>
