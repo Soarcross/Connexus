@@ -75,7 +75,7 @@ export default async function AdminPage() {
             .single(),
         supabase
             .from("community_posts")
-            .select("*, profiles(id, full_name, avatar_url)")
+            .select("*, profiles!community_posts_user_id_fkey(id, full_name, avatar_url)")
             .order("created_at", { ascending: false }),
     ])
 
