@@ -7,8 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
 import { Textarea } from "@/app/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app/components/ui/card"
-import { ExternalLink, Trash2, Clock, XCircle, RefreshCw, Check } from "lucide-react"
+import { Card, CardContent } from "@/app/components/ui/card"
+import { ExternalLink, Trash2, Clock, XCircle, RefreshCw, Check, MapPin, Calendar } from "lucide-react"
 
 type Post = {
     id: string
@@ -57,11 +57,48 @@ function getDaysLeft(expiresAt: string | null): number | null {
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
 }
 
+function getTimeAgo(createdAt: string): string {
+    const diff = Date.now() - new Date(createdAt).getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 60) return `${mins}m ago`
+    const hours = Math.floor(mins / 60)
+    if (hours < 24) return `${hours}h ago`
+    const days = Math.floor(hours / 24)
+    if (days < 7) return `${days}d ago`
+    const weeks = Math.floor(days / 7)
+    if (weeks < 5) return `${weeks}w ago`
+    return new Date(createdAt).toLocaleDateString()
+}
+
+function ExpandableDescription({ text }: { text: string }) {
+    const [expanded, setExpanded] = useState(false)
+    const isLong = text.length > 200
+
+    return (
+        <div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+                {isLong && !expanded ? text.slice(0, 200) + "…" : text}
+            </p>
+            {isLong && (
+                <button
+                    onClick={() => setExpanded(e => !e)}
+                    className="text-xs font-medium text-primary mt-1 hover:underline"
+                >
+                    {expanded ? "See less" : "See more"}
+                </button>
+            )}
+        </div>
+    )
+}
+
 export function PostsFeed({ posts, myPosts, currentUserId }: Props) {
     const router = useRouter()
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const [extendingId, setExtendingId] = useState<string | null>(null)
     const [expandedImage, setExpandedImage] = useState<string | null>(null)
+    const [extendingPostId, setExtendingPostId] = useState<string | null>(null)
+    const [extendReason, setExtendReason] = useState("")
+    const [extendLoading, setExtendLoading] = useState(false)
 
     async function handleDelete(id: string, imageUrl: string | null) {
         if (!confirm("Delete this post?")) return
@@ -84,10 +121,6 @@ export function PostsFeed({ posts, myPosts, currentUserId }: Props) {
             setDeletingId(null)
         }
     }
-
-    const [extendingPostId, setExtendingPostId] = useState<string | null>(null)
-    const [extendReason, setExtendReason] = useState("")
-    const [extendLoading, setExtendLoading] = useState(false)
 
     async function handleSubmitExtension() {
         if (!extendReason.trim()) return
@@ -129,7 +162,39 @@ export function PostsFeed({ posts, myPosts, currentUserId }: Props) {
                 </div>
             )}
 
-            {/* User's own posts — all statuses */}
+            {/* Extension Request Modal */}
+            {extendingPostId && (
+                <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+                    <div className="bg-background border rounded-xl shadow-xl w-full max-w-md flex flex-col gap-4 p-6">
+                        <div className="flex flex-col gap-1">
+                            <p className="font-semibold">Request Extension</p>
+                            <p className="text-sm text-muted-foreground">
+                                Explain to the admins why this post should be extended for another month.
+                            </p>
+                        </div>
+                        <Textarea
+                            placeholder="e.g. The deadline for this opportunity was extended and students still need more time to apply..."
+                            value={extendReason}
+                            onChange={(e) => setExtendReason(e.target.value)}
+                            rows={4}
+                        />
+                        <div className="flex gap-2">
+                            <Button
+                                className="flex-1"
+                                disabled={!extendReason.trim() || extendLoading}
+                                onClick={handleSubmitExtension}
+                            >
+                                {extendLoading ? "Submitting..." : "Submit Request"}
+                            </Button>
+                            <Button variant="outline" onClick={() => { setExtendingPostId(null); setExtendReason("") }}>
+                                Cancel
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* User's own posts */}
             {myPosts.length > 0 && (
                 <div className="flex flex-col gap-3">
                     <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
@@ -156,7 +221,6 @@ export function PostsFeed({ posts, myPosts, currentUserId }: Props) {
                                     <div className="flex flex-col gap-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <p className="text-sm font-semibold">{post.title}</p>
-
                                             {isPending && (
                                                 <Badge variant="outline" className="text-xs gap-1 text-yellow-600 border-yellow-400">
                                                     <Clock className="size-3" />
@@ -182,23 +246,16 @@ export function PostsFeed({ posts, myPosts, currentUserId }: Props) {
                                                 </Badge>
                                             )}
                                         </div>
-
                                         {isRejected && post.rejection_reason && (
-                                            <p className="text-xs text-destructive">
-                                                Reason: {post.rejection_reason}
-                                            </p>
+                                            <p className="text-xs text-destructive">Reason: {post.rejection_reason}</p>
                                         )}
                                         {isApproved && daysLeft !== null && (
                                             <p className="text-xs text-muted-foreground">
                                                 Expires {daysLeft > 0 ? `in ${daysLeft} day${daysLeft === 1 ? "" : "s"}` : "today"}
                                             </p>
                                         )}
-
-                                        <p className="text-xs text-muted-foreground line-clamp-1">
-                                            {post.description}
-                                        </p>
+                                        <p className="text-xs text-muted-foreground line-clamp-1">{post.description}</p>
                                     </div>
-
                                     <div className="flex items-center gap-1 shrink-0">
                                         {isApproved && (
                                             <Button
@@ -226,37 +283,6 @@ export function PostsFeed({ posts, myPosts, currentUserId }: Props) {
                             </Card>
                         )
                     })}
-                    {/* Extension Request Modal */}
-                    {extendingPostId && (
-                        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-                            <div className="bg-background border rounded-xl shadow-xl w-full max-w-md flex flex-col gap-4 p-6">
-                                <div className="flex flex-col gap-1">
-                                    <p className="font-semibold">Request Extension</p>
-                                    <p className="text-sm text-muted-foreground">
-                                        Explain to the admins why this post should be extended for another month.
-                                    </p>
-                                </div>
-                                <Textarea
-                                    placeholder="e.g. The deadline for this opportunity was extended and students still need more time to apply..."
-                                    value={extendReason}
-                                    onChange={(e) => setExtendReason(e.target.value)}
-                                    rows={4}
-                                />
-                                <div className="flex gap-2">
-                                    <Button
-                                        className="flex-1"
-                                        disabled={!extendReason.trim() || extendLoading}
-                                        onClick={handleSubmitExtension}
-                                    >
-                                        {extendLoading ? "Submitting..." : "Submit Request"}
-                                    </Button>
-                                    <Button variant="outline" onClick={() => { setExtendingPostId(null); setExtendReason("") }}>
-                                        Cancel
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </div>
             )}
 
@@ -273,26 +299,67 @@ export function PostsFeed({ posts, myPosts, currentUserId }: Props) {
                         const daysLeft = getDaysLeft(post.expires_at)
                         return (
                             <Card key={post.id} className="hover:border-primary/50 transition-colors overflow-hidden">
-                                {post.image_url && (
-                                    <div
-                                        className="w-full max-h-72 overflow-hidden cursor-pointer bg-muted"
-                                        onClick={() => setExpandedImage(post.image_url!)}
-                                    >
-                                        <img
-                                            src={post.image_url}
-                                            alt={post.title}
-                                            className="w-full object-cover hover:opacity-95 transition-opacity"
-                                        />
-                                    </div>
-                                )}
+                                <CardContent className="p-0">
 
-                                <CardHeader className="pb-2">
-                                    <div className="flex items-start justify-between gap-2">
-                                        <div className="flex flex-col gap-1 min-w-0">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <CardTitle className="text-sm font-semibold leading-snug">
-                                                    {post.title}
-                                                </CardTitle>
+                                    {/* Two-column layout: text left, image right */}
+                                    <div className="flex">
+
+                                        {/* Left: all text content */}
+                                        <div className="flex flex-col justify-between flex-1 min-w-0 p-6 gap-4">
+
+                                            {/* Poster row */}
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar
+                                                        className="size-8 cursor-pointer shrink-0"
+                                                        onClick={() => router.push(`/profile/${post.profiles?.id}`)}
+                                                    >
+                                                        <AvatarImage src={post.profiles?.avatar_url ?? ""} />
+                                                        <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
+                                                            {post.profiles?.full_name?.[0] ?? "?"}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div>
+                                                        <p
+                                                            className="text-xs font-semibold leading-tight cursor-pointer hover:underline"
+                                                            onClick={() => router.push(`/profile/${post.profiles?.id}`)}
+                                                        >
+                                                            {post.profiles?.full_name ?? "Anonymous"}
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground">{getTimeAgo(post.created_at)}</p>
+                                                    </div>
+                                                </div>
+                                                {post.user_id === currentUserId && (
+                                                    <Button
+                                                        size="icon"
+                                                        variant="ghost"
+                                                        onClick={() => handleDelete(post.id, post.image_url)}
+                                                        disabled={deletingId === post.id}
+                                                        className="text-destructive hover:text-destructive shrink-0 size-7"
+                                                    >
+                                                        <Trash2 className="size-3.5" />
+                                                    </Button>
+                                                )}
+                                            </div>
+
+                                            {/* Title */}
+                                            <div className="flex flex-col gap-1">
+                                                <p className="text-sm font-semibold leading-snug">{post.title}</p>
+                                                {(post.organization || post.location) && (
+                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                                                        {post.organization && <span>{post.organization}</span>}
+                                                        {post.location && (
+                                                            <span className="flex items-center gap-0.5">
+                                                                <MapPin className="size-3" />
+                                                                {post.location}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Badges */}
+                                            <div className="flex items-center gap-1.5 flex-wrap">
                                                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${CATEGORY_COLORS[post.category] ?? ""}`}>
                                                     {post.category}
                                                 </span>
@@ -305,76 +372,61 @@ export function PostsFeed({ posts, myPosts, currentUserId }: Props) {
                                                     </Badge>
                                                 )}
                                             </div>
-                                            {post.organization && (
-                                                <CardDescription className="text-xs">
-                                                    {post.organization}
-                                                    {post.location ? ` · ${post.location}` : ""}
-                                                </CardDescription>
-                                            )}
-                                        </div>
-                                        {post.user_id === currentUserId && (
-                                            <Button
-                                                size="icon"
-                                                variant="ghost"
-                                                onClick={() => handleDelete(post.id, post.image_url)}
-                                                disabled={deletingId === post.id}
-                                                className="text-destructive hover:text-destructive shrink-0"
-                                            >
-                                                <Trash2 className="size-4" />
-                                            </Button>
-                                        )}
-                                    </div>
-                                </CardHeader>
 
-                                <CardContent className="flex flex-col gap-3">
-                                    <p className="text-xs text-muted-foreground line-clamp-3">
-                                        {post.description}
-                                    </p>
-                                    <div className="flex items-center justify-between gap-2">
-                                        <div className="flex items-center gap-2">
-                                            <Avatar className="size-6">
-                                                <AvatarImage src={post.profiles?.avatar_url ?? ""} />
-                                                <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                                                    {post.profiles?.full_name?.[0] ?? "?"}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                            <div className="flex flex-col">
-                                                <p
-                                                    className="text-xs font-medium cursor-pointer hover:underline"
-                                                    onClick={() => router.push(`/profile/${post.profiles?.id}`)}
-                                                >
-                                                    {post.profiles?.full_name ?? "Anonymous"}
-                                                </p>
-                                                {post.deadline && (
-                                                    <p className="text-xs text-muted-foreground">
-                                                        Due {new Date(post.deadline).toLocaleDateString()}
-                                                    </p>
-                                                )}
+                                            {/* Description */}
+                                            <ExpandableDescription text={post.description} />
+
+                                            {/* Footer: deadline + actions */}
+                                            <div className="flex items-center justify-between gap-2 pt-2 border-t border-border">
+                                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                                    {post.deadline && (
+                                                        <>
+                                                            <Calendar className="size-3.5" />
+                                                            <span>Due {new Date(post.deadline).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    {post.user_id === currentUserId && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => setExtendingPostId(post.id)}
+                                                            disabled={extendingId === post.id}
+                                                            className="text-xs h-7 gap-1"
+                                                        >
+                                                            <RefreshCw className="size-3" />
+                                                            {extendingId === post.id ? "Extending..." : "Extend 1mo"}
+                                                        </Button>
+                                                    )}
+                                                    {post.url && (
+                                                        <a href={post.url} target="_blank" rel="noopener noreferrer">
+                                                            <Button size="sm" className="text-xs h-7 gap-1">
+                                                                Apply
+                                                                <ExternalLink className="size-3" />
+                                                            </Button>
+                                                        </a>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            {post.user_id === currentUserId && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => setExtendingPostId(post.id)}
-                                                    disabled={extendingId === post.id}
-                                                    className="text-xs h-7 gap-1"
-                                                >
-                                                    <RefreshCw className="size-3" />
-                                                    {extendingId === post.id ? "Extending..." : "Extend 1mo"}
-                                                </Button>
-                                            )}
-                                            {post.url && (
-                                                <a href={post.url} target="_blank" rel="noopener noreferrer">
-                                                    <Button size="sm" variant="outline" className="text-xs h-7 gap-1">
-                                                        Apply
-                                                        <ExternalLink className="size-3" />
-                                                    </Button>
-                                                </a>
-                                            )}
-                                        </div>
+
+                                        {/* Right: image panel — 35% width, full height, no cropping */}
+                                        {post.image_url && (
+                                            <div
+                                                className="shrink-0 border-l border-border cursor-pointer bg-muted overflow-hidden self-stretch flex items-center justify-center"
+                                                style={{ width: "35%" }}
+                                                onClick={() => setExpandedImage(post.image_url!)}
+                                            >
+                                                <img
+                                                    src={post.image_url}
+                                                    alt={post.title}
+                                                    className="w-full h-full object-contain hover:opacity-90 transition-opacity"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
+
                                 </CardContent>
                             </Card>
                         )
