@@ -5,7 +5,7 @@ import { useTheme } from "next-themes"
 
 const QUOTES = [
   "Discover opportunities.",
-  "Connect with Stuyvesant.",
+  "Connect with your chapter.",
   "Find your next mentor.",
   "Build meaningful connections.",
   "Explore internships and more.",

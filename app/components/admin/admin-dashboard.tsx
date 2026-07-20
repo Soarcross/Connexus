@@ -133,6 +133,31 @@ type ExtensionRequest = {
     } | null
 }
 
+type Chapter = {
+    id: string
+    slug: string
+    name: string
+    school_name: string
+    city: string | null
+    state: string | null
+    status: string
+    created_at: string
+}
+
+type ChapterApplication = {
+    id: string
+    applicant_name: string
+    applicant_email: string
+    applicant_role: string
+    school_name: string
+    city: string | null
+    state: string | null
+    motivation: string
+    status: string
+    rejection_reason: string | null
+    created_at: string
+}
+
 type Props = {
     opportunities: Opportunity[]
     users: User[]
@@ -145,6 +170,8 @@ type Props = {
     aboutContent: AboutContent | null
     communityPosts: CommunityPost[]
     extensionRequests: ExtensionRequest[]
+    chapters: Chapter[]
+    chapterApplications: ChapterApplication[]
 }
 
 const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering", "Programs"]
@@ -189,6 +216,8 @@ export function AdminDashboard({
     aboutContent: initialAboutContent,
     communityPosts: initialCommunityPosts,
     extensionRequests: initialExtensionRequests,
+    chapters: initialChapters,
+    chapterApplications: initialChapterApplications,
 }: Props) {
     const router = useRouter()
     const [opportunities, setOpportunities] = useState<Opportunity[]>(initialOpportunities)
@@ -224,6 +253,13 @@ export function AdminDashboard({
 
     const [rejectionReason, setRejectionReason] = useState<Record<string, string>>({})
     const [extensionRejectionReason, setExtensionRejectionReason] = useState<Record<string, string>>({})
+
+    const [chapters, setChapters] = useState<Chapter[]>(initialChapters)
+    const [chapterApplications, setChapterApplications] = useState<ChapterApplication[]>(initialChapterApplications)
+    const [applicationRejectionReason, setApplicationRejectionReason] = useState<Record<string, string>>({})
+    const [applicationSlug, setApplicationSlug] = useState<Record<string, string>>({})
+    const [approvingApplicationId, setApprovingApplicationId] = useState<string | null>(null)
+    const [rejectingApplicationId, setRejectingApplicationId] = useState<string | null>(null)
 
     const opportunitiesByCategory = CATEGORIES.map(cat => ({
         category: cat.slice(0, 4),
@@ -563,14 +599,19 @@ export function AdminDashboard({
     }
 
     async function handleApproveExtension(req: ExtensionRequest) {
+        if (!req.post_id) {
+            setError("This extension request isn't linked to a post and can't be approved.")
+            return
+        }
         const supabase = getSupaBrowserClient()
         try {
             // Extend the post by 1 month
-            const { error: postError } = await supabase
+            const { error: postError, count } = await supabase
                 .from("community_posts")
-                .update({ expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() })
+                .update({ expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() }, { count: "exact" })
                 .eq("id", req.post_id)
             if (postError) throw postError
+            if (!count) throw new Error("No matching post was found to extend.")
 
             // Mark request as approved
             const { error: reqError } = await supabase
@@ -606,6 +647,92 @@ export function AdminDashboard({
         }
     }
 
+    function slugify(value: string) {
+        // truncate before trimming hyphens, so a cut that lands right after a
+        // hyphen doesn't leave one dangling at the end
+        const slug = value
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .slice(0, 30)
+            .replace(/^-+|-+$/g, "")
+        // the DB's slug_format constraint requires at least 2 characters
+        // total -- a single surviving alnum char (e.g. "A" -> "a") would
+        // otherwise pass this function but be rejected at approve time
+        return slug.length >= 2 ? slug : "chapter"
+    }
+
+    async function handleApproveApplication(application: ChapterApplication) {
+        // always re-normalize before submit -- the admin may have hand-edited
+        // the auto-suggested slug into something with spaces/uppercase/etc.
+        const slug = slugify(applicationSlug[application.id] ?? application.school_name)
+        if (!slug) {
+            setError("Please provide a chapter slug.")
+            return
+        }
+        setApprovingApplicationId(application.id)
+        setError(null)
+        try {
+            const res = await fetch("/api/admin/approve-chapter", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ applicationId: application.id, slug }),
+            })
+            const json = await res.json()
+            if (!res.ok || !json.chapter) throw new Error(json.error ?? "Failed to approve application.")
+
+            setChapterApplications(prev => prev.map(a => a.id === application.id ? { ...a, status: "Approved" } : a))
+            setChapters(prev => [json.chapter, ...prev])
+
+            if (json.error) {
+                // chapter was created, but the invite email failed — surface as a warning, not a hard error
+                setError(json.error)
+            } else {
+                showSuccess(`${json.chapter.name} chapter created — invite sent to ${application.applicant_email}.`)
+            }
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to approve application.")
+        } finally {
+            setApprovingApplicationId(null)
+        }
+    }
+
+    async function handleRejectApplication(application: ChapterApplication) {
+        const reason = applicationRejectionReason[application.id]?.trim()
+        if (!reason) {
+            setError("Please provide a rejection reason.")
+            return
+        }
+        setRejectingApplicationId(application.id)
+        const supabase = getSupaBrowserClient()
+        try {
+            const { error } = await supabase
+                .from("chapter_applications")
+                .update({ status: "Rejected", rejection_reason: reason })
+                .eq("id", application.id)
+            if (error) throw error
+            setChapterApplications(prev => prev.map(a => a.id === application.id ? { ...a, status: "Rejected", rejection_reason: reason } : a))
+            showSuccess("Application rejected.")
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to reject application.")
+        } finally {
+            setRejectingApplicationId(null)
+        }
+    }
+
+    async function handleToggleChapterStatus(chapter: Chapter) {
+        const nextStatus = chapter.status === "Active" ? "Inactive" : "Active"
+        const supabase = getSupaBrowserClient()
+        try {
+            const { error } = await supabase.from("chapters").update({ status: nextStatus }).eq("id", chapter.id)
+            if (error) throw error
+            setChapters(prev => prev.map(c => c.id === chapter.id ? { ...c, status: nextStatus } : c))
+            showSuccess(`${chapter.name} is now ${nextStatus.toLowerCase()}.`)
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to update chapter.")
+        }
+    }
+
+    const pendingApplications = chapterApplications.filter(a => a.status === "Pending")
     const pendingExtensions = extensionRequests.filter(r => r.status === "Pending")
     const pendingPosts = communityPosts.filter(p => p.status === "Pending")
     const totalPostsBadge = pendingPosts.length + pendingExtensions.length
@@ -616,7 +743,7 @@ export function AdminDashboard({
             {success && <div className="bg-primary/10 text-primary text-sm rounded-lg px-4 py-3">{success}</div>}
 
             <Tabs defaultValue="stats">
-                <TabsList className="grid grid-cols-7 w-full">
+                <TabsList className="grid grid-cols-8 w-full">
                     <TabsTrigger value="stats">Statistics</TabsTrigger>
                     <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
                     <TabsTrigger value="users">Users</TabsTrigger>
@@ -634,6 +761,14 @@ export function AdminDashboard({
                         {totalPostsBadge > 0 && (
                             <span className="ml-1.5 size-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold inline-flex items-center justify-center">
                                 {totalPostsBadge}
+                            </span>
+                        )}
+                    </TabsTrigger>
+                    <TabsTrigger value="chapters">
+                        Chapters
+                        {pendingApplications.length > 0 && (
+                            <span className="ml-1.5 size-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold inline-flex items-center justify-center">
+                                {pendingApplications.length}
                             </span>
                         )}
                     </TabsTrigger>
@@ -1172,12 +1307,12 @@ export function AdminDashboard({
                         <CardContent className="flex flex-col gap-4">
                             <div className="flex flex-col gap-2">
                                 <label className="text-sm font-medium">Mission Statement</label>
-                                <Textarea value={missionEdit} onChange={(e) => setMissionEdit(e.target.value)} placeholder="Describe the mission of Stuy Connections..." rows={4} />
+                                <Textarea value={missionEdit} onChange={(e) => setMissionEdit(e.target.value)} placeholder="Describe the mission of High School Connections..." rows={4} />
                             </div>
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div className="flex flex-col gap-2">
                                     <label className="text-sm font-medium">Contact Email</label>
-                                    <Input value={contactEmailEdit} onChange={(e) => setContactEmailEdit(e.target.value)} placeholder="contact@stuyconnections.com" type="email" />
+                                    <Input value={contactEmailEdit} onChange={(e) => setContactEmailEdit(e.target.value)} placeholder="contact@highschoolconnections.org" type="email" />
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <label className="text-sm font-medium">Contact Phone</label>
@@ -1409,6 +1544,100 @@ export function AdminDashboard({
                                 ))
                             )}
                         </div>
+                    </div>
+                </TabsContent>
+
+                {/* Chapters Tab */}
+                <TabsContent value="chapters" className="mt-6 flex flex-col gap-8">
+                    <div className="flex flex-col gap-4">
+                        <p className="font-semibold">Pending Applications ({pendingApplications.length})</p>
+                        {pendingApplications.length === 0 ? (
+                            <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No pending chapter applications.</CardContent></Card>
+                        ) : (
+                            pendingApplications.map(application => (
+                                <Card key={application.id}>
+                                    <CardContent className="pt-6 flex flex-col gap-3">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="flex flex-col">
+                                                <p className="font-semibold">{application.school_name}</p>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {[application.city, application.state].filter(Boolean).join(", ")}
+                                                </p>
+                                            </div>
+                                            <Badge variant="secondary">{application.applicant_role}</Badge>
+                                        </div>
+                                        <p className="text-sm">
+                                            <span className="text-muted-foreground">From </span>
+                                            {application.applicant_name} &middot; {application.applicant_email}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground leading-relaxed">{application.motivation}</p>
+
+                                        <div className="flex flex-col gap-2 pt-2">
+                                            <label className="text-sm font-medium">Chapter slug (subdomain)</label>
+                                            <Input
+                                                value={applicationSlug[application.id] ?? slugify(application.school_name)}
+                                                onChange={(e) => setApplicationSlug(prev => ({ ...prev, [application.id]: e.target.value }))}
+                                                className="max-w-[240px]"
+                                            />
+                                        </div>
+
+                                        <div className="flex gap-2 pt-2">
+                                            <Button
+                                                size="sm"
+                                                className="gap-1 flex-1"
+                                                disabled={approvingApplicationId === application.id || rejectingApplicationId === application.id}
+                                                onClick={() => handleApproveApplication(application)}
+                                            >
+                                                <Check className="size-4" />
+                                                {approvingApplicationId === application.id ? "Approving..." : "Approve & Create Chapter"}
+                                            </Button>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                placeholder="Rejection reason..."
+                                                value={applicationRejectionReason[application.id] ?? ""}
+                                                onChange={(e) => setApplicationRejectionReason(prev => ({ ...prev, [application.id]: e.target.value }))}
+                                                className="flex-1"
+                                            />
+                                            <Button
+                                                size="sm"
+                                                variant="destructive"
+                                                className="gap-1"
+                                                disabled={approvingApplicationId === application.id || rejectingApplicationId === application.id}
+                                                onClick={() => handleRejectApplication(application)}
+                                            >
+                                                <X className="size-4" />
+                                                Reject
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                        <p className="font-semibold">Chapters ({chapters.length})</p>
+                        {chapters.length === 0 ? (
+                            <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No chapters yet.</CardContent></Card>
+                        ) : (
+                            chapters.map(chapter => (
+                                <Card key={chapter.id}>
+                                    <CardContent className="py-4 flex items-center justify-between gap-4">
+                                        <div className="flex flex-col min-w-0">
+                                            <p className="text-sm font-semibold">{chapter.name} <span className="text-muted-foreground font-normal">({chapter.slug})</span></p>
+                                            <p className="text-xs text-muted-foreground truncate">{chapter.school_name}</p>
+                                        </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <Badge variant={chapter.status === "Active" ? "default" : "secondary"}>{chapter.status}</Badge>
+                                            <Button size="sm" variant="outline" onClick={() => handleToggleChapterStatus(chapter)}>
+                                                {chapter.status === "Active" ? "Deactivate" : "Activate"}
+                                            </Button>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            ))
+                        )}
                     </div>
                 </TabsContent>
             </Tabs>

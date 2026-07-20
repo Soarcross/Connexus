@@ -61,9 +61,11 @@ export function PeopleCarousel({ people, currentUserId }: Props) {
                             </Avatar>
                             <div className="flex flex-col gap-0.5 min-w-0 w-full">
                                 <p className="font-semibold text-sm truncate">{person.full_name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                    {person.grad_year ? `Class of ${person.grad_year}` : "Stuyvesant"}
-                                </p>
+                                {person.grad_year && (
+                                    <p className="text-xs text-muted-foreground">
+                                        Class of {person.grad_year}
+                                    </p>
+                                )}
                             </div>
                             {person.club_roles && person.club_roles.length > 0 && (
                                 <div className="flex flex-wrap gap-1 justify-center">

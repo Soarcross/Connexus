@@ -60,7 +60,7 @@ export function LoginForm({
             }
 
             // complete profile → send to home
-            router.push("/")
+            router.push("/home")
             router.refresh()
             return
         }

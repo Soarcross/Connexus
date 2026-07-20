@@ -22,7 +22,7 @@ export default async function ProfilePage({ params }: Props) {
     // get the profile being viewed
     const { data: profile, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select("*, chapters(name, school_name)")
         .eq("id", id)
         .single()
 
@@ -47,6 +47,16 @@ export default async function ProfilePage({ params }: Props) {
         currentUserInterests = myProfile?.interests ?? []
     }
 
+    let availableChapters: { id: string; name: string; school_name: string }[] = []
+    if (isOwnProfile && !profile.chapter_id) {
+        const { data: chapters } = await supabase
+            .from("chapters")
+            .select("id, name, school_name")
+            .eq("status", "Active")
+            .order("name")
+        availableChapters = chapters ?? []
+    }
+
     return (
         <div className="min-h-svh bg-background">
             <div className="max-w-2xl mx-auto px-6 py-12">
@@ -55,6 +65,7 @@ export default async function ProfilePage({ params }: Props) {
                     isOwnProfile={isOwnProfile}
                     userId={user?.id ?? null}
                     currentUserInterests={currentUserInterests}
+                    availableChapters={availableChapters}
                 />
             </div>
         </div>

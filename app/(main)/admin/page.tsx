@@ -14,7 +14,7 @@ export default async function AdminPage() {
         .eq("id", user.id)
         .single()
 
-    if (!(profile as any)?.is_admin) redirect("/")
+    if (!(profile as any)?.is_admin) redirect("/home")
 
 const { data: communityPosts } = await supabase
     .from("community_posts")
@@ -43,6 +43,8 @@ const [
     { data: teamMembers },
     { data: partners },
     { data: aboutContent },
+    { data: chapters },
+    { data: chapterApplications },
 ] = await Promise.all([
     supabase
         .from("opportunities")
@@ -86,6 +88,14 @@ const [
         .from("about_content")
         .select("*")
         .maybeSingle(),
+    supabase
+        .from("chapters")
+        .select("*")
+        .order("created_at", { ascending: false }),
+    supabase
+        .from("chapter_applications")
+        .select("*")
+        .order("created_at", { ascending: false }),
 ])
 
     return (
@@ -111,6 +121,8 @@ const [
                 aboutContent={aboutContent as any}
                 communityPosts={(communityPosts ?? []) as any}
                 extensionRequests={(extensionRequests ?? []) as any}
+                chapters={chapters ?? []}
+                chapterApplications={chapterApplications ?? []}
             />
         </div>
     )

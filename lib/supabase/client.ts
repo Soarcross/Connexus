@@ -20,6 +20,12 @@ export function getSupaBrowserClient(): SupabaseClient<Database> {
         );
     }
 
-    client = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
+    // see lib/supabase/server.ts for why this is set, and the constraint on
+    // how broad it may safely be
+    const cookieDomain = process.env.NEXT_PUBLIC_COOKIE_DOMAIN;
+
+    client = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
+        cookieOptions: cookieDomain ? { domain: cookieDomain } : undefined,
+    });
     return client;
 }

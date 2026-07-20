@@ -36,16 +36,22 @@ export default async function HomePage() {
   // fetch current user's profile for matching
   const { data: currentProfile } = await supabase
     .from("profiles")
-    .select("interests, looking_for, club_roles")
+    .select("interests, looking_for, club_roles, chapter_id")
     .eq("id", user?.id ?? "")
     .single()
 
-  // fetch all other profiles for recommendations
-  const { data: allProfiles } = await supabase
-    .from("profiles")
-    .select("id, full_name, avatar_url, grad_year, interests, looking_for, club_roles, bio")
-    .neq("id", user?.id ?? "")
-    .not("full_name", "is", null)
+  const myChapterId = currentProfile?.chapter_id ?? null
+
+  // fetch other profiles in the same chapter for recommendations
+  // (a user without a chapter yet has no chapter-mates to recommend)
+  const { data: allProfiles } = myChapterId
+    ? await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url, grad_year, interests, looking_for, club_roles, bio")
+        .neq("id", user?.id ?? "")
+        .not("full_name", "is", null)
+        .eq("chapter_id", myChapterId)
+    : { data: [] }
 
   // score each profile primarily by extracurricular (club_roles) overlap, then interests
   const scored = (allProfiles ?? []).map(profile => {
@@ -74,13 +80,15 @@ export default async function HomePage() {
   const opportunitiesByCategory: Record<string, any[]> = {}
   await Promise.all(
     CATEGORIES.map(async (category) => {
-      const { data } = await supabase
+      const baseQuery = supabase
         .from("opportunities")
         .select("*")
         .eq("category", category)
         .eq("is_featured", true)
-        .order("created_at", { ascending: false })
-        .limit(2)
+      const { data } = await (myChapterId
+        ? baseQuery.or(`chapter_id.eq.${myChapterId},chapter_id.is.null`)
+        : baseQuery.is("chapter_id", null)
+      ).order("created_at", { ascending: false }).limit(2)
       opportunitiesByCategory[category] = data ?? []
     })
   )
@@ -96,7 +104,7 @@ export default async function HomePage() {
       {/* Hero — escape layout padding so it truly fills the viewport */}
       <section className="relative z-10 flex flex-col items-center justify-start text-center gap-4 -mx-4 -mt-8 px-4" style={{ height: "100vh", paddingTop: "35vh" }}>
         <div className="flex flex-col gap-4 items-center px-8 py-6 rounded-2xl backdrop-blur-sm">
-          <h1 className="text-5xl font-bold tracking-tight">Welcome to Stuy Connections</h1>
+          <h1 className="text-5xl font-bold tracking-tight">Welcome to High School Connections</h1>
           <HeroTypewriter />
         </div>
       </section>

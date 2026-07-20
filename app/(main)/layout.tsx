@@ -17,7 +17,7 @@ export default async function MainLayout({
 
     const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name, avatar_url, is_admin")
+        .select("full_name, avatar_url, is_admin, chapter_role, chapters(name)")
         .eq("id", user.id)
         .single()
 
@@ -25,9 +25,11 @@ export default async function MainLayout({
         <div className="min-h-svh bg-background">
             <Navbar
                 userId={user.id}
-                avatarUrl={(profile as any)?.avatar_url ?? null}
-                fullName={(profile as any)?.full_name ?? null}
-                isAdmin={(profile as any)?.is_admin ?? false}
+                avatarUrl={profile?.avatar_url ?? null}
+                fullName={profile?.full_name ?? null}
+                isAdmin={profile?.is_admin ?? false}
+                chapterName={profile?.chapters?.name ?? null}
+                isChapterAdmin={profile?.chapter_role === "chapter_admin"}
             />
             <main className="max-w-6xl mx-auto px-4 py-8">
                 {children}

@@ -1,5 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
-import { createClient } from "@supabase/supabase-js"
+import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(req: NextRequest) {
@@ -15,10 +15,7 @@ export async function POST(req: NextRequest) {
     if (!userId) return NextResponse.json({ error: "userId required" }, { status: 400 })
 
     // use service role to delete from auth (cascades to profiles)
-    const supabaseAdmin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const supabaseAdmin = createSupabaseAdminClient()
 
     const { error } = await supabaseAdmin.auth.admin.deleteUser(userId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

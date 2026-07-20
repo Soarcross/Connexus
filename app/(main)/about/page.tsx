@@ -34,10 +34,10 @@ export default async function AboutPage() {
                 <section className="flex flex-col gap-4 text-center items-center">
                     <Badge variant="secondary" className="w-fit">Our Mission</Badge>
                     <h1 className="text-4xl font-bold tracking-tight">
-                        Connecting Stuyvesant's Community
+                        Connecting High School Communities
                     </h1>
                     <p className="text-muted-foreground text-lg max-w-2xl leading-relaxed">
-                        {(aboutContent as any)?.mission || "Stuy Connections is a platform built to bridge the gap between Stuyvesant students and alumni, creating meaningful connections that help everyone grow personally and professionally."}
+                        {(aboutContent as any)?.mission || "High School Connections is a platform built to bridge the gap between students and alumni at high schools across the country, creating meaningful connections that help everyone grow personally and professionally."}
                     </p>
                 </section>
 
@@ -47,7 +47,7 @@ export default async function AboutPage() {
                         <div className="flex flex-col gap-1 text-center">
                             <h2 className="text-2xl font-bold">Meet the Team</h2>
                             <p className="text-muted-foreground text-sm">
-                                The people behind Stuy Connections
+                                The people behind High School Connections
                             </p>
                         </div>
                         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

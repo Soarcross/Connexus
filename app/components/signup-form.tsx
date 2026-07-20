@@ -14,10 +14,17 @@ import { getSupaBrowserClient } from "@/lib/supabase/client"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
+type Props = React.ComponentProps<"form"> & {
+  chapterId?: string | null
+  chapterName?: string | null
+}
+
 export function SignupForm({
   className,
+  chapterId,
+  chapterName,
   ...props
-}: React.ComponentProps<"form">) {
+}: Props) {
   const router = useRouter()
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -48,7 +55,14 @@ export function SignupForm({
       email,
       password,
       options: {
-        data: { full_name: name },
+        data: {
+          full_name: name,
+          // chapter_role is intentionally never sent here — it must never be
+          // client-trusted (see supabase/sql/001_chapters.sql section 4).
+          // The DB trigger defaults it to 'member'; only the platform-admin
+          // approve-chapter route can elevate a profile to chapter_admin.
+          ...(chapterId ? { chapter_id: chapterId } : {}),
+        },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     })
@@ -96,6 +110,7 @@ export function SignupForm({
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Create your account</h1>
           <p className="text-sm text-balance text-muted-foreground">
+            {chapterName ? `You're joining the ${chapterName} chapter. ` : ""}
             Fill in the form below to create your account
           </p>
         </div>

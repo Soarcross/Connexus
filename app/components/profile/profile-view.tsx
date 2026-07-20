@@ -22,6 +22,14 @@ type Profile = {
     looking_for: string[] | null
     club_roles: string[] | null
     email?: string | null
+    chapter_id?: string | null
+    chapters?: { name: string; school_name: string } | null
+}
+
+type ChapterOption = {
+    id: string
+    name: string
+    school_name: string
 }
 
 type Props = {
@@ -29,6 +37,7 @@ type Props = {
     isOwnProfile: boolean
     userId: string | null
     currentUserInterests?: string[]
+    availableChapters?: ChapterOption[]
 }
 
 const INTEREST_OPTIONS = [
@@ -42,7 +51,7 @@ const LOOKING_FOR_OPTIONS = [
     "Internships", "Jobs", "Mentorship", "Networking", "Collaborators", "Leadership"
 ]
 
-export function ProfileView({ profile, isOwnProfile, userId, currentUserInterests = [] }: Props) {
+export function ProfileView({ profile, isOwnProfile, userId, currentUserInterests = [], availableChapters = [] }: Props) {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -53,6 +62,7 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
     const [fullName, setFullName] = useState(profile.full_name ?? "")
     const [bio, setBio] = useState(profile.bio ?? "")
     const [gradYear, setGradYear] = useState(profile.grad_year?.toString() ?? "")
+    const [chapterId, setChapterId] = useState(profile.chapter_id ?? "")
     const [interests, setInterests] = useState<string[]>(profile.interests ?? [])
     const [customInterest, setCustomInterest] = useState("")
     const [lookingFor, setLookingFor] = useState<string[]>(profile.looking_for ?? [])
@@ -233,7 +243,8 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
                     interests,
                     looking_for: lookingFor,
                     club_roles: clubRoles,
-                } as any)
+                    ...(chapterId && !profile.chapter_id ? { chapter_id: chapterId } : {}),
+                })
                 .eq("id", profile.id)
 
             if (updateError) throw updateError
@@ -358,12 +369,24 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
                                         max={2035}
                                         className="max-w-[140px]"
                                     />
+                                    {!profile.chapter_id && availableChapters.length > 0 && (
+                                        <select
+                                            value={chapterId}
+                                            onChange={(e) => setChapterId(e.target.value)}
+                                            className="max-w-[280px] h-9 rounded-md border border-input bg-background px-3 text-sm"
+                                        >
+                                            <option value="">Select your chapter&hellip;</option>
+                                            {availableChapters.map(c => (
+                                                <option key={c.id} value={c.id}>{c.school_name}</option>
+                                            ))}
+                                        </select>
+                                    )}
                                 </div>
                             ) : (
                                 <>
                                     <h1 className="text-2xl font-bold">{fullName || "No name set"}</h1>
                                     <p className="text-sm text-muted-foreground">
-                                        Stuyvesant High School
+                                        {profile.chapters?.school_name ?? "No chapter yet"}
                                         {gradYear ? ` · Class of ${gradYear}` : ""}
                                     </p>
                                     {!isOwnProfile && userId && (
@@ -578,7 +601,7 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
                 <div className="pb-10">
                     <Button
                         className="w-full"
-                        onClick={() => router.push("/")}
+                        onClick={() => router.push("/home")}
                     >
                         Next: Go to Home
                         <ArrowRight className="size-4 ml-2" />

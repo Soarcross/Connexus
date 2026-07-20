@@ -18,8 +18,15 @@ function getEnvironmentVariables() {
 export async function createSupabaseServerClient() {
     const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables();
     const cookieStore = await cookies();
+    // Deliberately shared across every chapter subdomain (e.g.
+    // ".highschoolconnections.org") so a session survives moving between
+    // chapters -- set this no broader than the root domain itself, never a
+    // shared parent domain outside this app's control, or it becomes a
+    // cross-host "supercookie".
+    const cookieDomain = process.env.NEXT_PUBLIC_COOKIE_DOMAIN;
 
     return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+        cookieOptions: cookieDomain ? { domain: cookieDomain } : undefined,
         cookies: {
             getAll() {
                 return cookieStore.getAll();

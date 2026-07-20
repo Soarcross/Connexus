@@ -12,8 +12,8 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: "Stuy Connections",
-  description: "Connect with Stuyvesant alumni and students",
+  title: "High School Connections",
+  description: "Connect with students and alumni from high schools across the country",
 }
 
 export default function RootLayout({

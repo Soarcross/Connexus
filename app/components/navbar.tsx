@@ -22,10 +22,12 @@ type Props = {
     avatarUrl: string | null
     fullName: string | null
     isAdmin: boolean
+    chapterName?: string | null
+    isChapterAdmin?: boolean
 }
 
 const NAV_LINKS = [
-    { label: "Home", href: "/", icon: Home },
+    { label: "Home", href: "/home", icon: Home },
     { label: "People", href: "/people", icon: Users },
     { label: "Opportunities", href: "/opportunities", icon: Briefcase },
     { label: "Community", href: "/community", icon: Newspaper },
@@ -33,7 +35,7 @@ const NAV_LINKS = [
     { label: "Contact", href: "/contact", icon: Mail },
 ]
 
-export function Navbar({ userId, avatarUrl, fullName, isAdmin }: Props) {
+export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isChapterAdmin }: Props) {
     const router = useRouter()
     const pathname = usePathname()
     const [search, setSearch] = useState("")
@@ -93,16 +95,19 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin }: Props) {
             <div className="max-w-6xl mx-auto px-4 h-16 flex items-center gap-3">
 
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2 shrink-0">
+                <Link href="/home" className="flex items-center gap-2 shrink-0">
                     <Image
-                        src="/Stuy_connections_logo.png"
-                        alt="Stuy Connections"
+                        src="/hsc-logo.png"
+                        alt="High School Connections"
                         width={32}
                         height={32}
                         className="rounded-md"
                     />
-                    <span className="font-bold text-base hidden lg:block">
-                        Stuy Connections
+                    <span className="font-bold text-base hidden lg:flex lg:flex-col lg:leading-tight">
+                        High School Connections
+                        {chapterName && (
+                            <span className="font-normal text-xs text-muted-foreground">{chapterName}</span>
+                        )}
                     </span>
                 </Link>
 
@@ -171,6 +176,14 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin }: Props) {
                                 <User className="size-4 mr-2" />
                                 My Profile
                             </DropdownMenuItem>
+                            {isChapterAdmin && (
+                                <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => router.push("/chapter-admin")}>
+                                        Chapter Admin
+                                    </DropdownMenuItem>
+                                </>
+                            )}
                             {isAdmin && (
                                 <>
                                     <DropdownMenuSeparator />

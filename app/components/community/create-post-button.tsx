@@ -39,9 +39,10 @@ const EMPTY_FORM = {
 
 type Props = {
     userId: string
+    chapterId: string
 }
 
-export function CreatePostButton({ userId }: Props) {
+export function CreatePostButton({ userId, chapterId }: Props) {
     const router = useRouter()
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
@@ -107,6 +108,7 @@ export function CreatePostButton({ userId }: Props) {
                 .from("community_posts")
                 .insert({
                     user_id: userId,
+                    chapter_id: chapterId,
                     title: form.title,
                     description: form.description,
                     category: form.category,
@@ -152,7 +154,7 @@ export function CreatePostButton({ userId }: Props) {
                     <DialogHeader>
                         <DialogTitle>Share an Opportunity</DialogTitle>
                         <DialogDescription>
-                            Submit an opportunity to share with the Stuy Connections community.
+                            Submit an opportunity to share with your chapter's community.
                             It will be reviewed by an admin before appearing publicly.
                         </DialogDescription>
                     </DialogHeader>
@@ -317,7 +319,7 @@ export function CreatePostButton({ userId }: Props) {
                                     Why should this be displayed? *
                                 </label>
                                 <Textarea
-                                    placeholder="Explain why this opportunity is valuable and how it will help the Stuyvesant community..."
+                                    placeholder="Explain why this opportunity is valuable and how it will help your chapter's community..."
                                     value={form.qualification}
                                     onChange={(e) => setForm(f => ({ ...f, qualification: e.target.value }))}
                                     rows={3}

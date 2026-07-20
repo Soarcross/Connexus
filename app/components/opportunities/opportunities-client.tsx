@@ -19,6 +19,7 @@ type Opportunity = {
     deadline: string | null
     is_featured: boolean
     created_at: string
+    chapter_id: string | null
 }
 
 type Props = {
@@ -236,6 +237,9 @@ export function OpportunitiesClient({ opportunities }: Props) {
                                                     <div className="flex flex-col gap-1 items-end shrink-0">
                                                         {opp.is_featured && (
                                                             <Badge className="text-xs">Featured</Badge>
+                                                        )}
+                                                        {!opp.chapter_id && (
+                                                            <Badge variant="outline" className="text-xs">National</Badge>
                                                         )}
                                                         <Badge variant="secondary" className="text-xs" style={{ backgroundColor: CATEGORY_COLORS[opp.category]?.bg, color: CATEGORY_COLORS[opp.category]?.text }}>
                                                             {opp.category}

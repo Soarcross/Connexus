@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import { getSupaBrowserClient } from "@/lib/supabase/client"
 import { Input } from "@/app/components/ui/input"
 import { Badge } from "@/app/components/ui/badge"
 import { Card, CardContent } from "@/app/components/ui/card"
@@ -18,11 +19,14 @@ type Profile = {
     looking_for: string[] | null
     club_roles: string[] | null
     bio: string | null
+    chapter_id: string | null
+    chapters: { name: string } | null
 }
 
 type Props = {
     profiles: Profile[]
     initialSearch: string
+    viewerChapterId: string | null
 }
 
 const INTEREST_OPTIONS = [
@@ -36,7 +40,7 @@ const LOOKING_FOR_OPTIONS = [
     "Internships", "Jobs", "Mentorship", "Networking", "Collaborators"
 ]
 
-export function PeopleClient({ profiles, initialSearch }: Props) {
+export function PeopleClient({ profiles, initialSearch, viewerChapterId }: Props) {
     const router = useRouter()
     const [search, setSearch] = useState(initialSearch)
     const [selectedInterests, setSelectedInterests] = useState<string[]>([])
@@ -44,6 +48,33 @@ export function PeopleClient({ profiles, initialSearch }: Props) {
     const [gradYearFilter, setGradYearFilter] = useState("")
     const [clubRoleFilter, setClubRoleFilter] = useState("")
     const [showFilters, setShowFilters] = useState(false)
+    const [showAllChapters, setShowAllChapters] = useState(false)
+    const [allChaptersProfiles, setAllChaptersProfiles] = useState<Profile[] | null>(null)
+    const [loadingAllChapters, setLoadingAllChapters] = useState(false)
+
+    // The server only sends the viewer's own chapter by default (sending
+    // every school's users on every page load regardless of the toggle
+    // would leak the whole platform's PII) -- fetch the full cross-chapter
+    // roster lazily, only the first time "All chapters" is actually toggled.
+    async function handleToggleAllChapters() {
+        if (showAllChapters) {
+            setShowAllChapters(false)
+            return
+        }
+        if (allChaptersProfiles === null) {
+            setLoadingAllChapters(true)
+            const supabase = getSupaBrowserClient()
+            const { data } = await supabase
+                .from("profiles")
+                .select("id, full_name, avatar_url, grad_year, interests, looking_for, club_roles, bio, chapter_id, chapters(name)")
+                .order("created_at", { ascending: false })
+            setAllChaptersProfiles(data ?? [])
+            setLoadingAllChapters(false)
+        }
+        setShowAllChapters(true)
+    }
+
+    const baseProfiles = showAllChapters && allChaptersProfiles ? allChaptersProfiles : profiles
 
     function toggleInterest(interest: string) {
         setSelectedInterests(prev =>
@@ -77,7 +108,7 @@ export function PeopleClient({ profiles, initialSearch }: Props) {
         clubRoleFilter
 
     const filtered = useMemo(() => {
-        return profiles.filter(profile => {
+        return baseProfiles.filter(profile => {
             // search by name, interests, club roles
             if (search) {
                 const q = search.toLowerCase()
@@ -120,7 +151,7 @@ export function PeopleClient({ profiles, initialSearch }: Props) {
 
             return true
         })
-    }, [profiles, search, selectedInterests, selectedLookingFor, gradYearFilter, clubRoleFilter])
+    }, [baseProfiles, search, selectedInterests, selectedLookingFor, gradYearFilter, clubRoleFilter])
 
     return (
         <div className="flex flex-col gap-6">
@@ -151,6 +182,16 @@ export function PeopleClient({ profiles, initialSearch }: Props) {
                 {hasActiveFilters && (
                     <Button variant="ghost" size="icon" onClick={clearFilters} className="shrink-0">
                         <X className="size-4" />
+                    </Button>
+                )}
+                {viewerChapterId && (
+                    <Button
+                        variant={showAllChapters ? "default" : "outline"}
+                        onClick={handleToggleAllChapters}
+                        disabled={loadingAllChapters}
+                        className="shrink-0"
+                    >
+                        {loadingAllChapters ? "Loading..." : showAllChapters ? "All chapters" : "My chapter"}
                     </Button>
                 )}
             </div>
@@ -257,10 +298,14 @@ export function PeopleClient({ profiles, initialSearch }: Props) {
                                             {profile.full_name ?? "Anonymous"}
                                         </p>
                                         <p className="text-xs text-muted-foreground">
-                                            {profile.grad_year ? `Class of ${profile.grad_year}` : "Stuyvesant"}
+                                            {profile.grad_year ? `Class of ${profile.grad_year}` : (profile.chapters?.name ?? "")}
                                         </p>
                                     </div>
                                 </div>
+
+                                {showAllChapters && profile.chapters?.name && (
+                                    <Badge variant="outline" className="w-fit text-xs">{profile.chapters.name}</Badge>
+                                )}
 
                                 {profile.bio && (
                                     <p className="text-xs text-muted-foreground line-clamp-2">
