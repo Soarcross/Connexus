@@ -3,7 +3,6 @@ import { Card, CardContent } from "@/app/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Badge } from "@/app/components/ui/badge"
 import { Mail, Phone, ExternalLink } from "lucide-react"
-import { AuroraBackground } from "@/app/components/about/aurora-background"
 
 export default async function AboutPage() {
     const supabase = await createSupabaseServerClient()
@@ -28,7 +27,6 @@ export default async function AboutPage() {
 
     return (
         <>
-            <AuroraBackground />
             <div className="relative z-10 max-w-4xl mx-auto flex flex-col gap-16">
                 {/* Mission */}
                 <section className="flex flex-col gap-4 text-center items-center">

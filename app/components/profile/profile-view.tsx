@@ -322,11 +322,12 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
             )}
 
             {/* Header Card */}
-            <Card>
-                <CardContent className="pt-6">
+            <Card className="pt-0 overflow-hidden">
+                <div className="h-24 bg-primary/80 -mb-16" />
+                <CardContent className="pt-0">
                     <div className="flex items-start gap-5">
                         <div className="relative shrink-0">
-                            <Avatar className="size-24">
+                            <Avatar className="size-24 ring-4 ring-card">
                                 <AvatarImage src={avatarUrl} />
                                 <AvatarFallback className="text-2xl bg-primary/10 text-primary font-semibold">
                                     {fullName?.[0] ?? "?"}
@@ -351,7 +352,7 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
                             )}
                         </div>
 
-                        <div className="flex-1 flex flex-col gap-2">
+                        <div className="flex-1 flex flex-col gap-2 pt-16">
                             {editingSection === "header" ? (
                                 <div className="flex flex-col gap-2">
                                     <Input

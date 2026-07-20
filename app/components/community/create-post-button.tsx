@@ -40,9 +40,10 @@ const EMPTY_FORM = {
 type Props = {
     userId: string
     chapterId: string
+    trigger?: React.ReactNode
 }
 
-export function CreatePostButton({ userId, chapterId }: Props) {
+export function CreatePostButton({ userId, chapterId, trigger }: Props) {
     const router = useRouter()
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
@@ -144,10 +145,26 @@ export function CreatePostButton({ userId, chapterId }: Props) {
 
     return (
         <>
-            <Button onClick={() => setOpen(true)} className="gap-2">
-                <Plus className="size-4" />
-                Create Post
-            </Button>
+            {trigger ? (
+                <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setOpen(true)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault()
+                            setOpen(true)
+                        }
+                    }}
+                >
+                    {trigger}
+                </div>
+            ) : (
+                <Button onClick={() => setOpen(true)} className="gap-2">
+                    <Plus className="size-4" />
+                    Create Post
+                </Button>
+            )}
 
             <Dialog open={open} onOpenChange={handleClose}>
                 <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">

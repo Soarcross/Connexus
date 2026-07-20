@@ -6,7 +6,6 @@ import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Textarea } from "@/app/components/ui/textarea"
 import { CheckCircle, Send, Mail, Bug, Lightbulb } from "lucide-react"
-import { ConstellationBackground } from "@/app/components/contact/constellation-background"
 
 const CATEGORIES = [
     { label: "General Inquiry", icon: Mail },
@@ -57,7 +56,6 @@ export default function ContactForm({ userEmail, userName }: Props) {
     if (submitted) {
         return (
             <>
-            <ConstellationBackground />
             <div className="relative z-10 min-h-[60vh] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-6 text-center max-w-md">
                     <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center">
@@ -69,7 +67,7 @@ export default function ContactForm({ userEmail, userName }: Props) {
                             Thanks for reaching out. We'll get back to you as soon as possible.
                         </p>
                     </div>
-                    <Button variant="outline" className="border-black dark:border-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all duration-300" onClick={() => {
+                    <Button variant="outline" onClick={() => {
                         setSubmitted(false)
                         setMessage("")
                         setCategory("General Inquiry")
@@ -84,7 +82,6 @@ export default function ContactForm({ userEmail, userName }: Props) {
 
     return (
         <>
-        <ConstellationBackground />
         <div className="relative z-10 max-w-2xl mx-auto flex flex-col gap-8">
 
             {/* Header */}

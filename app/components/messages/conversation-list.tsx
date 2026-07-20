@@ -37,7 +37,7 @@ export function ConversationList({ conversations, currentUserId }: Props) {
                 <CardContent className="py-16 flex flex-col items-center gap-3 text-center">
                     <MessageCircle className="size-10 text-muted-foreground/50" />
                     <p className="text-muted-foreground text-sm">
-                        No conversations yet. Visit someone's profile to start a conversation!
+                        No conversations yet. Visit someone&apos;s profile to start a conversation!
                     </p>
                 </CardContent>
             </Card>
@@ -45,11 +45,11 @@ export function ConversationList({ conversations, currentUserId }: Props) {
     }
 
     return (
-        <div className="flex flex-col gap-2">
+        <Card className="py-0 gap-0 divide-y divide-border">
             {conversations.map((conv) => (
-                <Card
+                <div
                     key={conv.id}
-                    className={`cursor-pointer transition-colors hover:border-primary/50 ${conv.unreadCount > 0 ? "border-primary/30 bg-primary/5" : ""}`}
+                    className={`cursor-pointer transition-colors hover:bg-muted/50 ${conv.unreadCount > 0 ? "bg-primary/5" : ""}`}
                     onClick={() => router.push(`/messages/${conv.id}`)}
                 >
                     <CardContent className="py-4 flex items-center gap-4">
@@ -87,8 +87,8 @@ export function ConversationList({ conversations, currentUserId }: Props) {
                             </div>
                         </div>
                     </CardContent>
-                </Card>
+                </div>
             ))}
-        </div>
+        </Card>
     )
 }

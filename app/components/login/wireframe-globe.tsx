@@ -19,7 +19,8 @@ export function WireframeGlobe() {
     window.addEventListener("resize", setSize)
 
     const LINES = 18       // latitude + longitude line count
-    const COLOR = "rgba(167,139,250,"
+    // mirrors the rebrand palette: dark canvas oklch(0.21 0.006 286), violet primary #A78BFA
+    const COLOR = "rgba(166,132,255,"
     let angle = 0
     let animId: number
 
@@ -41,7 +42,7 @@ export function WireframeGlobe() {
       const cy = h / 2
       const r = Math.min(w, h) * 0.38
 
-      ctx.fillStyle = "#0d0f1a"
+      ctx.fillStyle = "#18181b"
       ctx.fillRect(0, 0, w, h)
 
       // latitude lines
