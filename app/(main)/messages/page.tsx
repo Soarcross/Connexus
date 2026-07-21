@@ -63,8 +63,8 @@ export default async function MessagesPage() {
     return (
         <div className="flex flex-col gap-6 max-w-2xl mx-auto">
             <div className="flex flex-col gap-1">
-                <h1 className="text-3xl font-bold tracking-tight">Messages</h1>
-                <p className="text-muted-foreground">Your conversations with other members.</p>
+                <h1 className="text-2xl font-semibold tracking-tight">Messages</h1>
+                <p className="text-sm text-muted-foreground">Your conversations with other members.</p>
             </div>
             <ConversationList
                 conversations={conversationsWithProfiles as any}

@@ -13,11 +13,10 @@ export default function MarketingLayout({
                 <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
                     <Link href="/" className="flex items-center gap-2 shrink-0">
                         <Image
-                            src="/hsc-logo.png"
+                            src="/brand/hsc-logo.svg"
                             alt="High School Connections"
                             width={32}
                             height={32}
-                            className="rounded-md"
                         />
                         <span className="font-bold text-base">High School Connections</span>
                     </Link>

@@ -1,6 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { PeopleClient } from "@/app/components/people/people-client"
-import { SymbolRain } from "@/app/components/people/symbol-rain"
 
 export default async function PeoplePage({
     searchParams,
@@ -34,21 +33,18 @@ export default async function PeoplePage({
         : { data: [] }
 
     return (
-        <>
-            <SymbolRain />
-            <div className="relative z-10 flex flex-col gap-6">
-                <div className="flex flex-col gap-2 items-center text-center">
-                    <h1 className="text-5xl font-bold tracking-tight">People</h1>
-                    <p className="text-lg text-muted-foreground">
-                        Find and connect with students and alumni from your chapter.
-                    </p>
-                </div>
-                <PeopleClient
-                    profiles={profiles ?? []}
-                    initialSearch={search ?? ""}
-                    viewerChapterId={viewerChapterId}
-                />
+        <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-1">
+                <h1 className="text-2xl font-semibold tracking-tight">People</h1>
+                <p className="text-sm text-muted-foreground">
+                    Find and connect with students and alumni from your chapter.
+                </p>
             </div>
-        </>
+            <PeopleClient
+                profiles={profiles ?? []}
+                initialSearch={search ?? ""}
+                viewerChapterId={viewerChapterId}
+            />
+        </div>
     )
 }

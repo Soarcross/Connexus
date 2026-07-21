@@ -11,7 +11,7 @@ export default async function SignupPage() {
             <div className="flex flex-col gap-4 p-6 md:p-10">
                 <div className="flex justify-center gap-2 md:justify-start">
                     <a href="#" className="flex items-center gap-2 font-medium">
-                        <img src="/hsc-logo.png" alt="High School Connections" className="size-9" />
+                        <img src="/brand/hsc-logo.svg" alt="High School Connections" className="size-9" />
                         High School Connections
                     </a>
                 </div>
@@ -21,12 +21,8 @@ export default async function SignupPage() {
                     </div>
                 </div>
             </div>
-            <div className="relative hidden bg-muted lg:block">
-                <img
-                    src="/placeholder"
-                    alt="Image"
-                    className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-                />
+            <div className="relative hidden lg:flex lg:items-center lg:justify-center bg-gradient-to-br from-primary/90 to-primary/60 dark:from-primary/30 dark:to-background">
+                <img src="/brand/hsc-logo.svg" alt="" aria-hidden="true" className="size-40 opacity-90" />
             </div>
         </div>
     )

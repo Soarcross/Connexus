@@ -5,7 +5,10 @@ import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app/components/ui/card"
 import { Input } from "@/app/components/ui/input"
-import { Briefcase, GraduationCap, FlaskConical, Trophy, Heart, BookOpen, Search, X, ExternalLink, ChevronDown, ChevronUp, Layers } from "lucide-react"
+import { Switch } from "@/app/components/ui/switch"
+import { PageShell } from "@/app/components/layout/page-shell"
+import { Search, X, ExternalLink, ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react"
+import { categoryChip, categoryIcon } from "@/lib/category-colors"
 
 type Opportunity = {
     id: string
@@ -26,27 +29,7 @@ type Props = {
     opportunities: Opportunity[]
 }
 
-const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-    Internships: <Briefcase className="size-4" />,
-    Jobs: <GraduationCap className="size-4" />,
-    Research: <FlaskConical className="size-4" />,
-    Scholarships: <BookOpen className="size-4" />,
-    Competitions: <Trophy className="size-4" />,
-    Volunteering: <Heart className="size-4" />,
-    Programs: <Layers className="size-4" />,
-}
-
 const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering", "Programs"]
-
-const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-    Internships:  { bg: "#3b82f6", text: "#ffffff" },
-    Jobs:         { bg: "#22c55e", text: "#ffffff" },
-    Research:     { bg: "#a855f7", text: "#ffffff" },
-    Scholarships: { bg: "#f59e0b", text: "#ffffff" },
-    Competitions: { bg: "#ef4444", text: "#ffffff" },
-    Volunteering: { bg: "#14b8a6", text: "#ffffff" },
-    Programs:     { bg: "#f97316", text: "#ffffff" },
-}
 
 const FIELDS = [
     "Computer Science", "Law", "Medicine", "Finance",
@@ -61,6 +44,7 @@ export function OpportunitiesClient({ opportunities }: Props) {
     const [selectedFields, setSelectedFields] = useState<string[]>([])
     const [showFeaturedOnly, setShowFeaturedOnly] = useState(false)
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+    const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
     function toggleExpanded(id: string) {
         setExpandedIds(prev => {
@@ -128,75 +112,90 @@ export function OpportunitiesClient({ opportunities }: Props) {
         return groups
     }, [filtered])
 
+    const filtersCard = (
+        <Card size="sm">
+            <CardContent className="flex flex-col gap-5">
+                <div className="flex flex-col gap-2">
+                    <p className="text-sm font-medium">Type</p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {CATEGORIES.map(cat => (
+                            <Badge
+                                key={cat}
+                                variant={selectedCategories.includes(cat) ? "default" : "outline"}
+                                className="cursor-pointer transition-colors"
+                                onClick={() => toggleCategory(cat)}
+                            >
+                                {cat}
+                            </Badge>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <p className="text-sm font-medium">Field</p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {FIELDS.map(field => (
+                            <Badge
+                                key={field}
+                                variant={selectedFields.includes(field) ? "default" : "outline"}
+                                className="cursor-pointer transition-colors"
+                                onClick={() => toggleField(field)}
+                            >
+                                {field}
+                            </Badge>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <Switch checked={showFeaturedOnly} onCheckedChange={setShowFeaturedOnly} />
+                    <span className="text-sm text-muted-foreground">Featured only</span>
+                </div>
+                {hasActiveFilters && (
+                    <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-muted-foreground w-fit">
+                        <X className="size-3" />
+                        Clear filters
+                    </Button>
+                )}
+            </CardContent>
+        </Card>
+    )
+
     return (
-        <div className="flex flex-col gap-6">
-            <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-                <Input
-                    placeholder="Search opportunities..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-8"
-                />
+        <PageShell left={filtersCard}>
+        <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search opportunities..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="pl-8 bg-card"
+                    />
+                </div>
+                <Button
+                    variant={mobileFiltersOpen ? "default" : "outline"}
+                    size="sm"
+                    className="lg:hidden gap-1.5"
+                    onClick={() => setMobileFiltersOpen(o => !o)}
+                >
+                    <SlidersHorizontal className="size-4" />
+                    Filters
+                    {hasActiveFilters && (
+                        <span className="size-4 rounded-full bg-primary-foreground text-primary text-xs flex items-center justify-center font-bold">
+                            !
+                        </span>
+                    )}
+                </Button>
+                {hasActiveFilters && (
+                    <Button variant="ghost" size="icon" onClick={clearFilters} className="lg:hidden shrink-0">
+                        <X className="size-4" />
+                    </Button>
+                )}
             </div>
 
-            <Card>
-                <CardContent className="pt-4 flex flex-col gap-5">
-                    <div className="flex flex-col gap-2">
-                        <p className="text-sm font-medium">Type</p>
-                        <div className="flex flex-wrap gap-2">
-                            {CATEGORIES.map(cat => (
-                                <Badge
-                                    key={cat}
-                                    variant={selectedCategories.includes(cat) ? "default" : "outline"}
-                                    className="cursor-pointer transition-colors"
-                                    onClick={() => toggleCategory(cat)}
-                                >
-                                    {cat}
-                                </Badge>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                        <p className="text-sm font-medium">Field</p>
-                        <div className="flex flex-wrap gap-2">
-                            {FIELDS.map(field => (
-                                <Badge
-                                    key={field}
-                                    variant={selectedFields.includes(field) ? "default" : "outline"}
-                                    className="cursor-pointer transition-colors"
-                                    onClick={() => toggleField(field)}
-                                >
-                                    {field}
-                                </Badge>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={() => setShowFeaturedOnly(!showFeaturedOnly)}
-                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors
-                                    ${showFeaturedOnly ? "bg-primary" : "bg-muted"}`}
-                            >
-                                <span
-                                    className={`pointer-events-none inline-block size-4 rounded-full bg-white shadow-lg transition-transform
-                                        ${showFeaturedOnly ? "translate-x-4" : "translate-x-0"}`}
-                                />
-                            </button>
-                            <span className="text-sm text-muted-foreground">Featured only</span>
-                        </div>
-                        {hasActiveFilters && (
-                            <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-muted-foreground">
-                                <X className="size-3" />
-                                Clear filters
-                            </Button>
-                        )}
-                    </div>
-                </CardContent>
-            </Card>
+            {mobileFiltersOpen && <div className="lg:hidden">{filtersCard}</div>}
 
             <p className="text-sm text-muted-foreground">
                 {filtered.length} {filtered.length === 1 ? "opportunity" : "opportunities"} found
@@ -216,18 +215,18 @@ export function OpportunitiesClient({ opportunities }: Props) {
                         return (
                             <div key={category} className="flex flex-col gap-4">
                                 <div className="flex items-center gap-2">
-                                    <div className="size-7 rounded-md flex items-center justify-center" style={{ backgroundColor: CATEGORY_COLORS[category]?.bg + "22", color: CATEGORY_COLORS[category]?.bg }}>
-                                        {CATEGORY_ICONS[category]}
+                                    <div className={`size-7 rounded-md flex items-center justify-center ${categoryChip(category)}`}>
+                                        {categoryIcon(category)}
                                     </div>
                                     <h2 className="font-semibold text-lg">{category}</h2>
                                     <span className="text-sm text-muted-foreground">({opps.length})</span>
                                 </div>
-                                <div className="grid gap-6 sm:grid-cols-2">
+                                <div className="grid gap-4 sm:grid-cols-2">
                                     {opps.map(opp => (
                                         <Card
                                             key={opp.id}
-                                            className="transition-colors hover:border-primary/50"
-                                            style={{ backgroundColor: "var(--opp-card-bg)", border: "2px solid black" }}
+                                            size="sm"
+                                            className="transition-shadow hover:shadow-md"
                                         >
                                             <CardHeader className="pb-2">
                                                 <div className="flex items-start justify-between gap-2">
@@ -241,9 +240,9 @@ export function OpportunitiesClient({ opportunities }: Props) {
                                                         {!opp.chapter_id && (
                                                             <Badge variant="outline" className="text-xs">National</Badge>
                                                         )}
-                                                        <Badge variant="secondary" className="text-xs" style={{ backgroundColor: CATEGORY_COLORS[opp.category]?.bg, color: CATEGORY_COLORS[opp.category]?.text }}>
+                                                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${categoryChip(opp.category)}`}>
                                                             {opp.category}
-                                                        </Badge>
+                                                        </span>
                                                     </div>
                                                 </div>
                                                 {opp.organization && (
@@ -284,7 +283,7 @@ export function OpportunitiesClient({ opportunities }: Props) {
                                                     )}
                                                     {opp.url && (
                                                         <a href={opp.url} target="_blank" rel="noopener noreferrer">
-                                                            <Button size="sm" variant="outline" className="text-xs h-7 gap-1 transition-all duration-300 border-black text-black hover:bg-black hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-black">
+                                                            <Button size="sm" variant="outline" className="text-xs h-7 gap-1">
                                                                 Apply
                                                                 <ExternalLink className="size-3" />
                                                             </Button>
@@ -301,5 +300,6 @@ export function OpportunitiesClient({ opportunities }: Props) {
                 </div>
             )}
         </div>
+        </PageShell>
     )
 }

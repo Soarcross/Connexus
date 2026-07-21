@@ -1,18 +1,33 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { PostsFeed } from "@/app/components/community/posts-feed"
-import { CreatePostButton } from "@/app/components/community/create-post-button"
-import Link from "next/link"
 
 export default async function CommunityPage() {
     const supabase = await createSupabaseServerClient()
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    const { data: viewerProfile } = await supabase
-        .from("profiles")
-        .select("chapter_id")
-        .eq("id", user?.id ?? "")
-        .single()
+    // viewerProfile and myPosts are independent of each other — fetch
+    // concurrently rather than paying for two sequential round-trips
+    const [{ data: viewerProfile }, { data: myPosts }] = await Promise.all([
+        supabase
+            .from("profiles")
+            .select("full_name, avatar_url, grad_year, chapter_id, chapters(name)")
+            .eq("id", user?.id ?? "")
+            .single(),
+        supabase
+            .from("community_posts")
+            .select(`
+                *,
+                profiles (
+                    id,
+                    full_name,
+                    avatar_url,
+                    grad_year
+                )
+            `)
+            .eq("user_id", user?.id ?? "")
+            .order("created_at", { ascending: false }),
+    ])
 
     const myChapterId = viewerProfile?.chapter_id ?? null
 
@@ -35,44 +50,25 @@ export default async function CommunityPage() {
             .order("created_at", { ascending: false })
         : { data: [] }
 
-    const { data: myPosts } = await supabase
-        .from("community_posts")
-        .select(`
-            *,
-            profiles (
-                id,
-                full_name,
-                avatar_url,
-                grad_year
-            )
-        `)
-        .eq("user_id", user?.id ?? "")
-        .order("created_at", { ascending: false })
-
     return (
         <div className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-                <div className="flex flex-col gap-1">
-                    <h1 className="text-3xl font-bold tracking-tight">Community</h1>
-                    <p className="text-muted-foreground">
-                        Opportunities shared by students and alumni in your chapter.
-                    </p>
-                </div>
-                {myChapterId ? (
-                    <CreatePostButton userId={user?.id ?? ""} chapterId={myChapterId} />
-                ) : (
-                    <p className="text-sm text-muted-foreground">
-                        <Link href={`/profile/${user?.id ?? ""}`} className="text-primary hover:underline">
-                            Pick a chapter on your profile
-                        </Link>{" "}
-                        to post here.
-                    </p>
-                )}
+            <div className="flex flex-col gap-1">
+                <h1 className="text-2xl font-semibold tracking-tight">Community</h1>
+                <p className="text-sm text-muted-foreground">
+                    Opportunities shared by students and alumni in your chapter.
+                </p>
             </div>
             <PostsFeed
                 posts={(posts as any) ?? []}
                 myPosts={(myPosts as any) ?? []}
                 currentUserId={user?.id ?? ""}
+                chapterId={myChapterId}
+                viewer={{
+                    fullName: viewerProfile?.full_name ?? null,
+                    avatarUrl: viewerProfile?.avatar_url ?? null,
+                    chapterName: viewerProfile?.chapters?.name ?? null,
+                    gradYear: viewerProfile?.grad_year ?? null,
+                }}
             />
         </div>
     )

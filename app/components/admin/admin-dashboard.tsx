@@ -194,14 +194,20 @@ const EMPTY_FORM = {
     is_featured: false,
 }
 
-const PIE_COLORS = ["#A78BFA", "#818CF8", "#C4B5FD", "#7C3AED", "#6D28D9"]
+const PIE_COLORS = [
+    "var(--chart-cat-1)",
+    "var(--chart-cat-2)",
+    "var(--chart-cat-3)",
+    "var(--chart-cat-4)",
+    "var(--chart-cat-5)",
+]
 
 const lineChartConfig = {
-    count: { label: "Count", color: "#A78BFA" },
+    count: { label: "Count", color: "var(--chart-1)" },
 } satisfies ChartConfig
 
 const barChartConfig = {
-    count: { label: "Opportunities", color: "#A78BFA" },
+    count: { label: "Opportunities", color: "var(--chart-1)" },
 } satisfies ChartConfig
 
 export function AdminDashboard({
@@ -819,7 +825,7 @@ export function AdminDashboard({
                                             <XAxis dataKey="day" tick={{ fontSize: 10 }} />
                                             <YAxis tick={{ fontSize: 10 }} />
                                             <ChartTooltip content={<ChartTooltipContent />} />
-                                            <Line type="monotone" dataKey="count" stroke="#A78BFA" strokeWidth={2} dot={false} />
+                                            <Line type="monotone" dataKey="count" stroke="var(--chart-1)" strokeWidth={2} dot={false} />
                                         </LineChart>
                                     </ChartContainer>
                                 )}
@@ -836,7 +842,7 @@ export function AdminDashboard({
                                             <XAxis dataKey="day" tick={{ fontSize: 10 }} />
                                             <YAxis tick={{ fontSize: 10 }} />
                                             <ChartTooltip content={<ChartTooltipContent />} />
-                                            <Line type="monotone" dataKey="count" stroke="#A78BFA" strokeWidth={2} dot={false} />
+                                            <Line type="monotone" dataKey="count" stroke="var(--chart-1)" strokeWidth={2} dot={false} />
                                         </LineChart>
                                     </ChartContainer>
                                 )}
@@ -850,7 +856,7 @@ export function AdminDashboard({
                                         <XAxis dataKey="category" tick={{ fontSize: 10 }} />
                                         <YAxis tick={{ fontSize: 10 }} />
                                         <ChartTooltip content={<ChartTooltipContent />} />
-                                        <Bar dataKey="count" fill="#A78BFA" radius={[4, 4, 0, 0]} />
+                                        <Bar dataKey="count" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
                                     </BarChart>
                                 </ChartContainer>
                             </CardContent>
@@ -864,7 +870,7 @@ export function AdminDashboard({
                                     <div className="flex flex-col items-center gap-4">
                                         <ChartContainer config={barChartConfig} className="h-40 w-full">
                                             <PieChart>
-                                                <Pie data={submissionsByType} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70}>
+                                                <Pie data={submissionsByType} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} stroke="var(--card)" strokeWidth={2}>
                                                     {submissionsByType.map((_, index) => (
                                                         <Cell key={index} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                                                     ))}

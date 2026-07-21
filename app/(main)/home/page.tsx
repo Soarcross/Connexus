@@ -1,32 +1,12 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
-import { Badge } from "@/app/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app/components/ui/card"
 import { Button } from "@/app/components/ui/button"
-import { Briefcase, GraduationCap, FlaskConical, Trophy, Heart, BookOpen, ArrowRight } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { PeopleCarousel } from "@/app/components/home/people-carousel"
-import { ParticleBackground } from "@/app/components/home/particle-background"
-import { HeroTypewriter } from "@/app/components/home/hero-typewriter"
+import { categoryChip, categoryIcon } from "@/lib/category-colors"
 
-const CATEGORY_ICONS: Record<string, React.ReactNode> = {
-  Internships: <Briefcase className="size-4" />,
-  Jobs: <GraduationCap className="size-4" />,
-  Research: <FlaskConical className="size-4" />,
-  Scholarships: <BookOpen className="size-4" />,
-  Competitions: <Trophy className="size-4" />,
-  Volunteering: <Heart className="size-4" />,
-}
-
-const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering"]
-
-const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  Internships:  { bg: "#3b82f6", text: "#ffffff" }, // blue
-  Jobs:         { bg: "#22c55e", text: "#ffffff" }, // green
-  Research:     { bg: "#a855f7", text: "#ffffff" }, // purple
-  Scholarships: { bg: "#f59e0b", text: "#ffffff" }, // amber
-  Competitions: { bg: "#ef4444", text: "#ffffff" }, // red
-  Volunteering: { bg: "#14b8a6", text: "#ffffff" }, // teal
-}
+const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering", "Programs"]
 
 export default async function HomePage() {
   const supabase = await createSupabaseServerClient()
@@ -36,7 +16,7 @@ export default async function HomePage() {
   // fetch current user's profile for matching
   const { data: currentProfile } = await supabase
     .from("profiles")
-    .select("interests, looking_for, club_roles, chapter_id")
+    .select("full_name, interests, looking_for, club_roles, chapter_id, chapters(name)")
     .eq("id", user?.id ?? "")
     .single()
 
@@ -97,59 +77,67 @@ export default async function HomePage() {
     (cat) => opportunitiesByCategory[cat].length > 0
   )
 
-  return (
-    <div className="flex flex-col gap-10">
-      <ParticleBackground />
+  const firstName = currentProfile?.full_name?.split(" ")[0] ?? null
+  const chapterName = currentProfile?.chapters?.name ?? null
 
-      {/* Hero — escape layout padding so it truly fills the viewport */}
-      <section className="relative z-10 flex flex-col items-center justify-start text-center gap-4 -mx-4 -mt-8 px-4" style={{ height: "100vh", paddingTop: "35vh" }}>
-        <div className="flex flex-col gap-4 items-center px-8 py-6 rounded-2xl backdrop-blur-sm">
-          <h1 className="text-5xl font-bold tracking-tight">Welcome to High School Connections</h1>
-          <HeroTypewriter />
-        </div>
-      </section>
+  return (
+    <div className="flex flex-col gap-8">
+
+      {/* Welcome banner */}
+      <Card className="bg-primary/5 border-primary/15">
+        <CardContent className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Welcome back{firstName ? `, ${firstName}` : ""}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {chapterName
+              ? `Here's what's happening in the ${chapterName} chapter.`
+              : "Here's what's happening across High School Connections."}
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Opportunities */}
-      <section className="relative z-10 flex flex-col gap-6">
-        <div className="flex flex-col items-center gap-2 sm:relative sm:flex-row sm:justify-center">
-          <h2 className="text-3xl font-bold tracking-tight px-6 py-3 rounded-xl backdrop-blur-2xl bg-white/20 dark:bg-black/20">Opportunities of the Month</h2>
-          <Link href="/opportunities" className="sm:absolute sm:right-0">
-            <Button variant="ghost" size="sm" className="gap-1 backdrop-blur-2xl bg-white/20 dark:bg-black/20 rounded-xl hover:bg-black hover:text-white dark:hover:bg-black dark:hover:text-white">
+      <section className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold tracking-tight">Opportunities of the Month</h2>
+          <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" asChild>
+            <Link href="/opportunities">
               View all <ArrowRight className="size-4" />
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
 
         {!hasAnyOpportunities ? (
-          <Card className="dark:bg-zinc-800" style={{ backgroundColor: "var(--opp-card-bg)" }}>
+          <Card>
             <CardContent className="py-12 text-center text-muted-foreground text-sm">
               No featured opportunities yet. Check back soon!
             </CardContent>
           </Card>
         ) : (
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-6">
             {[...CATEGORIES].sort((a, b) => opportunitiesByCategory[b].length - opportunitiesByCategory[a].length).map((category) => {
               const opps = opportunitiesByCategory[category]
               if (opps.length === 0) return null
               return (
                 <div key={category} className="flex flex-col gap-3">
                   <div className="flex items-center gap-2">
-                    <div className="size-7 rounded-md flex items-center justify-center" style={{ backgroundColor: CATEGORY_COLORS[category]?.bg + "22", color: CATEGORY_COLORS[category]?.bg }}>
-                      {CATEGORY_ICONS[category]}
+                    <div className={`size-7 rounded-md flex items-center justify-center ${categoryChip(category)}`}>
+                      {categoryIcon(category)}
                     </div>
                     <h3 className="font-semibold text-base">{category}</h3>
                   </div>
-                  <div className="grid gap-6 sm:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-2">
                     {opps.map((opp) => (
-                      <Card key={opp.id} className="hover:border-primary/50 transition-colors" style={{ backgroundColor: "var(--opp-card-bg)", border: "2px solid black" }}>
-                        <CardHeader className="pb-2">
+                      <Card key={opp.id} size="sm" className="transition-shadow hover:shadow-md">
+                        <CardHeader className="pb-0">
                           <div className="flex items-start justify-between gap-2">
                             <CardTitle className="text-sm font-semibold leading-snug">
                               {opp.title}
                             </CardTitle>
-                            <Badge variant="secondary" className="shrink-0 text-xs" style={{ backgroundColor: CATEGORY_COLORS[opp.category]?.bg, color: CATEGORY_COLORS[opp.category]?.text }}>
+                            <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${categoryChip(opp.category)}`}>
                               {opp.category}
-                            </Badge>
+                            </span>
                           </div>
                           {opp.organization && (
                             <CardDescription className="text-xs">{opp.organization}</CardDescription>
@@ -165,7 +153,7 @@ export default async function HomePage() {
                             )}
                             {opp.url && (
                               <a href={opp.url} target="_blank" rel="noopener noreferrer">
-                                <Button size="sm" variant="outline" className="text-xs h-7 transition-all duration-300 border-black text-black hover:bg-black hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-black">
+                                <Button size="sm" variant="outline" className="text-xs h-7">
                                   Learn more
                                 </Button>
                               </a>
@@ -180,22 +168,22 @@ export default async function HomePage() {
             })}
           </div>
         )}
-
-        {/* People Recommendations */}
-        {recommendations.length > 0 && (
-          <section className="relative z-10 flex flex-col gap-6">
-            <div className="flex flex-col items-center gap-2 sm:relative sm:flex-row sm:justify-center">
-              <h2 className="text-3xl font-bold tracking-tight px-6 py-3 rounded-xl backdrop-blur-2xl bg-white/20 dark:bg-black/20">Suggested Connections</h2>
-              <Link href="/people" className="sm:absolute sm:right-0">
-                <Button variant="ghost" size="sm" className="gap-1 backdrop-blur-2xl bg-white/20 dark:bg-black/20 rounded-xl hover:bg-black hover:text-white dark:hover:bg-black dark:hover:text-white">
-                  See all <ArrowRight className="size-4" />
-                </Button>
-              </Link>
-            </div>
-            <PeopleCarousel people={recommendations} currentUserId={user?.id ?? ""} />
-          </section>
-        )}
       </section>
+
+      {/* People Recommendations */}
+      {recommendations.length > 0 && (
+        <section className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold tracking-tight">Suggested Connections</h2>
+            <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" asChild>
+              <Link href="/people">
+                See all <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          </div>
+          <PeopleCarousel people={recommendations} currentUserId={user?.id ?? ""} />
+        </section>
+      )}
     </div>
   )
 }

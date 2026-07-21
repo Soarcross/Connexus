@@ -31,7 +31,7 @@ export default async function MainLayout({
                 chapterName={profile?.chapters?.name ?? null}
                 isChapterAdmin={profile?.chapter_role === "chapter_admin"}
             />
-            <main className="max-w-6xl mx-auto px-4 py-8">
+            <main className="max-w-[1128px] mx-auto px-4 py-6">
                 {children}
             </main>
         </div>

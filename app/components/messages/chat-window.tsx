@@ -110,7 +110,7 @@ export function ChatWindow({ conversationId, currentUserId, otherProfile, initia
     }
 
     return (
-        <div className="flex flex-col h-[calc(100vh-8rem)]">
+        <div className="flex flex-col h-[calc(100svh-6.5rem)]">
 
             {/* Header */}
             <div className="flex items-center gap-3 pb-4 border-b mb-4">

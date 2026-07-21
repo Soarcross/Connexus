@@ -8,7 +8,8 @@ import { Badge } from "@/app/components/ui/badge"
 import { Card, CardContent } from "@/app/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Button } from "@/app/components/ui/button"
-import { Search, X } from "lucide-react"
+import { Search, X, SlidersHorizontal } from "lucide-react"
+import { PageShell } from "@/app/components/layout/page-shell"
 
 type Profile = {
     id: string
@@ -153,10 +154,82 @@ export function PeopleClient({ profiles, initialSearch, viewerChapterId }: Props
         })
     }, [baseProfiles, search, selectedInterests, selectedLookingFor, gradYearFilter, clubRoleFilter])
 
-    return (
-        <div className="flex flex-col gap-6">
+    const filtersCard = (
+        <Card size="sm">
+            <CardContent className="flex flex-col gap-5">
 
-            {/* Search + Filter Toggle */}
+                {/* Grad Year */}
+                <div className="flex flex-col gap-2">
+                    <p className="text-sm font-medium">Graduation Year</p>
+                    <Input
+                        placeholder="e.g. 2025"
+                        value={gradYearFilter}
+                        onChange={(e) => setGradYearFilter(e.target.value)}
+                        type="number"
+                        min={1970}
+                        max={2035}
+                    />
+                </div>
+
+                {/* Club Role */}
+                <div className="flex flex-col gap-2">
+                    <p className="text-sm font-medium">Club Role</p>
+                    <Input
+                        placeholder="e.g. Math Team"
+                        value={clubRoleFilter}
+                        onChange={(e) => setClubRoleFilter(e.target.value)}
+                    />
+                </div>
+
+                {/* Interests */}
+                <div className="flex flex-col gap-2">
+                    <p className="text-sm font-medium">Career Interests</p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {INTEREST_OPTIONS.map(interest => (
+                            <Badge
+                                key={interest}
+                                variant={selectedInterests.includes(interest) ? "default" : "outline"}
+                                className="cursor-pointer transition-colors"
+                                onClick={() => toggleInterest(interest)}
+                            >
+                                {interest}
+                            </Badge>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Looking For */}
+                <div className="flex flex-col gap-2">
+                    <p className="text-sm font-medium">Looking For</p>
+                    <div className="flex flex-wrap gap-1.5">
+                        {LOOKING_FOR_OPTIONS.map(option => (
+                            <Badge
+                                key={option}
+                                variant={selectedLookingFor.includes(option) ? "default" : "outline"}
+                                className="cursor-pointer transition-colors"
+                                onClick={() => toggleLookingFor(option)}
+                            >
+                                {option}
+                            </Badge>
+                        ))}
+                    </div>
+                </div>
+
+                {hasActiveFilters && (
+                    <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-muted-foreground w-fit">
+                        <X className="size-3" />
+                        Clear filters
+                    </Button>
+                )}
+            </CardContent>
+        </Card>
+    )
+
+    return (
+        <PageShell left={filtersCard}>
+        <div className="flex flex-col gap-4">
+
+            {/* Search + toggles */}
             <div className="flex gap-2">
                 <div className="relative flex-1">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -164,23 +237,24 @@ export function PeopleClient({ profiles, initialSearch, viewerChapterId }: Props
                         placeholder="Search by name, interests, or club roles..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="pl-8"
+                        className="pl-8 bg-card"
                     />
                 </div>
                 <Button
                     variant={showFilters ? "default" : "outline"}
                     onClick={() => setShowFilters(!showFilters)}
-                    className="shrink-0"
+                    className="shrink-0 gap-1.5 lg:hidden"
                 >
+                    <SlidersHorizontal className="size-4" />
                     Filters
                     {hasActiveFilters && (
-                        <span className="ml-1.5 size-4 rounded-full bg-primary-foreground text-primary text-xs flex items-center justify-center font-bold">
+                        <span className="size-4 rounded-full bg-primary-foreground text-primary text-xs flex items-center justify-center font-bold">
                             !
                         </span>
                     )}
                 </Button>
                 {hasActiveFilters && (
-                    <Button variant="ghost" size="icon" onClick={clearFilters} className="shrink-0">
+                    <Button variant="ghost" size="icon" onClick={clearFilters} className="shrink-0 lg:hidden">
                         <X className="size-4" />
                     </Button>
                 )}
@@ -196,73 +270,8 @@ export function PeopleClient({ profiles, initialSearch, viewerChapterId }: Props
                 )}
             </div>
 
-            {/* Filters Panel */}
-            {showFilters && (
-                <Card>
-                    <CardContent className="pt-4 flex flex-col gap-5">
-
-                        {/* Grad Year */}
-                        <div className="flex flex-col gap-2">
-                            <p className="text-sm font-medium">Graduation Year</p>
-                            <Input
-                                placeholder="e.g. 2025"
-                                value={gradYearFilter}
-                                onChange={(e) => setGradYearFilter(e.target.value)}
-                                className="max-w-[160px]"
-                                type="number"
-                                min={1970}
-                                max={2035}
-                            />
-                        </div>
-
-                        {/* Club Role */}
-                        <div className="flex flex-col gap-2">
-                            <p className="text-sm font-medium">Club Role</p>
-                            <Input
-                                placeholder="e.g. Math Team"
-                                value={clubRoleFilter}
-                                onChange={(e) => setClubRoleFilter(e.target.value)}
-                                className="max-w-[240px]"
-                            />
-                        </div>
-
-                        {/* Interests */}
-                        <div className="flex flex-col gap-2">
-                            <p className="text-sm font-medium">Career Interests</p>
-                            <div className="flex flex-wrap gap-2">
-                                {INTEREST_OPTIONS.map(interest => (
-                                    <Badge
-                                        key={interest}
-                                        variant={selectedInterests.includes(interest) ? "default" : "outline"}
-                                        className="cursor-pointer transition-colors"
-                                        onClick={() => toggleInterest(interest)}
-                                    >
-                                        {interest}
-                                    </Badge>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Looking For */}
-                        <div className="flex flex-col gap-2">
-                            <p className="text-sm font-medium">Looking For</p>
-                            <div className="flex flex-wrap gap-2">
-                                {LOOKING_FOR_OPTIONS.map(option => (
-                                    <Badge
-                                        key={option}
-                                        variant={selectedLookingFor.includes(option) ? "default" : "outline"}
-                                        className="cursor-pointer transition-colors"
-                                        onClick={() => toggleLookingFor(option)}
-                                    >
-                                        {option}
-                                    </Badge>
-                                ))}
-                            </div>
-                        </div>
-
-                    </CardContent>
-                </Card>
-            )}
+            {/* Filters inline on smaller screens (left rail hidden below lg) */}
+            {showFilters && <div className="lg:hidden">{filtersCard}</div>}
 
             {/* Results Count */}
             <p className="text-sm text-muted-foreground">
@@ -281,13 +290,12 @@ export function PeopleClient({ profiles, initialSearch, viewerChapterId }: Props
                     {filtered.map(profile => (
                         <Card
                             key={profile.id}
-                            className="cursor-pointer transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_4px_10px_rgba(0,0,0,0.35)] hover:bg-accent dark:hover:border-primary/50 dark:hover:shadow-none dark:hover:bg-accent"
-                            style={{ border: "2px solid black" }}
+                            className="cursor-pointer transition-shadow hover:shadow-md"
                             onClick={() => router.push(`/profile/${profile.id}`)}
                         >
                             <CardContent className="pt-6 flex flex-col gap-4">
                                 <div className="flex items-center gap-3">
-                                    <Avatar className="size-12 border border-black/30 dark:border-0">
+                                    <Avatar className="size-12">
                                         <AvatarImage src={profile.avatar_url ?? ""} />
                                         <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                                             {profile.full_name?.[0] ?? "?"}
@@ -343,5 +351,6 @@ export function PeopleClient({ profiles, initialSearch, viewerChapterId }: Props
                 </div>
             )}
         </div>
+        </PageShell>
     )
 }
