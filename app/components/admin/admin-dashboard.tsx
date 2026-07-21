@@ -393,10 +393,14 @@ export function AdminDashboard({
 
     async function handleToggleAdmin(user: User) {
         if (!confirm(`${user.is_admin ? "Remove" : "Grant"} admin access for ${user.full_name}?`)) return
-        const supabase = getSupaBrowserClient()
         try {
-            const { error } = await supabase.from("profiles").update({ is_admin: !user.is_admin } as any).eq("id", user.id)
-            if (error) throw error
+            const res = await fetch("/api/admin/set-admin", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: user.id, isAdmin: !user.is_admin }),
+            })
+            const json = await res.json()
+            if (!res.ok) throw new Error(json.error ?? "Failed to update.")
             setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_admin: !u.is_admin } : u))
             showSuccess(`Admin access ${!user.is_admin ? "granted" : "removed"} for ${user.full_name}.`)
         } catch (err) {

@@ -9,7 +9,7 @@ import { Button } from "@/app/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
 import { Input } from "@/app/components/ui/input"
 import { Textarea } from "@/app/components/ui/textarea"
-import { MessageCircle, Mail, Sparkles } from "lucide-react"
+import { MessageCircle, Sparkles } from "lucide-react"
 import { Camera, Pencil, X, Check, ArrowRight, Plus } from "lucide-react"
 
 type Profile = {
@@ -132,6 +132,18 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
     async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0]
         if (!file) return
+
+        if (!file.type.startsWith("image/")) {
+            setError("Please upload an image file.")
+            e.target.value = ""
+            return
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            setError("Image must be under 2MB.")
+            e.target.value = ""
+            return
+        }
+        setError(null)
 
         setAvatarUrl(URL.createObjectURL(file))
         setLoading(true)
@@ -401,24 +413,6 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
                                                 <MessageCircle className="size-4" />
                                                 Message {fullName?.split(" ")[0]}
                                             </Button>
-
-                                            {profile.email && (
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    className="gap-2"
-                                                    asChild
-                                                >
-                                                    <a
-                                                        href={`https://mail.google.com/mail/?view=cm&to=${profile.email}&su=Hey ${fullName?.split(" ")[0]}!`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                    >
-                                                        <Mail className="size-4" />
-                                                        Email
-                                                    </a>
-                                                </Button>
-                                            )}
                                         </div>
                                     )}
                                 </>

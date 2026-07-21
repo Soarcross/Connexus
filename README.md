@@ -9,7 +9,7 @@ npm install
 npm run dev      # dev server on :3000
 ```
 
-`.env.local` needs `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. There's no staging database — the Supabase project is production.
+`.env.local` needs `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (server-only, powers the privileged routes under `app/api/admin/`), and `SUPABASE_ACCESS_TOKEN` (an account-scoped Supabase CLI credential, broader than this one project — handle with care). The file is gitignored and has never been committed. There's no staging database — the Supabase project is production.
 
 Other commands:
 

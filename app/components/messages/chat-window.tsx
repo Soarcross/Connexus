@@ -103,7 +103,13 @@ export function ChatWindow({ conversationId, currentUserId, otherProfile, initia
 
             setInput("")
         } catch (err) {
-            console.error("Failed to send message:", err)
+            // Supabase error objects can carry message/details/hint/code;
+            // only surface the full object to the console in development.
+            if (process.env.NODE_ENV === "development") {
+                console.error("Failed to send message:", err)
+            } else {
+                console.error("Failed to send message.")
+            }
         } finally {
             setSending(false)
         }

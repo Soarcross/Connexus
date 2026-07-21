@@ -58,12 +58,17 @@ const [
         .from("contact_submissions")
         .select("*")
         .order("created_at", { ascending: false }),
-    supabase
-        .from("messages_per_day")
-        .select("*"),
-    supabase
-        .from("users_per_day")
-        .select("*"),
+    // These two used to read the messages_per_day / users_per_day views
+    // directly. Both views are SECURITY DEFINER (they bypass the underlying
+    // tables' RLS), and `authenticated` held SELECT on them -- so any logged-in
+    // non-admin could hit /rest/v1/users_per_day and read platform-wide daily
+    // signup counts, going around this page's is_admin gate entirely. The
+    // views are now revoked and replaced by these admin-gated RPCs, which
+    // re-check is_admin inside the database. Same { day, count } shape.
+    // (Cast: types/supabase.ts predates these functions -- regenerate after
+    // applying supabase/sql/002_security_hardening.sql and drop the cast.)
+    (supabase as any).rpc("admin_messages_per_day"),
+    (supabase as any).rpc("admin_users_per_day"),
     supabase
         .from("profiles")
         .select("id", { count: "exact", head: true }),

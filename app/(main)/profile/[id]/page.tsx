@@ -1,5 +1,4 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
-import { createClient } from "@supabase/supabase-js"
 import { notFound } from "next/navigation"
 import { ProfileView } from "@/app/components/profile/profile-view"
 
@@ -10,11 +9,6 @@ type Props = {
 export default async function ProfilePage({ params }: Props) {
     const { id } = await params
     const supabase = await createSupabaseServerClient()
-
-    const supabaseAdmin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
 
     // get the logged in user so we know if this is their own profile
     const { data: { user } } = await supabase.auth.getUser()
@@ -31,10 +25,15 @@ export default async function ProfilePage({ params }: Props) {
         notFound()
     }
 
-    // fetch the email of the profile being viewed from auth.users
-    const { data: { user: profileUser } } = await supabaseAdmin.auth.admin.getUserById(id)
-
     const isOwnProfile = user?.id === profile.id
+
+    // Only ever expose the viewer's own auth email, taken from their own
+    // session -- never look up another user's email. This used to go
+    // through an inline service-role client (auth.admin.getUserById), which
+    // leaked every profile's private auth email to any authenticated
+    // viewer regardless of isOwnProfile. Other people's profiles get null;
+    // the in-app DM feature is the intended way to reach them.
+    const email = isOwnProfile ? (user?.email ?? null) : null
 
     // fetch the current viewer's interests to compute overlap
     let currentUserInterests: string[] = []
@@ -61,7 +60,7 @@ export default async function ProfilePage({ params }: Props) {
         <div className="min-h-svh bg-background">
             <div className="max-w-2xl mx-auto px-6 py-12">
                 <ProfileView
-                    profile={{ ...profile, email: profileUser?.email ?? null }}
+                    profile={{ ...profile, email }}
                     isOwnProfile={isOwnProfile}
                     userId={user?.id ?? null}
                     currentUserInterests={currentUserInterests}

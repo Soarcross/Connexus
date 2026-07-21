@@ -47,7 +47,18 @@ export default function ContactForm({ userEmail, userName }: Props) {
             if (error) throw error
             setSubmitted(true)
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
+            // The rate_limit_contact_submissions trigger (see
+            // supabase/sql/002_security_hardening.sql) raises a check_violation
+            // when a user exceeds 5 submissions/hour. Surface that specific
+            // message -- it's actionable -- but keep every other DB error
+            // generic rather than leaking Postgres detail to the browser.
+            const message =
+                typeof err === "object" && err !== null && "message" in err &&
+                typeof (err as { message: unknown }).message === "string" &&
+                (err as { message: string }).message.includes("Rate limit exceeded")
+                    ? "You've sent several messages recently. Please wait a little while before sending another."
+                    : "Something went wrong. Please try again."
+            setError(message)
         } finally {
             setLoading(false)
         }

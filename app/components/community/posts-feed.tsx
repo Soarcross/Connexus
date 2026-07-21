@@ -125,7 +125,13 @@ export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer }: 
             if (error) throw error
             router.refresh()
         } catch (err) {
-            console.error(err)
+            // Supabase error objects can carry message/details/hint/code;
+            // only surface the full object to the console in development.
+            if (process.env.NODE_ENV === "development") {
+                console.error(err)
+            } else {
+                console.error("Failed to delete post.")
+            }
         } finally {
             setDeletingId(null)
         }
@@ -148,7 +154,13 @@ export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer }: 
             setExtendingPostId(null)
             setExtendReason("")
         } catch (err) {
-            console.error(err)
+            // Supabase error objects can carry message/details/hint/code;
+            // only surface the full object to the console in development.
+            if (process.env.NODE_ENV === "development") {
+                console.error(err)
+            } else {
+                console.error("Failed to submit extension request.")
+            }
         } finally {
             setExtendLoading(false)
         }

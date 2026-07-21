@@ -1,8 +1,14 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,30}$/
+
+const bodySchema = z.object({
+    applicationId: z.string().uuid(),
+    slug: z.string().regex(SLUG_PATTERN, "Slug must be lowercase letters, numbers and hyphens, 2-31 characters."),
+})
 
 export async function POST(req: NextRequest) {
     // verify the caller is a platform admin
@@ -13,13 +19,19 @@ export async function POST(req: NextRequest) {
     const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single()
     if (!profile?.is_admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
-    const { applicationId, slug } = await req.json()
-    if (!applicationId || !slug) {
-        return NextResponse.json({ error: "applicationId and slug are required" }, { status: 400 })
+    let json: unknown
+    try {
+        json = await req.json()
+    } catch {
+        return NextResponse.json({ error: "Invalid request body." }, { status: 400 })
     }
-    if (!SLUG_PATTERN.test(slug)) {
-        return NextResponse.json({ error: "Slug must be lowercase letters, numbers and hyphens, 2-31 characters." }, { status: 400 })
+
+    const parsed = bodySchema.safeParse(json)
+    if (!parsed.success) {
+        const message = parsed.error.issues[0]?.message ?? "Invalid request."
+        return NextResponse.json({ error: message }, { status: 400 })
     }
+    const { applicationId, slug } = parsed.data
 
     const supabaseAdmin = createSupabaseAdminClient()
 
@@ -34,7 +46,8 @@ export async function POST(req: NextRequest) {
         .maybeSingle()
 
     if (claimError) {
-        return NextResponse.json({ error: claimError.message }, { status: 500 })
+        console.error("approve-chapter: failed to claim application", claimError)
+        return NextResponse.json({ error: "Failed to approve application." }, { status: 500 })
     }
     if (!application) {
         return NextResponse.json({ error: "Application not found or already reviewed." }, { status: 409 })
@@ -59,7 +72,8 @@ export async function POST(req: NextRequest) {
         if (chapterError.code === "23505") {
             return NextResponse.json({ error: `A chapter with slug "${slug}" already exists.` }, { status: 409 })
         }
-        return NextResponse.json({ error: chapterError.message }, { status: 500 })
+        console.error("approve-chapter: failed to create chapter", chapterError)
+        return NextResponse.json({ error: "Failed to create chapter." }, { status: 500 })
     }
 
     const { error: linkError } = await supabaseAdmin
@@ -68,7 +82,8 @@ export async function POST(req: NextRequest) {
         .eq("id", applicationId)
 
     if (linkError) {
-        return NextResponse.json({ error: linkError.message }, { status: 500 })
+        console.error("approve-chapter: failed to link application to chapter", linkError)
+        return NextResponse.json({ error: "Chapter created, but failed to link the application to it." }, { status: 500 })
     }
 
     const { origin } = new URL(req.url)
@@ -86,9 +101,10 @@ export async function POST(req: NextRequest) {
     if (inviteError) {
         // the chapter was still created successfully — surface the invite failure separately
         // so the admin can invite the leader manually (e.g. the email already has an account).
+        console.error("approve-chapter: failed to send invite email", inviteError)
         return NextResponse.json({
             chapter,
-            error: `Chapter created, but the invite email failed: ${inviteError.message}. If ${application.applicant_email} already has an account, ask them to log in and set their chapter manually.`,
+            error: `Chapter created, but the invite email failed to send. If ${application.applicant_email} already has an account, ask them to log in and set their chapter manually.`,
         }, { status: 207 })
     }
 
@@ -106,9 +122,10 @@ export async function POST(req: NextRequest) {
             .eq("id", invitedUserId)
 
         if (roleError) {
+            console.error("approve-chapter: failed to elevate invited user to chapter_admin", roleError)
             return NextResponse.json({
                 chapter,
-                error: `Chapter created and invite sent, but setting up ${application.applicant_email} as chapter admin failed: ${roleError.message}. You may need to set this manually once they accept the invite.`,
+                error: `Chapter created and invite sent, but setting up ${application.applicant_email} as chapter admin failed. You may need to set this manually once they accept the invite.`,
             }, { status: 207 })
         }
     }

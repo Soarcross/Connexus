@@ -37,7 +37,15 @@ export async function createSupabaseServerClient() {
                         cookieStore.set(name, value, options)
                     );
                 } catch (error) {
-                    console.log(error);
+                    // Expected here: cookies can only be modified in a Server
+                    // Action or Route Handler, and setAll() is also invoked
+                    // from plain Server Component renders where writes are a
+                    // no-op. Session refresh is handled by proxy.ts, so this
+                    // is safe to ignore; only log in development to avoid
+                    // spamming production logs with a benign, expected error.
+                    if (process.env.NODE_ENV === "development") {
+                        console.log(error);
+                    }
                 }
             },
         },

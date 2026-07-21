@@ -1,55 +1,95 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
 
 const ROLES = ["Student", "Teacher", "Alum", "Parent"]
 const MAX_LEN = 2000
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+// The four required fields: zod enforces they're present, are strings, and
+// non-empty after trimming -- a single source of truth for the same
+// "required field" bucket the hand-rolled checks used to guard one by one.
+const requiredFieldsSchema = z.object({
+    applicant_name: z.string().trim().min(1),
+    applicant_email: z.string().trim().min(1),
+    school_name: z.string().trim().min(1),
+    motivation: z.string().trim().min(1),
+})
+
 export async function POST(req: NextRequest) {
-    let body: Record<string, unknown>
+    let body: unknown
     try {
         body = await req.json()
     } catch {
         return NextResponse.json({ error: "Invalid request body." }, { status: 400 })
     }
 
-    const {
-        applicant_name,
-        applicant_email,
-        applicant_role,
-        school_name,
-        city,
-        state,
-        motivation,
-        website, // honeypot — real users never see or fill this field
-    } = body ?? {}
+    const record = (body && typeof body === "object" ? body : {}) as Record<string, unknown>
+    const { applicant_role, city, state, website } = record // website is a honeypot — real users never see or fill this field
 
-    // Bots that fill hidden fields get a fake success with no insert.
+    // Bots that fill hidden fields get a fake success with no insert. This is
+    // checked before any other validation so a bot that also mangles the
+    // other fields still gets the same fake success, not a validation error
+    // that would reveal the honeypot's existence.
     if (typeof website === "string" && website.trim().length > 0) {
         return NextResponse.json({ success: true })
     }
 
-    if (
-        typeof applicant_name !== "string" || !applicant_name.trim() ||
-        typeof applicant_email !== "string" || !applicant_email.trim() ||
-        typeof school_name !== "string" || !school_name.trim() ||
-        typeof motivation !== "string" || !motivation.trim()
-    ) {
+    const supabase = await createSupabaseServerClient()
+
+    // Rate limit before doing any real work. This endpoint is unauthenticated
+    // and writes a row, so without a limit anyone can flood chapter_applications
+    // (and the admin review queue) indefinitely. Keyed by client IP: 3 attempts
+    // per hour is far above what a genuine applicant needs and far below what a
+    // script needs to be useful.
+    //
+    // Placed AFTER the honeypot so a caught bot still gets the same fake
+    // success and learns nothing, but BEFORE validation so malformed spam
+    // costs us nothing. Fails OPEN: if the limiter itself errors we would
+    // rather accept a legitimate application than hard-fail the public form.
+    //
+    // The RPC runs through the service-role client, not the anon one:
+    // check_rate_limit writes a row on every call, so it is deliberately not
+    // granted to anon/authenticated (a public limiter is its own abuse vector
+    // -- unbounded distinct keys would bloat the table). This is a route
+    // handler under app/api/, which is the one place the admin client belongs.
+    // (Cast: types/supabase.ts predates check_rate_limit -- regenerate after
+    // applying supabase/sql/002_security_hardening.sql and drop the cast.)
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
+    const { data: withinLimit, error: rateLimitError } = await (createSupabaseAdminClient() as any).rpc("check_rate_limit", {
+        p_key: `apply:${clientIp}`,
+        p_max_hits: 3,
+        p_window_seconds: 3600,
+    })
+    if (rateLimitError) {
+        console.error("apply: rate limit check failed, allowing request", rateLimitError)
+    } else if (withinLimit === false) {
+        return NextResponse.json(
+            { error: "Too many applications from this network. Please try again later." },
+            { status: 429 }
+        )
+    }
+
+    const parsed = requiredFieldsSchema.safeParse(record)
+    if (!parsed.success) {
         return NextResponse.json({ error: "Please fill in all required fields." }, { status: 400 })
     }
 
-    if (!EMAIL_PATTERN.test(applicant_email.trim())) {
+    const {
+        applicant_name: trimmedName,
+        applicant_email: trimmedEmail,
+        school_name: trimmedSchool,
+        motivation: trimmedMotivation,
+    } = parsed.data
+
+    if (!EMAIL_PATTERN.test(trimmedEmail)) {
         return NextResponse.json({ error: "Please enter a valid email address." }, { status: 400 })
     }
 
     // check the trimmed lengths — these are what actually get stored, so a
     // whitespace-padded field shouldn't be rejected as "too long" when the
     // real, saved value fits comfortably under the cap.
-    const trimmedName = applicant_name.trim()
-    const trimmedEmail = applicant_email.trim()
-    const trimmedSchool = school_name.trim()
-    const trimmedMotivation = motivation.trim()
-
     if (
         trimmedName.length > 200 ||
         trimmedEmail.length > 200 ||
@@ -60,8 +100,6 @@ export async function POST(req: NextRequest) {
     }
 
     const role = ROLES.includes(applicant_role as string) ? applicant_role as string : "Student"
-
-    const supabase = await createSupabaseServerClient()
 
     const { error } = await supabase
         .from("chapter_applications")
@@ -87,7 +125,8 @@ export async function POST(req: NextRequest) {
                 { status: 409 }
             )
         }
-        return NextResponse.json({ error: error.message }, { status: 500 })
+        console.error("apply: failed to insert chapter application", error)
+        return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })

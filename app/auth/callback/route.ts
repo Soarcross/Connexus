@@ -2,14 +2,30 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { getChapterSlug } from "@/lib/chapter"
 import { NextRequest, NextResponse } from "next/server"
 
+// Only allow same-origin, absolute-path redirects (e.g. "/reset-password").
+// Rejects anything that isn't a single leading slash: protocol-relative
+// ("//evil.com"), backslash-based ("/\evil.com", which some browsers treat
+// the same as "//"), or any absolute URL -- all of which would otherwise
+// send the OAuth/password-reset landing flow off-site.
+function sanitizeNextPath(next: string | null): string | null {
+    if (!next) return null
+    if (!next.startsWith("/")) return null
+    if (next.startsWith("//") || next.startsWith("/\\")) return null
+    return next
+}
+
 export async function GET(request: NextRequest) {
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get("code")
-    const next = searchParams.get("next")
+    const next = sanitizeNextPath(searchParams.get("next"))
 
     if (code) {
         const supabase = await createSupabaseServerClient()
-        await supabase.auth.exchangeCodeForSession(code)
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+
+        if (exchangeError) {
+            return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`)
+        }
 
         // if there's a next param (e.g. password reset) redirect there
         if (next) {
