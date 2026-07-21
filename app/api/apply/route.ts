@@ -54,10 +54,8 @@ export async function POST(req: NextRequest) {
     // granted to anon/authenticated (a public limiter is its own abuse vector
     // -- unbounded distinct keys would bloat the table). This is a route
     // handler under app/api/, which is the one place the admin client belongs.
-    // (Cast: types/supabase.ts predates check_rate_limit -- regenerate after
-    // applying supabase/sql/002_security_hardening.sql and drop the cast.)
     const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
-    const { data: withinLimit, error: rateLimitError } = await (createSupabaseAdminClient() as any).rpc("check_rate_limit", {
+    const { data: withinLimit, error: rateLimitError } = await createSupabaseAdminClient().rpc("check_rate_limit", {
         p_key: `apply:${clientIp}`,
         p_max_hits: 3,
         p_window_seconds: 3600,

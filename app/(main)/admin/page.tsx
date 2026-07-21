@@ -65,10 +65,8 @@ const [
     // signup counts, going around this page's is_admin gate entirely. The
     // views are now revoked and replaced by these admin-gated RPCs, which
     // re-check is_admin inside the database. Same { day, count } shape.
-    // (Cast: types/supabase.ts predates these functions -- regenerate after
-    // applying supabase/sql/002_security_hardening.sql and drop the cast.)
-    (supabase as any).rpc("admin_messages_per_day"),
-    (supabase as any).rpc("admin_users_per_day"),
+    supabase.rpc("admin_messages_per_day"),
+    supabase.rpc("admin_users_per_day"),
     supabase
         .from("profiles")
         .select("id", { count: "exact", head: true }),
