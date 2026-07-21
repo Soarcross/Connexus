@@ -1,5 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
-import { getChapterSlug } from "@/lib/chapter"
+import { getChapterSlug, getChapterHomeUrl } from "@/lib/chapter"
 import { NextRequest, NextResponse } from "next/server"
 
 // Only allow same-origin, absolute-path redirects (e.g. "/reset-password").
@@ -37,32 +37,41 @@ export async function GET(request: NextRequest) {
         if (user) {
             const { data: profile } = await supabase
                 .from("profiles")
-                .select("grad_year, interests, chapter_id")
+                .select("grad_year, interests, chapter_id, chapters(slug)")
                 .eq("id", user.id)
                 .single()
+
+            let chapterSlug = profile?.chapters?.slug ?? null
 
             // OAuth signups (e.g. Google) don't carry our custom chapter metadata,
             // so backfill from the subdomain here if the profile has no chapter yet.
             if (!profile?.chapter_id) {
-                const slug = await getChapterSlug()
-                if (slug) {
+                const currentSlug = await getChapterSlug()
+                if (currentSlug) {
                     const { data: chapter } = await supabase
                         .from("chapters")
-                        .select("id")
-                        .eq("slug", slug)
+                        .select("id, slug")
+                        .eq("slug", currentSlug)
                         .eq("status", "Active")
                         .maybeSingle()
                     if (chapter) {
                         await supabase.from("profiles").update({ chapter_id: chapter.id }).eq("id", user.id)
+                        chapterSlug = chapter.slug
                     }
                 }
             }
 
-            if (!profile?.grad_year || !profile?.interests?.length) {
-                return NextResponse.redirect(`${origin}/profile/${user.id}`)
+            const destinationPath = (!profile?.grad_year || !profile?.interests?.length)
+                ? `/profile/${user.id}`
+                : "/home"
+
+            // Always land the user on their own chapter's subdomain, not whichever
+            // one they happened to authenticate from.
+            if (chapterSlug && chapterSlug !== (await getChapterSlug())) {
+                return NextResponse.redirect(getChapterHomeUrl(chapterSlug, destinationPath, origin))
             }
 
-            return NextResponse.redirect(`${origin}/home`)
+            return NextResponse.redirect(`${origin}${destinationPath}`)
         }
     }
 

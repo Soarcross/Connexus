@@ -14,15 +14,23 @@ import { getSupaBrowserClient } from "@/lib/supabase/client"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
+type ChapterOption = {
+  id: string
+  name: string
+  school_name: string
+}
+
 type Props = React.ComponentProps<"form"> & {
   chapterId?: string | null
   chapterName?: string | null
+  chapters?: ChapterOption[]
 }
 
 export function SignupForm({
   className,
-  chapterId,
+  chapterId: defaultChapterId,
   chapterName,
+  chapters = [],
   ...props
 }: Props) {
   const router = useRouter()
@@ -30,6 +38,7 @@ export function SignupForm({
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [chapterId, setChapterId] = useState(defaultChapterId ?? "")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -37,6 +46,11 @@ export function SignupForm({
   async function handleEmailSignup(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+
+    if (!chapterId) {
+      setError("Please select your chapter.")
+      return
+    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.")
@@ -61,7 +75,7 @@ export function SignupForm({
           // client-trusted (see supabase/sql/001_chapters.sql section 4).
           // The DB trigger defaults it to 'member'; only the platform-admin
           // approve-chapter route can elevate a profile to chapter_admin.
-          ...(chapterId ? { chapter_id: chapterId } : {}),
+          chapter_id: chapterId,
         },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
@@ -129,6 +143,21 @@ export function SignupForm({
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="chapter">School / Chapter</FieldLabel>
+          <select
+            id="chapter"
+            required
+            value={chapterId}
+            onChange={(e) => setChapterId(e.target.value)}
+            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+          >
+            <option value="">Select your chapter&hellip;</option>
+            {chapters.map((c) => (
+              <option key={c.id} value={c.id}>{c.school_name}</option>
+            ))}
+          </select>
         </Field>
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>

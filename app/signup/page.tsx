@@ -5,6 +5,11 @@ import { getCurrentChapter } from "@/lib/chapter"
 export default async function SignupPage() {
     const supabase = await createSupabaseServerClient()
     const chapter = await getCurrentChapter(supabase)
+    const { data: chapters } = await supabase
+        .from("chapters")
+        .select("id, name, school_name")
+        .eq("status", "Active")
+        .order("name")
 
     return (
         <div className="grid min-h-svh lg:grid-cols-2">
@@ -17,7 +22,11 @@ export default async function SignupPage() {
                 </div>
                 <div className="flex flex-1 items-center justify-center">
                     <div className="w-full max-w-xs">
-                        <SignupForm chapterId={chapter?.id ?? null} chapterName={chapter?.name ?? null} />
+                        <SignupForm
+                            chapterId={chapter?.id ?? null}
+                            chapterName={chapter?.name ?? null}
+                            chapters={chapters ?? []}
+                        />
                     </div>
                 </div>
             </div>
