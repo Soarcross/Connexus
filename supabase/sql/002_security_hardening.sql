@@ -50,10 +50,25 @@ begin;
 -- become a platform admin; the same gap lets a user self-assign
 -- chapter_role = 'chapter_admin' on their own row.
 --
--- Column-level REVOKE is layered UNDER row-level security: Postgres checks
--- column privileges first, so this blocks the write before RLS is even
--- consulted, for every role except service_role (which was never granted
--- these and doesn't need them -- it bypasses grants entirely).
+-- Column privileges are layered UNDER row-level security: Postgres checks
+-- them first, so this blocks the write before RLS is even consulted, for
+-- every role except service_role (which bypasses grants entirely).
+--
+-- GOTCHA, learned the hard way when this migration was first applied: a
+-- column-level REVOKE CANNOT narrow a table-level grant. anon/authenticated
+-- held table-wide INSERT/UPDATE on profiles (Supabase's default grant), which
+-- implicitly covers every column, so
+--   revoke update (is_admin, chapter_role) on public.profiles from ...
+-- silently succeeded and changed NOTHING -- information_schema still showed
+-- the privileges and the escalation was still live. The table-wide grant has
+-- to be dropped first, then re-granted column by column. Verify with:
+--   select grantee, privilege_type from information_schema.role_table_grants
+--   where table_name = 'profiles' and grantee in ('anon','authenticated');
+-- If INSERT/UPDATE appear there at all, the column grants below are moot.
+--
+-- anon deliberately gets nothing back: profile rows are created by the
+-- handle_new_user trigger (SECURITY DEFINER, runs as the owner), and every
+-- app-side profile write happens as authenticated.
 --
 -- This deliberately breaks the browser-side toggle at
 -- app/components/admin/admin-dashboard.tsx's handleToggleAdmin(), which does
@@ -63,8 +78,15 @@ begin;
 -- by another agent in this remediation), which uses
 -- createSupabaseAdminClient() and is therefore unaffected by this revoke.
 -- See "DEPLOYMENT ORDER" above.
-revoke update (is_admin, chapter_role) on public.profiles from anon, authenticated;
-revoke insert (is_admin, chapter_role) on public.profiles from anon, authenticated;
+revoke insert, update on public.profiles from anon, authenticated;
+
+grant update (
+  full_name, avatar_url, bio, grad_year, interests, looking_for, club_roles, chapter_id
+) on public.profiles to authenticated;
+
+grant insert (
+  id, full_name, avatar_url, bio, grad_year, interests, looking_for, club_roles, chapter_id
+) on public.profiles to authenticated;
 
 -- =========================================================================
 -- 2. Anon PII leak fix: profiles readable without authentication
@@ -384,7 +406,25 @@ begin
 end;
 $$;
 
-revoke execute on function public.delete_expired_posts() from anon, authenticated;
+-- GOTCHA (same family as the section 1 table-vs-column grant trap): Postgres
+-- grants EXECUTE on every new function to PUBLIC by default. Revoking from
+-- anon/authenticated alone leaves that PUBLIC grant in place and anon still
+-- inherits it -- on the first application of this file, delete_expired_posts
+-- remained callable via POST /rest/v1/rpc/delete_expired_posts. PUBLIC must be
+-- named explicitly. Check with `\df+` or:
+--   select proname, proacl from pg_proc where proname = 'delete_expired_posts';
+-- An entry of the form `=X/postgres` (empty grantee) IS the PUBLIC grant.
+revoke all on function public.delete_expired_posts() from public, anon, authenticated;
+
+-- Same treatment for every other non-user-facing function. The trigger
+-- functions do not need caller EXECUTE (the trigger mechanism invokes them as
+-- the definer), so revoking here does not affect any trigger.
+revoke all on function public.handle_new_user() from public, anon, authenticated;
+revoke all on function public.rls_auto_enable() from public, anon, authenticated;
+revoke all on function public.guard_post_moderation_fields() from public, anon, authenticated;
+revoke all on function public.guard_extension_request_status() from public, anon, authenticated;
+revoke all on function public.guard_message_edit_fields() from public, anon, authenticated;
+revoke all on function public.rate_limit_contact_submissions() from public, anon, authenticated;
 
 -- =========================================================================
 -- 9. messages UPDATE tightening
@@ -751,14 +791,41 @@ commit;
 -- Run these read-only queries after applying the migration to confirm each
 -- fix landed. None of them modify data.
 
--- 1. profiles: anon/authenticated must no longer hold write grants on
---    is_admin/chapter_role. Expect ZERO rows.
--- select table_name, column_name, grantee, privilege_type
--- from information_schema.column_privileges
+-- 1. profiles: check the TABLE-level grant first -- this is the one that
+--    matters. If INSERT/UPDATE show up here, a column-level revoke did
+--    nothing and is_admin is still writable regardless of what
+--    column_privileges reports. Expect ZERO rows.
+-- select grantee, privilege_type
+-- from information_schema.role_table_grants
 -- where table_schema = 'public' and table_name = 'profiles'
---   and column_name in ('is_admin', 'chapter_role')
 --   and grantee in ('anon', 'authenticated')
 --   and privilege_type in ('INSERT', 'UPDATE');
+--
+--    Then confirm the column grants are the intended set (is_admin and
+--    chapter_role must NOT appear; anon must not appear at all):
+-- select grantee, privilege_type, column_name
+-- from information_schema.column_privileges
+-- where table_schema = 'public' and table_name = 'profiles'
+--   and grantee in ('anon', 'authenticated')
+--   and privilege_type in ('INSERT', 'UPDATE')
+-- order by grantee, privilege_type, column_name;
+--
+--    Strongest check -- actually attempt the exploit as a real user (this
+--    rolls itself back and writes nothing):
+-- do $$
+-- declare victim uuid; result text;
+-- begin
+--   select id into victim from public.profiles where is_admin is not true limit 1;
+--   execute 'set local role authenticated';
+--   execute format('set local request.jwt.claims = %L',
+--     json_build_object('sub', victim, 'role', 'authenticated')::text);
+--   begin
+--     update public.profiles set is_admin = true where id = victim;
+--     result := 'STILL VULNERABLE';
+--   exception when others then result := 'blocked: ' || sqlerrm;
+--   end;
+--   raise exception 'escalation=[%] -- rolled back', result;
+-- end $$;
 
 -- 2. profiles: the public/anon SELECT policy must be gone, replaced by an
 --    authenticated-only one. Expect no policy with roles containing "public"
