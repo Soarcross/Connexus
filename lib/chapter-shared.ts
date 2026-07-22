@@ -6,7 +6,11 @@
 
 export const CHAPTER_SLUG_HEADER = "x-chapter-slug"
 
-export const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "highschoolconnections.org"
+// The one place to change when the domain changes. Currently stuyconnections.com
+// (temporary -- highschoolconnections.com hasn't been purchased yet). Swap this
+// literal to highschoolconnections.com once it's bought, or override per-environment
+// via NEXT_PUBLIC_ROOT_DOMAIN in Vercel without touching code.
+export const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? "stuyconnections.com"
 export const DEV_HOSTS = ["localhost", "lvh.me", "127.0.0.1"]
 export const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,30}$/
 

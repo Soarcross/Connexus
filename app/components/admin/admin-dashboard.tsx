@@ -1354,7 +1354,7 @@ export function AdminDashboard({
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div className="flex flex-col gap-2">
                                     <label className="text-sm font-medium">Contact Email</label>
-                                    <Input value={contactEmailEdit} onChange={(e) => setContactEmailEdit(e.target.value)} placeholder="contact@highschoolconnections.org" type="email" />
+                                    <Input value={contactEmailEdit} onChange={(e) => setContactEmailEdit(e.target.value)} placeholder="contact@stuyconnections.com" type="email" />
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <label className="text-sm font-medium">Contact Phone</label>

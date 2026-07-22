@@ -3,6 +3,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/supabase";
+import { ROOT_DOMAIN } from "@/lib/chapter-shared";
 
 let client: SupabaseClient<Database> | null = null;
 
@@ -20,9 +21,10 @@ export function getSupaBrowserClient(): SupabaseClient<Database> {
         );
     }
 
-    // see lib/supabase/server.ts for why this is set, and the constraint on
-    // how broad it may safely be
-    const cookieDomain = process.env.NEXT_PUBLIC_COOKIE_DOMAIN;
+    // see lib/supabase/server.ts for why this is set, the constraint on how
+    // broad it may safely be, and why the ROOT_DOMAIN default is production-only
+    const cookieDomain = process.env.NEXT_PUBLIC_COOKIE_DOMAIN
+        ?? (process.env.NODE_ENV === "production" ? ROOT_DOMAIN : undefined);
 
     client = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
         cookieOptions: cookieDomain ? { domain: cookieDomain } : undefined,
