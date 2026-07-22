@@ -29,7 +29,12 @@ const tabsListVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-muted",
+        // overflow-x-auto only on `default`: the `line` variant's active
+        // indicator sits at after:bottom-[-5px] and a scroll container clips it.
+        // Scrollbar hidden: the list is a fixed h-9, so a classic desktop
+        // scrollbar would eat half its height.
+        default:
+          "bg-muted overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         line: "gap-1 bg-transparent",
       },
     },

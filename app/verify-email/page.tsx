@@ -1,6 +1,6 @@
 export default function VerifyEmailPage() {
     return (
-        <div className="flex min-h-svh items-center justify-center">
+        <div className="flex min-h-svh items-center justify-center px-4">
             <div className="text-center flex flex-col gap-2">
                 <h1 className="text-2xl font-bold">Check your email</h1>
                 <p className="text-muted-foreground text-sm">

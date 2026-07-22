@@ -270,7 +270,7 @@ export function ChapterAdminDashboard({ chapterId, communityPosts: initialCommun
             {success && <div className="bg-primary/10 text-primary text-sm rounded-lg px-4 py-3">{success}</div>}
 
             <Tabs defaultValue="posts">
-                <TabsList className="grid grid-cols-3 w-full">
+                <TabsList className="w-full justify-start sm:grid sm:grid-cols-3">
                     <TabsTrigger value="posts">
                         Posts
                         {totalPostsBadge > 0 && (

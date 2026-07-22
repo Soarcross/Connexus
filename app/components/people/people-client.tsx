@@ -230,8 +230,8 @@ export function PeopleClient({ profiles, initialSearch, viewerChapterId }: Props
         <div className="flex flex-col gap-4">
 
             {/* Search + toggles */}
-            <div className="flex gap-2">
-                <div className="relative flex-1">
+            <div className="flex flex-wrap gap-2">
+                <div className="relative flex-1 min-w-[12rem]">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                     <Input
                         placeholder="Search by name, interests, or club roles..."

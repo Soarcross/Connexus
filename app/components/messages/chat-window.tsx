@@ -116,7 +116,7 @@ export function ChatWindow({ conversationId, currentUserId, otherProfile, initia
     }
 
     return (
-        <div className="flex flex-col h-[calc(100svh-6.5rem)]">
+        <div className="flex flex-col h-[calc(100dvh-6.5rem)]">
 
             {/* Header */}
             <div className="flex items-center gap-3 pb-4 border-b mb-4">
@@ -134,8 +134,8 @@ export function ChatWindow({ conversationId, currentUserId, otherProfile, initia
                         {otherProfile?.full_name?.[0] ?? "?"}
                     </AvatarFallback>
                 </Avatar>
-                <div>
-                    <p className="font-semibold text-sm">{otherProfile?.full_name ?? "Unknown"}</p>
+                <div className="min-w-0">
+                    <p className="font-semibold text-sm truncate">{otherProfile?.full_name ?? "Unknown"}</p>
                     <p
                         className="text-xs text-primary cursor-pointer hover:underline"
                         onClick={() => router.push(`/profile/${otherProfile?.id}`)}
@@ -146,7 +146,7 @@ export function ChatWindow({ conversationId, currentUserId, otherProfile, initia
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-1">
+            <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-3 pr-1">
                 {messages.length === 0 && (
                     <p className="text-center text-muted-foreground text-sm mt-8">
                         No messages yet. Say hello!
@@ -160,7 +160,7 @@ export function ChatWindow({ conversationId, currentUserId, otherProfile, initia
                             className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
                         >
                             <div
-                                className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm
+                                className={`max-w-[75%] min-w-0 break-words px-4 py-2.5 rounded-2xl text-sm
                                     ${isOwn
                                         ? "bg-primary text-primary-foreground rounded-br-sm"
                                         : "bg-muted text-foreground rounded-bl-sm"

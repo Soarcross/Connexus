@@ -270,13 +270,13 @@ export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer }: 
 
                 {/* Image lightbox */}
                 <Dialog open={!!expandedImage} onOpenChange={(open) => !open && setExpandedImage(null)}>
-                    <DialogContent className="max-w-3xl p-2 sm:p-2">
+                    <DialogContent className="p-2 sm:max-w-3xl">
                         <DialogTitle className="sr-only">Post image</DialogTitle>
                         {expandedImage && (
                             <img
                                 src={expandedImage}
                                 alt="Full size"
-                                className="w-full max-h-[80vh] rounded-md object-contain"
+                                className="w-full max-h-[75svh] rounded-md object-contain"
                             />
                         )}
                     </DialogContent>
@@ -292,7 +292,7 @@ export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer }: 
                         }
                     }}
                 >
-                    <DialogContent className="max-w-md">
+                    <DialogContent>
                         <DialogHeader>
                             <DialogTitle>Request Extension</DialogTitle>
                             <DialogDescription>
@@ -439,7 +439,7 @@ export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer }: 
                                 )}
 
                                 {/* Footer */}
-                                <div className="px-4 py-3 border-t border-border flex items-center justify-between gap-2">
+                                <div className="px-4 py-3 border-t border-border flex flex-wrap items-center justify-between gap-2">
                                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                         {post.deadline && (
                                             <>

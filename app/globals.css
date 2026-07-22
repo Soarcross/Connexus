@@ -141,6 +141,17 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans), system-ui, sans-serif;
+    /* Inherits, so one declaration keeps long URLs / unbroken tokens from
+       blowing out chat bubbles, bios, and post titles on narrow screens.
+       Deliberately NOT `overflow-x: hidden` — that kills the sticky headers. */
+    overflow-wrap: break-word;
+  }
+
+  img,
+  video,
+  canvas {
+    max-width: 100%;
+    height: auto;
   }
 
   html {

@@ -18,11 +18,13 @@ export default function MarketingLayout({
                             width={32}
                             height={32}
                         />
-                        <span className="font-bold text-base">High School Connections</span>
+                        <span className="hidden sm:inline font-bold text-base">High School Connections</span>
                     </Link>
 
                     <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="sm" asChild>
+                        {/* Hidden on phones to keep the header from overflowing;
+                            the same link is in the footer and the hero CTA. */}
+                        <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
                             <Link href="/apply">Start a chapter</Link>
                         </Button>
                         <Button variant="ghost" size="sm" asChild>
