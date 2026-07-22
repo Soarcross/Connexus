@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { CHAPTER_SLUG_HEADER, ROOT_DOMAIN, DEV_HOSTS, SLUG_PATTERN } from "@/lib/chapter-shared"
+import { CHAPTER_SLUG_HEADER, ROOT_DOMAIN, DEV_HOSTS, SLUG_PATTERN, DEFAULT_CHAPTER_SLUG } from "@/lib/chapter-shared"
 
 function resolveSlug(request: NextRequest): string | null {
     const host = (request.headers.get("host") ?? "").split(":")[0].toLowerCase()
@@ -13,7 +13,9 @@ function resolveSlug(request: NextRequest): string | null {
     const root = isDevHost ? DEV_HOSTS.find((devHost) => host.endsWith(devHost)) : ROOT_DOMAIN
     if (!root) return null
 
-    if (host === root || host === `www.${root}`) return null
+    // The apex/www domain is the flagship chapter's home, not a "no chapter"
+    // state -- see DEFAULT_CHAPTER_SLUG in lib/chapter-shared.ts.
+    if (host === root || host === `www.${root}`) return DEFAULT_CHAPTER_SLUG
 
     if (host.endsWith(`.${root}`)) {
         const subdomain = host.slice(0, -(`.${root}`.length))
