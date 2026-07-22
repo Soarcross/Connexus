@@ -52,7 +52,7 @@ const [
         .order("created_at", { ascending: false }),
     supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, grad_year, is_admin, created_at")
+        .select("id, full_name, avatar_url, grad_year, is_admin, created_at, chapter_id, chapter_role")
         .order("created_at", { ascending: false }),
     supabase
         .from("contact_submissions")

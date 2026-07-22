@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { origin } = new URL(req.url)
-    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+    const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
         application.applicant_email,
         {
             redirectTo: `${origin}/auth/callback`,
@@ -108,27 +108,11 @@ export async function POST(req: NextRequest) {
         }, { status: 207 })
     }
 
-    // Elevate the invited user to chapter_admin directly, via this already
-    // admin-gated, service-role code path -- never via raw_user_meta_data on
-    // the invite/signup itself, which a self-signup could forge to claim
-    // chapter_admin on any chapter. This also means the leader is chapter-
-    // scoped correctly even if the profiles-insert trigger only copies
-    // chapter_id (see supabase/sql/001_chapters.sql section 4).
-    const invitedUserId = inviteData.user?.id
-    if (invitedUserId) {
-        const { error: roleError } = await supabaseAdmin
-            .from("profiles")
-            .update({ chapter_id: chapter.id, chapter_role: "chapter_admin" })
-            .eq("id", invitedUserId)
-
-        if (roleError) {
-            console.error("approve-chapter: failed to elevate invited user to chapter_admin", roleError)
-            return NextResponse.json({
-                chapter,
-                error: `Chapter created and invite sent, but setting up ${application.applicant_email} as chapter admin failed. You may need to set this manually once they accept the invite.`,
-            }, { status: 207 })
-        }
-    }
+    // The invited applicant joins as a regular member (chapter_role defaults
+    // to 'member' via the new-user trigger, same as any other signup) — a
+    // new chapter has no chapter_admin until a platform admin explicitly
+    // assigns one via /api/admin/assign-chapter-admin. This is intentional:
+    // don't assume the applicant is who should run moderation for the chapter.
 
     return NextResponse.json({ success: true, chapter })
 }
