@@ -785,7 +785,9 @@ export function AdminDashboard({
             {success && <div className="bg-primary/10 text-primary text-sm rounded-lg px-4 py-3">{success}</div>}
 
             <Tabs defaultValue="stats">
-                <TabsList className="grid grid-cols-8 w-full">
+                {/* Scrollable strip below lg (TabsList is overflow-x-auto);
+                    the equal-width grid is restored at lg+. */}
+                <TabsList className="w-full justify-start lg:grid lg:grid-cols-8">
                     <TabsTrigger value="stats">Statistics</TabsTrigger>
                     <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
                     <TabsTrigger value="users">Users</TabsTrigger>
@@ -1002,7 +1004,7 @@ export function AdminDashboard({
                     <div className="flex flex-col gap-3">
                         {opportunities.map(opp => (
                             <Card key={opp.id} className={opp.is_featured ? "border-primary/30 bg-primary/5" : ""}>
-                                <CardContent className="py-4 flex items-start justify-between gap-4">
+                                <CardContent className="py-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                                     <div className="flex flex-col gap-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <p className="font-semibold text-sm">{opp.title}</p>
@@ -1034,7 +1036,7 @@ export function AdminDashboard({
                     <div className="flex flex-col gap-3">
                         {users.map(user => (
                             <Card key={user.id}>
-                                <CardContent className="py-4 flex items-center justify-between gap-4">
+                                <CardContent className="py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                                     <div className="flex items-center gap-3 min-w-0">
                                         <Avatar className="size-10 shrink-0">
                                             <AvatarImage src={user.avatar_url ?? ""} />
@@ -1120,7 +1122,7 @@ export function AdminDashboard({
                             {submissions.map(sub => (
                                 <Card key={sub.id} className={sub.resolved ? "opacity-60" : !sub.read ? "border-primary/30 bg-primary/5" : ""}>
                                     <CardContent className="py-4 flex flex-col gap-2">
-                                        <div className="flex items-start justify-between gap-2">
+                                        <div className="flex flex-wrap items-start justify-between gap-2">
                                             <div className="flex flex-col gap-0.5">
                                                 <div className="flex items-center gap-2 flex-wrap">
                                                     <p className="text-sm font-semibold">{sub.name}</p>

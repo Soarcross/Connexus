@@ -44,7 +44,7 @@ export function PeopleCarousel({ people, currentUserId }: Props) {
 
     return (
         <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {currentPage.map(person => (
                     <Card
                         key={person.id}

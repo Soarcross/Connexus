@@ -57,16 +57,16 @@ export default async function ProfilePage({ params }: Props) {
     }
 
     return (
-        <div className="min-h-svh bg-background">
-            <div className="max-w-2xl mx-auto px-6 py-12">
-                <ProfileView
-                    profile={{ ...profile, email }}
-                    isOwnProfile={isOwnProfile}
-                    userId={user?.id ?? null}
-                    currentUserInterests={currentUserInterests}
-                    availableChapters={availableChapters}
-                />
-            </div>
+        // No min-h-svh/bg-background here — (main)/layout.tsx already sets both,
+        // and its px-4 py-6 is the gutter. Extra padding only at sm+.
+        <div className="max-w-2xl mx-auto sm:px-2 sm:py-6">
+            <ProfileView
+                profile={{ ...profile, email }}
+                isOwnProfile={isOwnProfile}
+                userId={user?.id ?? null}
+                currentUserInterests={currentUserInterests}
+                availableChapters={availableChapters}
+            />
         </div>
     )
 }

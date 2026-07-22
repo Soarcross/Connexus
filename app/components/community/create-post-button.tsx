@@ -167,7 +167,7 @@ export function CreatePostButton({ userId, chapterId, trigger }: Props) {
             )}
 
             <Dialog open={open} onOpenChange={handleClose}>
-                <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>Share an Opportunity</DialogTitle>
                         <DialogDescription>

@@ -26,11 +26,13 @@ export default async function MarketingHomePage() {
                 <p className="text-muted-foreground text-lg max-w-2xl">
                     Connect with {chapter.name} students and alumni, share opportunities, and grow your network &mdash; all in one place.
                 </p>
-                <div className="flex items-center gap-3">
-                    <Button size="lg" asChild>
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+                    {/* chapter.name is operator-supplied and unbounded, so this
+                        button has to be allowed to wrap. */}
+                    <Button size="lg" className="w-full sm:w-auto whitespace-normal h-auto py-2.5 text-center sm:whitespace-nowrap" asChild>
                         <Link href="/signup">Join the {chapter.name} chapter</Link>
                     </Button>
-                    <Button size="lg" variant="outline" asChild>
+                    <Button size="lg" variant="outline" className="w-full sm:w-auto" asChild>
                         <Link href="/login">Log in</Link>
                     </Button>
                 </div>
@@ -47,13 +49,13 @@ export default async function MarketingHomePage() {
                 <p className="text-muted-foreground text-lg max-w-2xl">
                     High School Connections helps students and alumni from your school connect, share career opportunities, and build their network &mdash; organized by chapter, one per school.
                 </p>
-                <div className="flex items-center gap-3">
-                    <Button size="lg" asChild>
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
+                    <Button size="lg" className="w-full sm:w-auto" asChild>
                         <Link href="/apply">
                             Start a chapter at your school <ArrowRight className="size-4 ml-1" />
                         </Link>
                     </Button>
-                    <Button size="lg" variant="outline" asChild>
+                    <Button size="lg" variant="outline" className="w-full sm:w-auto" asChild>
                         <Link href="/login">Log in</Link>
                     </Button>
                 </div>

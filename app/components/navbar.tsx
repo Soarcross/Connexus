@@ -236,7 +236,10 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                                     )}
                                 </SheetTitle>
                             </SheetHeader>
-                            <div className="px-4 pb-4 flex flex-col gap-1">
+                            {/* min-h-0 is load-bearing: without it the flex item's
+                                min-height:auto floors it at content height and
+                                overflow-y-auto never engages (landscape phones). */}
+                            <div className="px-4 pb-4 flex flex-1 min-h-0 flex-col gap-1 overflow-y-auto">
                                 <form onSubmit={handleSearch} className="mb-2">
                                     <div className="relative">
                                         <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
