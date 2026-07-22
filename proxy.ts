@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { CHAPTER_SLUG_HEADER, ROOT_DOMAIN, DEV_HOSTS, SLUG_PATTERN } from "@/lib/chapter"
+import { CHAPTER_SLUG_HEADER, ROOT_DOMAIN, DEV_HOSTS, SLUG_PATTERN } from "@/lib/chapter-shared"
 
 function resolveSlug(request: NextRequest): string | null {
     const host = (request.headers.get("host") ?? "").split(":")[0].toLowerCase()

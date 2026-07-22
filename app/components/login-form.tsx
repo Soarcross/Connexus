@@ -11,7 +11,7 @@ import {
 } from "./ui/field"
 import { Input } from "./ui/input"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
-import { getChapterHomeUrl } from "@/lib/chapter"
+import { getChapterHomeUrl } from "@/lib/chapter-shared"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 

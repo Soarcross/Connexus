@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
-import { getChapterSlug, getChapterHomeUrl } from "@/lib/chapter"
+import { getChapterSlug } from "@/lib/chapter"
+import { getChapterHomeUrl } from "@/lib/chapter-shared"
 import { NextRequest, NextResponse } from "next/server"
 
 // Only allow same-origin, absolute-path redirects (e.g. "/reset-password").
