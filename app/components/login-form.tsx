@@ -17,17 +17,20 @@ import { useRouter } from "next/navigation"
 
 type Props = React.ComponentProps<"form"> & {
     currentChapterSlug?: string | null
+    /** Message for a `?error=` the auth callback redirected here with. */
+    initialError?: string | null
 }
 
 export function LoginForm({
     className,
     currentChapterSlug,
+    initialError = null,
     ...props
 }: Props) {
     const router = useRouter()
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-    const [error, setError] = useState<string | null>(null)
+    const [error, setError] = useState<string | null>(initialError)
     const [loading, setLoading] = useState(false)
 
     async function handleEmailLogin(e: React.FormEvent) {
