@@ -82,37 +82,67 @@ commit;
 -- write directly), so archived-item visibility must be enforced here, not only in
 -- the page queries.
 --
--- Review the existing policies before running this block — it replaces the SELECT
--- policies by name, and yours may be named differently:
---   select policyname, cmd, qual from pg_policies
---   where tablename in ('community_posts','opportunities');
-
--- Community posts: approved + unexpired to everyone; authors and admins see all
--- of their own, including archived ones.
+-- RUN THIS ONLY AFTER sections 1-5 have committed — it references
+-- opportunities.expires_at, which section 1 creates.
 --
---   drop policy if exists "community_posts_select" on public.community_posts;
---   create policy "community_posts_select" on public.community_posts
---     for select using (
---       (status = 'Approved' and (expires_at is null or expires_at > now()))
---       or user_id = auth.uid()
---       or exists (
---         select 1 from public.profiles p
---         where p.id = auth.uid() and p.is_admin
---       )
---     );
-
--- Opportunities: unexpired to everyone; the creator and admins also see archived.
+-- Written against the policies actually present on 2026-08-01:
 --
---   drop policy if exists "opportunities_select" on public.opportunities;
---   create policy "opportunities_select" on public.opportunities
---     for select using (
---       (expires_at is null or expires_at > now())
---       or created_by = auth.uid()
---       or exists (
---         select 1 from public.profiles p
---         where p.id = auth.uid() and p.is_admin
---       )
---     );
+--   community_posts SELECT x3:
+--     "Community posts select policy"          status='Approved' OR own OR is_admin
+--     "Users can view their own posts"         own
+--     "community_posts_select_chapter_admin"   chapter_admin of same chapter
+--   opportunities SELECT x1:
+--     "Opportunities are authenticated-viewable"   USING (true)
+--
+-- Postgres ORs permissive policies together, so the expiry condition only has to
+-- be added to the *public* branch of each. The author / admin / chapter-admin
+-- policies are left alone precisely so they keep seeing archived items.
+--
+-- ALTER POLICY is used rather than DROP + CREATE: it rewrites only the USING
+-- expression and preserves each policy's role grants, which a recreate would
+-- silently reset to PUBLIC.
+
+begin;
+
+-- Community posts: the public branch gains the expiry test. The `own` and
+-- `is_admin` branches are unchanged, so authors and admins still see archived
+-- posts. "Users can view their own posts" and the chapter-admin policy are not
+-- touched.
+alter policy "Community posts select policy" on public.community_posts
+  using (
+    (status = 'Approved' and (expires_at is null or expires_at > now()))
+    or auth.uid() = user_id
+    or exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.is_admin = true
+    )
+  );
+
+-- Opportunities: this is the only SELECT policy and it is currently USING (true),
+-- so every branch that should retain archived visibility has to be spelled out
+-- here or it is lost. The chapter-admin branch has no counterpart policy of its
+-- own -- chapter admins can update and delete opportunities in their chapter, so
+-- they must still be able to read the archived ones.
+alter policy "Opportunities are authenticated-viewable" on public.opportunities
+  using (
+    (expires_at is null or expires_at > now())
+    or created_by = auth.uid()
+    or exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.is_admin = true
+    )
+    or exists (
+      select 1 from public.profiles p
+      where p.id = auth.uid()
+        and p.chapter_role = 'chapter_admin'
+        and p.chapter_id = opportunities.chapter_id
+    )
+  );
+
+commit;
+
+-- Verify: as a non-author, non-admin account, an expired row must not come back.
+--   select id, expires_at from public.opportunities where expires_at < now();
 
 
 -- 7. Retire the old cleanup function -------------------------------------------
