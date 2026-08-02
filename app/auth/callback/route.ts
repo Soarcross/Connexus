@@ -25,6 +25,15 @@ export async function GET(request: NextRequest) {
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
         if (exchangeError) {
+            // The generic redirect hides why the exchange failed; log the real
+            // reason server-side so it is diagnosable from the dev terminal and
+            // the Vercel function logs.
+            console.error("[auth/callback] exchangeCodeForSession failed:", {
+                message: exchangeError.message,
+                status: exchangeError.status,
+                code: exchangeError.code,
+                origin,
+            })
             return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`)
         }
 
