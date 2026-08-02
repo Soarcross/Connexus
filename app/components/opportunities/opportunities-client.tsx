@@ -9,6 +9,12 @@ import { Switch } from "@/app/components/ui/switch"
 import { PageShell } from "@/app/components/layout/page-shell"
 import { Search, X, ExternalLink, ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react"
 import { categoryChip, categoryIcon } from "@/lib/category-colors"
+import { ArchiveBanner } from "@/app/components/lifecycle/archive-banner"
+import { ExpiryBadge } from "@/app/components/lifecycle/expiry-badge"
+import {
+    ExtensionRequestDialog,
+    type ExtensionTarget,
+} from "@/app/components/lifecycle/extension-request-dialog"
 
 type Opportunity = {
     id: string
@@ -20,6 +26,8 @@ type Opportunity = {
     location: string | null
     url: string | null
     deadline: string | null
+    expires_at: string | null
+    created_by: string | null
     is_featured: boolean
     created_at: string
     chapter_id: string | null
@@ -27,6 +35,10 @@ type Opportunity = {
 
 type Props = {
     opportunities: Opportunity[]
+    /** Past their deadline, visible only to the author (or an admin). */
+    archivedOpportunities?: Opportunity[]
+    currentUserId?: string
+    pendingExtensionOpportunityIds?: string[]
 }
 
 const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering", "Programs"]
@@ -38,7 +50,14 @@ const FIELDS = [
     "Cybersecurity", "Architecture", "Consulting", "Other"
 ]
 
-export function OpportunitiesClient({ opportunities }: Props) {
+export function OpportunitiesClient({
+    opportunities,
+    archivedOpportunities = [],
+    currentUserId = "",
+    pendingExtensionOpportunityIds = [],
+}: Props) {
+    const [extensionTarget, setExtensionTarget] = useState<ExtensionTarget | null>(null)
+    const pendingExtensions = new Set(pendingExtensionOpportunityIds)
     const [search, setSearch] = useState("")
     const [selectedCategories, setSelectedCategories] = useState<string[]>([])
     const [selectedFields, setSelectedFields] = useState<string[]>([])
@@ -164,6 +183,42 @@ export function OpportunitiesClient({ opportunities }: Props) {
     return (
         <PageShell left={filtersCard}>
         <div className="flex flex-col gap-4">
+            <ExtensionRequestDialog
+                target={extensionTarget}
+                currentUserId={currentUserId}
+                onClose={() => setExtensionTarget(null)}
+            />
+
+            {archivedOpportunities.length > 0 && (
+                <div className="flex flex-col gap-3">
+                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                        Archived — not visible to others
+                    </h2>
+                    {archivedOpportunities.map(opp => (
+                        <Card key={opp.id} className="border-dashed border-destructive/50">
+                            <CardContent className="py-4 flex flex-col gap-3">
+                                <ArchiveBanner
+                                    expiresAt={opp.expires_at}
+                                    onExtend={() => setExtensionTarget({ entity: "opportunity", id: opp.id })}
+                                    extensionPending={pendingExtensions.has(opp.id)}
+                                />
+                                <div className="flex flex-col gap-1 min-w-0">
+                                    <p className="text-sm font-semibold">{opp.title}</p>
+                                    {(opp.organization || opp.location) && (
+                                        <p className="text-xs text-muted-foreground">
+                                            {opp.organization}
+                                            {opp.organization && opp.location ? " · " : ""}
+                                            {opp.location}
+                                        </p>
+                                    )}
+                                    <p className="text-xs text-muted-foreground line-clamp-2">{opp.description}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            )}
+
             <div className="flex items-center gap-2">
                 <div className="relative flex-1">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -253,9 +308,12 @@ export function OpportunitiesClient({ opportunities }: Props) {
                                                 )}
                                             </CardHeader>
                                             <CardContent className="flex flex-col gap-3">
-                                                {opp.field && (
-                                                    <Badge variant="outline" className="text-xs w-fit">{opp.field}</Badge>
-                                                )}
+                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                    {opp.field && (
+                                                        <Badge variant="outline" className="text-xs">{opp.field}</Badge>
+                                                    )}
+                                                    <ExpiryBadge expiresAt={opp.expires_at} />
+                                                </div>
                                                 <div>
                                                     <p className={`text-xs text-muted-foreground ${expandedIds.has(opp.id) ? "" : "line-clamp-3"}`}>
                                                         {opp.description}

@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { OpportunitiesClient } from "@/app/components/opportunities/opportunities-client"
+import { activeFilter, getPurgeCutoff } from "@/lib/lifecycle"
 
 export default async function OpportunitiesPage() {
     const supabase = await createSupabaseServerClient()
@@ -8,20 +9,50 @@ export default async function OpportunitiesPage() {
 
     const { data: viewerProfile } = await supabase
         .from("profiles")
-        .select("chapter_id")
+        .select("chapter_id, is_admin")
         .eq("id", user?.id ?? "")
         .single()
 
     const myChapterId = viewerProfile?.chapter_id ?? null
+    const isAdmin = Boolean(viewerProfile?.is_admin)
 
     // a user without a chapter yet only sees national (chapter_id null)
     // opportunities -- comparing a uuid column to "" would error, not just
     // match zero rows, so branch instead of interpolating a possibly-empty id
-    const opportunitiesQuery = supabase.from("opportunities").select("*")
-    const { data: opportunities } = await (myChapterId
-        ? opportunitiesQuery.or(`chapter_id.eq.${myChapterId},chapter_id.is.null`)
-        : opportunitiesQuery.is("chapter_id", null)
-    ).order("created_at", { ascending: false })
+    const chapterFilter = myChapterId
+        ? `chapter_id.eq.${myChapterId},chapter_id.is.null`
+        : null
+
+    // Public list: in scope and not yet expired. Archived opportunities drop out
+    // here. Chained .or() groups are ANDed by PostgREST.
+    const listQuery = supabase.from("opportunities").select("*")
+    const { data: opportunities } = await (chapterFilter
+        ? listQuery.or(chapterFilter)
+        : listQuery.is("chapter_id", null)
+    ).or(activeFilter()).order("created_at", { ascending: false })
+
+    // Archived opportunities the viewer is allowed to see: their own, or all of
+    // them for admins. Rows already past the purge cutoff are excluded.
+    const archivedBase = supabase.from("opportunities").select("*")
+    let archivedQuery = (chapterFilter
+        ? archivedBase.or(chapterFilter)
+        : archivedBase.is("chapter_id", null)
+    )
+        .lte("expires_at", new Date().toISOString())
+        .gt("expires_at", getPurgeCutoff())
+        .order("expires_at", { ascending: true })
+
+    if (!isAdmin) {
+        archivedQuery = archivedQuery.eq("created_by", user?.id ?? "")
+    }
+
+    const { data: archived } = await archivedQuery
+
+    const { data: pendingExtensions } = await supabase
+        .from("extension_requests")
+        .select("opportunity_id")
+        .eq("user_id", user?.id ?? "")
+        .eq("status", "Pending")
 
     return (
         <div className="flex flex-col gap-6">
@@ -31,7 +62,16 @@ export default async function OpportunitiesPage() {
                     Browse internships, jobs, research positions and more curated for your chapter.
                 </p>
             </div>
-            <OpportunitiesClient opportunities={opportunities ?? []} />
+            <OpportunitiesClient
+                opportunities={opportunities ?? []}
+                archivedOpportunities={archived ?? []}
+                currentUserId={user?.id ?? ""}
+                pendingExtensionOpportunityIds={
+                    (pendingExtensions ?? [])
+                        .map(r => r.opportunity_id)
+                        .filter((id): id is string => Boolean(id))
+                }
+            />
         </div>
     )
 }

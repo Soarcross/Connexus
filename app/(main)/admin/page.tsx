@@ -25,7 +25,8 @@ const { data: extensionRequests } = await supabase
     .from("extension_requests")
     .select(`
         *,
-        community_posts (title),
+        community_posts (title, expires_at),
+        opportunities (title, expires_at),
         profiles (full_name, avatar_url)
     `)
     .order("created_at", { ascending: false })
@@ -126,6 +127,7 @@ const [
                 extensionRequests={(extensionRequests ?? []) as any}
                 chapters={chapters ?? []}
                 chapterApplications={chapterApplications ?? []}
+                currentUserId={user.id}
             />
         </div>
     )

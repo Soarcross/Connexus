@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
+import { formatFullName, validateFullName } from "@/lib/name-validation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
@@ -241,6 +242,19 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
 
     async function handleSave() {
         setError(null)
+
+        // handleSave is shared by every section, so only gate on the name when the
+        // user actually changed it — legacy profiles with an odd name can still
+        // edit their bio, interests, etc.
+        const nameChanged = fullName.trim() !== (profile.full_name ?? "").trim()
+        const nameResult = validateFullName(fullName)
+        if (nameChanged && !nameResult.ok) {
+            setError(nameResult.error)
+            return
+        }
+        const nextFullName = nameResult.ok ? nameResult.value : fullName.trim()
+        if (nextFullName !== fullName) setFullName(nextFullName)
+
         setLoading(true)
 
         const supabase = getSupaBrowserClient()
@@ -249,7 +263,7 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
             const { error: updateError } = await supabase
                 .from("profiles")
                 .update({
-                    full_name: fullName,
+                    full_name: nextFullName,
                     bio,
                     grad_year: parseInt(gradYear),
                     interests,
@@ -372,6 +386,7 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
                                     <Input
                                         value={fullName}
                                         onChange={(e) => setFullName(e.target.value)}
+                                        onBlur={() => setFullName(formatFullName(fullName))}
                                         placeholder="Full name"
                                         className="text-lg font-bold"
                                     />

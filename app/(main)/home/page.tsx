@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { PeopleCarousel } from "@/app/components/home/people-carousel"
 import { categoryChip, categoryIcon } from "@/lib/category-colors"
+import { activeFilter } from "@/lib/lifecycle"
 
 const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering", "Programs"]
 
@@ -65,10 +66,11 @@ export default async function HomePage() {
         .select("*")
         .eq("category", category)
         .eq("is_featured", true)
+      // Chained .or() groups are ANDed by PostgREST: (chapter match) AND (not expired).
       const { data } = await (myChapterId
         ? baseQuery.or(`chapter_id.eq.${myChapterId},chapter_id.is.null`)
         : baseQuery.is("chapter_id", null)
-      ).order("created_at", { ascending: false }).limit(2)
+      ).or(activeFilter()).order("created_at", { ascending: false }).limit(2)
       opportunitiesByCategory[category] = data ?? []
     })
   )

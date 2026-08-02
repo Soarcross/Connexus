@@ -11,6 +11,7 @@ import {
 } from "./ui/field"
 import { Input } from "./ui/input"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
+import { formatFullName, validateFullName } from "@/lib/name-validation"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
@@ -47,6 +48,14 @@ export function SignupForm({
     e.preventDefault()
     setError(null)
 
+    const nameResult = validateFullName(name)
+    if (!nameResult.ok) {
+      setError(nameResult.error)
+      return
+    }
+    // Persist the normalized form ("john smith" -> "John Smith").
+    setName(nameResult.value)
+
     if (!chapterId) {
       setError("Please select your chapter.")
       return
@@ -70,7 +79,7 @@ export function SignupForm({
       password,
       options: {
         data: {
-          full_name: name,
+          full_name: nameResult.value,
           // chapter_role is intentionally never sent here — it must never be
           // client-trusted (see supabase/sql/001_chapters.sql section 4).
           // The DB trigger defaults it to 'member'; only the platform-admin
@@ -142,7 +151,11 @@ export function SignupForm({
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onBlur={() => setName(formatFullName(name))}
           />
+          <FieldDescription>
+            Use your real first and last name so classmates can find you.
+          </FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor="chapter">School / Chapter</FieldLabel>
