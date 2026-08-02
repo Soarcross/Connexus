@@ -134,3 +134,34 @@ The audit found three exploitable issues — any user could self-promote to plat
 - **Check `git diff HEAD -- <file>` before trusting a finder agent's flag.** Two of ten candidates were real smells but provably pre-existing — the lines sat outside every diff hunk. That check separates "in scope" from "real but unrelated."
 - **Front-load scope into large-diff review prompts.** An unscoped Explore agent asked to read a ~3000-line diff hit a stream idle timeout; retrying with an explicit priority order ("these 3 highest-risk files first") succeeded.
 - **Show, don't describe, for design decisions.** An ASCII-sketch logo pitch was rejected; three real rendered SVG tiles at multiple sizes got a fast, clean decision. Same for color: run a palette through the dataviz skill's `validate_palette.js` *before* committing — a first-draft violet ramp failed lightness, chroma, and contrast checks outright.
+
+## Lessons from the production login outage (2026-08)
+
+Every Google sign-in on `stuyconnections.com` failed with `pkce_code_verifier_not_found` while incognito worked. Root cause and fix are described under Architecture (`proxy.ts` session refresh, `lib/supabase/clear-auth-cookies.ts`); this section is about how to *find* something like it again.
+
+**Evidence ladder for any auth failure — run it in this order, and stop theorizing until you've climbed it.** Each rung answers a question the previous one can't, and the whole ladder is ~10 minutes:
+
+1. **The server-side error object.** `?error=auth_callback_failed` is a label, not a diagnosis. `exchangeCodeForSession`'s real `{ message, status, code }` in the Vercel function log is the diagnosis.
+2. **Supabase auth logs** (`get_logs` MCP, service `auth`). Aggregate by `path` / `grant_type` / `error_code` rather than reading rows.
+3. **The actual `Cookie:` request header** on the failing request — DevTools → Network → *Preserve log* → the `/auth/callback` request. This is ground truth for what the server received.
+4. **Incognito vs. the real profile.** One binary answer that splits the entire problem space in half.
+
+**The absence of a log line is evidence.** The decisive clue was that Supabase recorded a *successful* Google login and then **zero** `/token` calls with `grant_type=pkce`. If the exchange never reached the auth server, it failed locally, which narrows the cause to client-side storage before any code is read. Aggregate the logs by request path first and look for the request that should be there and isn't.
+
+**"Works in incognito" means the code is right and the stored state is poisoned.** That single control test invalidates every hypothesis about cookie-domain logic, redirect allowlists, and env vars at once. Run it early — it's free. The corollary: a fix for poisoned state must *migrate existing users*, since they cannot reach a working state on their own. Verifying in incognito after such a fix proves nothing; test from the browser profile that was actually broken.
+
+**Ask for the one decisive artifact instead of narrowing by elimination.** Several rounds went into reasoning about duplicate cookies at two domain scopes when the request `Cookie` header — one screenshot — settled it immediately by showing the verifier was never sent at all. When a hypothesis is about what a client sent, go look at what the client sent.
+
+**Correlation with the last deploy was a red herring.** The outage surfaced right after a merge, but `git diff <last-known-good> origin/main -- lib/supabase/ proxy.ts` showed the merge touched none of the session machinery — the bug had been latent for weeks and the deploy only changed who noticed. Diff the *relevant subsystem* against the last known-good commit before accepting "the deploy broke it." Also check `origin/main`, not local `HEAD`: the suspected fix (`b377f0b`) turned out to be sitting unmerged on a feature branch, so it was never in production at all.
+
+**A comment asserting behavior is not evidence the behavior exists.** `lib/supabase/server.ts` said "Session refresh is handled by `proxy.ts`" and `proxy.ts` never imported Supabase. That single false comment is why nobody looked, for weeks, while the auth logs recorded ~89 failed refreshes a day. When a comment names another file as the owner of a behavior, open that file.
+
+**Design failure paths to be recoverable.** The original callback logged the user out to `/login` while leaving in place the exact cookies that caused the failure, so every retry failed identically — permanently unrecoverable without devtools. Any handler that fails because of stored state must clear that state on the way out.
+
+**Silent failure modes worth remembering:**
+- Deleting a cookie requires matching `(name, domain, path)`. Expiring one scope leaves the other alive, and the app keeps reading the leftover.
+- `NextResponse.cookies` is keyed by name alone — setting the same name twice emits *one* header. Use `headers.append("set-cookie", …)` when you need two.
+- `exchangeCodeForSession` clears the verifier from storage even on failure, so inspecting cookies *after* a failed login tells you nothing about whether it was ever written.
+- Server components silently cannot write cookies; only `proxy.ts` and route handlers can.
+
+**What paid off.** Adding the `console.error` to the callback (`376fd55`) *before* it was needed turned step 1 from an hour into two minutes — cheap diagnostic logging on a route that redirects away its own errors is worth writing speculatively. And there was a real acceptance test available: the `grant_type=pkce` / 200 entry that was entirely missing from the auth logs, not just "login seems to work."
