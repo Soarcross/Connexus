@@ -1,6 +1,8 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { getChapterSlug } from "@/lib/chapter"
 import { getChapterHomeUrl } from "@/lib/chapter-shared"
+import { resolveCookieDomain } from "@/lib/supabase/cookie-domain"
+import { AUTH_COOKIE_PREFIX, clearAuthCookies } from "@/lib/supabase/clear-auth-cookies"
 import { NextRequest, NextResponse } from "next/server"
 
 // Only allow same-origin, absolute-path redirects (e.g. "/reset-password").
@@ -34,7 +36,26 @@ export async function GET(request: NextRequest) {
                 code: exchangeError.code,
                 origin,
             })
-            return NextResponse.redirect(`${origin}/login?error=auth_callback_failed`)
+
+            // A failed exchange used to dead-end here: the stale session that
+            // caused it was still in the jar on the next attempt, so the retry
+            // failed identically and the only escape was clearing cookies by
+            // hand in devtools. Purge the auth cookies on the way out so the
+            // next login starts from a clean jar. proxy.ts skips this route
+            // precisely so this is the only writer during the exchange.
+            const response = NextResponse.redirect(
+                `${origin}/login?error=${exchangeError.code === "pkce_code_verifier_not_found"
+                    ? "session_expired"
+                    : "auth_callback_failed"}`
+            )
+            clearAuthCookies(
+                response,
+                request.cookies.getAll()
+                    .filter((cookie) => cookie.name.startsWith(AUTH_COOKIE_PREFIX))
+                    .map((cookie) => cookie.name),
+                resolveCookieDomain(request.headers.get("host"))
+            )
+            return response
         }
 
         // if there's a next param (e.g. password reset) redirect there
