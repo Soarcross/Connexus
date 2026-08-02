@@ -3,6 +3,7 @@
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
+import { initialExpiry } from "@/lib/lifecycle"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Textarea } from "@/app/components/ui/textarea"
@@ -121,6 +122,7 @@ export function CreatePostButton({ userId, chapterId, trigger }: Props) {
                     qualification: form.qualification,
                     status: "Pending",
                     image_url,
+                    expires_at: initialExpiry(form.deadline || null),
                 } as any)
 
             if (error) throw error

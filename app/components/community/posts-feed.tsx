@@ -20,6 +20,8 @@ import { ProfileRailCard } from "@/app/components/layout/profile-rail-card"
 import { ComposerCard } from "@/app/components/community/composer-card"
 import { ExternalLink, Trash2, Clock, XCircle, RefreshCw, Check, MapPin, Calendar } from "lucide-react"
 import { categoryChip } from "@/lib/category-colors"
+import { getDaysLeft, getLifecycleState } from "@/lib/lifecycle"
+import { ArchiveBanner } from "@/app/components/lifecycle/archive-banner"
 import Link from "next/link"
 
 type Post = {
@@ -34,7 +36,7 @@ type Post = {
     deadline: string | null
     status: string
     rejection_reason: string | null
-    created_at: string
+    created_at: string | null
     expires_at: string | null
     image_url: string | null
     user_id: string
@@ -59,15 +61,13 @@ type Props = {
     currentUserId: string
     chapterId: string | null
     viewer: Viewer
+    /** Posts with a Pending extension request, so the CTA reads as already filed. */
+    pendingExtensionPostIds?: string[]
 }
 
-function getDaysLeft(expiresAt: string | null): number | null {
-    if (!expiresAt) return null
-    const diff = new Date(expiresAt).getTime() - Date.now()
-    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
-}
 
-function getTimeAgo(createdAt: string): string {
+function getTimeAgo(createdAt: string | null): string {
+    if (!createdAt) return ""
     const diff = Date.now() - new Date(createdAt).getTime()
     const mins = Math.floor(diff / 60000)
     if (mins < 60) return `${mins}m ago`
@@ -101,7 +101,8 @@ function ExpandableDescription({ text }: { text: string }) {
     )
 }
 
-export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer }: Props) {
+export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer, pendingExtensionPostIds = [] }: Props) {
+    const pendingExtensions = new Set(pendingExtensionPostIds)
     const router = useRouter()
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const [expandedImage, setExpandedImage] = useState<string | null>(null)
@@ -171,9 +172,19 @@ export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer }: 
         const isRejected = post.status === "Rejected"
         const isApproved = post.status === "Approved"
         const isPending = post.status === "Pending"
+        // An archived post keeps status "Approved" — the lifecycle is derived
+        // from expires_at alone, never from a status value.
+        const isArchived = isApproved && getLifecycleState(post.expires_at) === "archived"
 
         return (
             <div key={post.id} className="flex flex-col gap-1.5 py-3 first:pt-0 last:pb-0">
+                {isArchived && (
+                    <ArchiveBanner
+                        expiresAt={post.expires_at}
+                        onExtend={() => setExtendingPostId(post.id)}
+                        extensionPending={pendingExtensions.has(post.id)}
+                    />
+                )}
                 <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-medium truncate">{post.title}</p>
                     <div className="flex items-center shrink-0">

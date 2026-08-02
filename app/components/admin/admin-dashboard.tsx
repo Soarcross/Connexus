@@ -3,6 +3,13 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
+import {
+    EXTENSION_DAYS,
+    extendedExpiry,
+    getLifecycleState,
+    initialExpiry,
+    type LifecycleEntity,
+} from "@/lib/lifecycle"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app/components/ui/card"
 import { Badge } from "@/app/components/ui/badge"
@@ -120,7 +127,9 @@ type CommunityPost = {
 
 type ExtensionRequest = {
     id: string
-    post_id: string
+    /** Exactly one of post_id / opportunity_id is set. */
+    post_id: string | null
+    opportunity_id: string | null
     user_id: string
     reason: string
     status: string
@@ -128,6 +137,11 @@ type ExtensionRequest = {
     created_at: string
     community_posts: {
         title: string
+        expires_at: string | null
+    } | null
+    opportunities: {
+        title: string
+        expires_at: string | null
     } | null
     profiles: {
         full_name: string | null
@@ -160,6 +174,29 @@ type ChapterApplication = {
     created_at: string
 }
 
+/** Resolves which table an extension request points at, plus its current expiry. */
+function getExtensionTarget(req: ExtensionRequest):
+    | { entity: LifecycleEntity; id: string; title: string; expiresAt: string | null }
+    | null {
+    if (req.post_id) {
+        return {
+            entity: "post",
+            id: req.post_id,
+            title: req.community_posts?.title ?? "Untitled post",
+            expiresAt: req.community_posts?.expires_at ?? null,
+        }
+    }
+    if (req.opportunity_id) {
+        return {
+            entity: "opportunity",
+            id: req.opportunity_id,
+            title: req.opportunities?.title ?? "Untitled opportunity",
+            expiresAt: req.opportunities?.expires_at ?? null,
+        }
+    }
+    return null
+}
+
 type Props = {
     opportunities: Opportunity[]
     users: User[]
@@ -174,6 +211,8 @@ type Props = {
     extensionRequests: ExtensionRequest[]
     chapters: Chapter[]
     chapterApplications: ChapterApplication[]
+    /** The signed-in admin — recorded as created_by on new opportunities. */
+    currentUserId: string
 }
 
 const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering", "Programs"]
@@ -226,6 +265,7 @@ export function AdminDashboard({
     extensionRequests: initialExtensionRequests,
     chapters: initialChapters,
     chapterApplications: initialChapterApplications,
+    currentUserId,
 }: Props) {
     const router = useRouter()
     const [opportunities, setOpportunities] = useState<Opportunity[]>(initialOpportunities)
@@ -348,12 +388,19 @@ export function AdminDashboard({
                 is_featured: form.is_featured,
             }
             if (editingId) {
+                // expires_at is deliberately left alone on edit so an already
+                // approved extension is not silently revoked.
                 const { data, error } = await supabase.from("opportunities").update(payload as any).eq("id", editingId).select().single()
                 if (error) throw error
                 setOpportunities(prev => prev.map(o => o.id === editingId ? data : o))
                 showSuccess("Opportunity updated successfully!")
             } else {
-                const { data, error } = await supabase.from("opportunities").insert(payload as any).select().single()
+                const insertPayload = {
+                    ...payload,
+                    created_by: currentUserId || null,
+                    expires_at: initialExpiry(form.deadline || null),
+                }
+                const { data, error } = await supabase.from("opportunities").insert(insertPayload as any).select().single()
                 if (error) throw error
                 setOpportunities(prev => [data, ...prev])
                 showSuccess("Opportunity added successfully!")
@@ -614,29 +661,42 @@ export function AdminDashboard({
     }
 
     async function handleApproveExtension(req: ExtensionRequest) {
-        if (!req.post_id) {
-            setError("This extension request isn't linked to a post and can't be approved.")
+        const supabase = getSupaBrowserClient()
+        const target = getExtensionTarget(req)
+        if (!target) {
+            setError("This request is not attached to a post or opportunity.")
             return
         }
-        const supabase = getSupaBrowserClient()
+
         try {
-            // Extend the post by 1 month
-            const { error: postError, count } = await supabase
-                .from("community_posts")
-                .update({ expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() }, { count: "exact" })
-                .eq("id", req.post_id)
-            if (postError) throw postError
-            if (!count) throw new Error("No matching post was found to extend.")
+            // extendedExpiry() counts from whichever is later — now or the current
+            // expiry — so this revives an archived item and never shortens an
+            // active one.
+            const nextExpiry = extendedExpiry(target.expiresAt)
+
+            // count: "exact" so a row that vanished (purged, or RLS-invisible)
+            // surfaces as an error instead of silently reporting success.
+            const { error: targetError, count } = target.entity === "post"
+                ? await supabase
+                    .from("community_posts")
+                    .update({ expires_at: nextExpiry }, { count: "exact" })
+                    .eq("id", target.id)
+                : await supabase
+                    .from("opportunities")
+                    .update({ expires_at: nextExpiry }, { count: "exact" })
+                    .eq("id", target.id)
+            if (targetError) throw targetError
+            if (!count) throw new Error(`No matching ${target.entity} was found to extend.`)
 
             // Mark request as approved
             const { error: reqError } = await supabase
                 .from("extension_requests")
-                .update({ status: "Approved" } as any)
+                .update({ status: "Approved" })
                 .eq("id", req.id)
             if (reqError) throw reqError
 
             setExtensionRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: "Approved" } : r))
-            showSuccess("Extension approved — post extended by 1 month!")
+            showSuccess(`Extension approved — ${target.entity} extended by ${EXTENSION_DAYS} days!`)
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to approve extension.")
         }
@@ -1171,7 +1231,11 @@ export function AdminDashboard({
                                 </CardContent>
                             </Card>
                         ) : (
-                            extensionRequests.map(req => (
+                            extensionRequests.map(req => {
+                                const target = getExtensionTarget(req)
+                                const targetArchived =
+                                    target !== null && getLifecycleState(target.expiresAt) === "archived"
+                                return (
                                 <Card
                                     key={req.id}
                                     className={
@@ -1187,7 +1251,7 @@ export function AdminDashboard({
                                             <div className="flex flex-col gap-1">
                                                 <div className="flex items-center gap-2 flex-wrap">
                                                     <p className="text-sm font-semibold">
-                                                        {req.community_posts?.title ?? "Unknown post"}
+                                                        {target?.title ?? "Unknown item"}
                                                     </p>
                                                     <Badge
                                                         variant={req.status === "Approved" ? "default" : req.status === "Rejected" ? "destructive" : "outline"}
@@ -1197,8 +1261,13 @@ export function AdminDashboard({
                                                     </Badge>
                                                     <Badge variant="secondary" className="text-xs gap-1">
                                                         <RefreshCw className="size-3" />
-                                                        Extension Request
+                                                        {target?.entity === "opportunity" ? "Opportunity" : "Post"} Extension
                                                     </Badge>
+                                                    {targetArchived && (
+                                                        <Badge variant="outline" className="text-xs text-destructive border-destructive/50">
+                                                            Archived — pending deletion
+                                                        </Badge>
+                                                    )}
                                                 </div>
                                                 <div className="flex items-center gap-2">
                                                     <Avatar className="size-5">
@@ -1243,7 +1312,8 @@ export function AdminDashboard({
                                         )}
                                     </CardContent>
                                 </Card>
-                            ))
+                                )
+                            })
                         )}
                     </div>
 
