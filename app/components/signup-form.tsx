@@ -10,6 +10,7 @@ import {
   FieldSeparator,
 } from "./ui/field"
 import { Input } from "./ui/input"
+import { PasswordInput } from "./ui/password-input"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
 import { formatFullName, validateFullName } from "@/lib/name-validation"
 import { useState } from "react"
@@ -189,9 +190,8 @@ export function SignupForm({
         </Field>
         <Field>
           <FieldLabel htmlFor="password">Password</FieldLabel>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -200,9 +200,8 @@ export function SignupForm({
         </Field>
         <Field>
           <FieldLabel htmlFor="confirm-password">Confirm Password</FieldLabel>
-          <Input
+          <PasswordInput
             id="confirm-password"
-            type="password"
             required
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}

@@ -10,6 +10,7 @@ import {
     FieldSeparator,
 } from "./ui/field"
 import { Input } from "./ui/input"
+import { PasswordInput } from "./ui/password-input"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
 import { getChapterHomeUrl } from "@/lib/chapter-shared"
 import { useState } from "react"
@@ -31,11 +32,16 @@ export function LoginForm({
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [error, setError] = useState<string | null>(initialError)
+    // "Invalid login credentials" covers both a wrong password and no account
+    // at all (Supabase doesn't distinguish, to avoid leaking which emails are
+    // registered) — so we can only nudge toward signup, never assert it.
+    const [showSignupHint, setShowSignupHint] = useState(false)
     const [loading, setLoading] = useState(false)
 
     async function handleEmailLogin(e: React.FormEvent) {
         e.preventDefault()
         setError(null)
+        setShowSignupHint(false)
         setLoading(true)
 
         const supabase = getSupaBrowserClient()
@@ -46,6 +52,11 @@ export function LoginForm({
             setLoading(false)
             if (error.message === "Email not confirmed") {
                 setError("Please check your inbox and confirm your email before logging in.")
+                return
+            }
+            if (error.message === "Invalid login credentials") {
+                setError("Incorrect email or password.")
+                setShowSignupHint(true)
                 return
             }
             setError(error.message)
@@ -116,6 +127,15 @@ export function LoginForm({
                     <p className="text-sm text-red-500 text-center">{error}</p>
                 )}
 
+                {showSignupHint && (
+                    <p className="text-sm text-center text-muted-foreground">
+                        Don&apos;t have an account?{" "}
+                        <a href="/signup" className="font-medium underline underline-offset-4">
+                            Sign up
+                        </a>
+                    </p>
+                )}
+
                 <Field>
                     <FieldLabel htmlFor="email">Email</FieldLabel>
                     <Input
@@ -134,9 +154,8 @@ export function LoginForm({
                             Forgot your password?
                         </a>
                     </div>
-                    <Input
+                    <PasswordInput
                         id="password"
-                        type="password"
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
