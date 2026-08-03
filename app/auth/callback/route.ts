@@ -3,6 +3,7 @@ import { getChapterSlug } from "@/lib/chapter"
 import { getChapterHomeUrl } from "@/lib/chapter-shared"
 import { resolveCookieDomain } from "@/lib/supabase/cookie-domain"
 import { AUTH_COOKIE_PREFIX, clearAuthCookies } from "@/lib/supabase/clear-auth-cookies"
+import { formatFullName } from "@/lib/name-validation"
 import { NextRequest, NextResponse } from "next/server"
 
 // Only allow same-origin, absolute-path redirects (e.g. "/reset-password").
@@ -66,11 +67,32 @@ export async function GET(request: NextRequest) {
         const { data: { user } } = await supabase.auth.getUser()
 
         if (user) {
-            const { data: profile } = await supabase
+            let { data: profile } = await supabase
                 .from("profiles")
                 .select("grad_year, interests, chapter_id, chapters(slug)")
                 .eq("id", user.id)
                 .single()
+
+            // The on-signup DB trigger should always create this row, but a
+            // handful of accounts predate a since-fixed version of it, and any
+            // future trigger hiccup would reproduce the same gap: an
+            // authenticated user with no profiles row, which used to hard-404
+            // them at /profile/[id] with no way back in. Self-heal here.
+            if (!profile) {
+                const rawName = user.user_metadata?.full_name ?? user.email ?? "New User"
+                const { data: created } = await supabase
+                    .from("profiles")
+                    .insert({
+                        id: user.id,
+                        // OAuth-provided names bypass the signup form's
+                        // validateFullName/formatFullName step entirely, so
+                        // this is the only normalization they ever get.
+                        full_name: formatFullName(rawName) || rawName,
+                    })
+                    .select("grad_year, interests, chapter_id, chapters(slug)")
+                    .single()
+                profile = created
+            }
 
             let chapterSlug = profile?.chapters?.slug ?? null
 

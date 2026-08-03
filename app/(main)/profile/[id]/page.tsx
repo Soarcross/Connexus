@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { ProfileView } from "@/app/components/profile/profile-view"
+import { formatFullName } from "@/lib/name-validation"
 
 type Props = {
     params: Promise<{ id: string }>
@@ -14,11 +15,33 @@ export default async function ProfilePage({ params }: Props) {
     const { data: { user } } = await supabase.auth.getUser()
 
     // get the profile being viewed
-    const { data: profile, error } = await supabase
+    let { data: profile, error } = await supabase
         .from("profiles")
         .select("*, chapters(name, school_name)")
         .eq("id", id)
         .single()
+
+    // A signed-in user with no profiles row (the on-signup trigger should
+    // always create one, but see auth/callback/route.ts for why it sometimes
+    // doesn't) used to hard-404 here with no way back in. Self-heal only for
+    // the viewer's own missing profile -- another user's missing row still
+    // 404s, since that's a real "doesn't exist" case, not a recoverable one.
+    if ((error || !profile) && user?.id === id) {
+        const rawName = user.user_metadata?.full_name ?? user.email ?? "New User"
+        const { data: created } = await supabase
+            .from("profiles")
+            .insert({
+                id: user.id,
+                // OAuth-provided names bypass the signup form's
+                // validateFullName/formatFullName step entirely, so this is
+                // the only normalization they ever get.
+                full_name: formatFullName(rawName) || rawName,
+            })
+            .select("*, chapters(name, school_name)")
+            .single()
+        profile = created
+        error = null
+    }
 
     // if profile doesn't exist show 404
     if (error || !profile) {
