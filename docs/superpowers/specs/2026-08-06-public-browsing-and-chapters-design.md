@@ -15,12 +15,17 @@ chapters living on **one website** (no more chapter subdomains).
 
 | Route | Treatment |
 |---|---|
-| `/` (marketing landing) | Public, unchanged |
+| `/` (marketing landing) | Public; CTA row gains a **"Continue as guest"** button (next to Log in) linking to `/home` |
+| `/home` | **Guest version**: "Welcome, guest" banner, the People carousel with public fields only, and the featured-opportunities section rendered as blurred placeholders with a sign-up prompt. Full app navbar in logged-out mode |
 | `/people` | **Public with real data** — the member list renders for everyone; clicking a card leads to the blurred profile page |
 | `/about`, `/contact` | Public real content (marketing info, no member data) |
 | `/apply`, `/login`, `/signup`, password/verify pages | Public, unchanged |
 | `/opportunities`, `/community`, `/chapters`, `/profile/[id]` | **Blur + login box**: generic placeholder cards under a CSS blur, centered card with Log in / Sign up buttons. **No real data is fetched or sent** — a blur over real data is trivially removable in dev tools |
-| `/messages`, `/home`, `/admin`, `/chapter-admin` | Redirect to `/login`, as today |
+| `/messages`, `/admin`, `/chapter-admin` | Redirect to `/login`, as today |
+
+Note `/` no longer auto-serves only marketing: it keeps redirecting *logged-in*
+visitors to `/home` as today, and `/home` no longer redirects logged-out
+visitors away — it renders the guest variant instead.
 
 Logged-in behavior is unchanged except where noted below.
 
@@ -43,9 +48,13 @@ profile page remains login-only. The user confirmed this trade-off explicitly.
   Log in and Sign up buttons.
 - Each blurred page short-circuits before any Supabase query when `user` is null
   and returns `<LockedPage variant="…"/>`.
-- Truly private pages (`/messages`, `/home`, `/admin`, `/chapter-admin`) keep an
-  explicit `redirect("/login")` — the layout no longer provides it, so each of
-  these pages must check (most already re-check `getUser()`; add where missing).
+- Truly private pages (`/messages`, `/admin`, `/chapter-admin`) keep an explicit
+  `redirect("/login")` — the layout no longer provides it, so each of these pages
+  must check (most already re-check `getUser()`; add where missing).
+- `/home` guest variant: when `user` is null, skip the profile/recommendations
+  queries; fetch only the public profile columns for the People carousel; render
+  the featured-opportunities section as blurred placeholders with a sign-up
+  prompt (no opportunities query — that data is login-only).
 - Navbar logged-out mode: nav links (People, Opportunities, Community, Chapters,
   About, Contact) + **Log in** / **Sign up** buttons; no avatar, no messages icon,
   no unread-badge realtime subscription. Logo links to `/` when logged out,
