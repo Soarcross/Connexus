@@ -23,8 +23,6 @@ type ChapterOption = {
 }
 
 type Props = React.ComponentProps<"form"> & {
-  chapterId?: string | null
-  chapterName?: string | null
   chapters?: ChapterOption[]
 }
 
@@ -34,8 +32,6 @@ const NO_CHAPTER = "__none__"
 
 export function SignupForm({
   className,
-  chapterId: defaultChapterId,
-  chapterName,
   chapters = [],
   ...props
 }: Props) {
@@ -44,7 +40,7 @@ export function SignupForm({
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [chapterId, setChapterId] = useState(defaultChapterId ?? "")
+  const [chapterId, setChapterId] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -138,7 +134,6 @@ export function SignupForm({
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Create your account</h1>
           <p className="text-sm text-balance text-muted-foreground">
-            {chapterName ? `You're joining the ${chapterName} chapter. ` : ""}
             Fill in the form below to create your account
           </p>
         </div>

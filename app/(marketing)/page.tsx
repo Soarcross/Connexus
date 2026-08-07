@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
-import { getCurrentChapter } from "@/lib/chapter"
 import { Button } from "@/app/components/ui/button"
 import { Card, CardContent } from "@/app/components/ui/card"
 import { ArrowRight, Users, Briefcase, Newspaper } from "lucide-react"
@@ -11,37 +10,6 @@ export default async function MarketingHomePage() {
 
     const { data: { user } } = await supabase.auth.getUser()
     if (user) redirect("/home")
-
-    const chapter = await getCurrentChapter(supabase)
-
-    if (chapter) {
-        return (
-            <div className="max-w-4xl mx-auto px-4 py-24 flex flex-col items-center text-center gap-6">
-                <p className="text-sm font-semibold text-primary uppercase tracking-wide">
-                    {chapter.school_name}
-                </p>
-                <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
-                    Welcome to the {chapter.name} chapter
-                </h1>
-                <p className="text-muted-foreground text-lg max-w-2xl">
-                    Connect with {chapter.name} students and alumni, share opportunities, and grow your network &mdash; all in one place.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
-                    {/* chapter.name is operator-supplied and unbounded, so this
-                        button has to be allowed to wrap. */}
-                    <Button size="lg" className="w-full sm:w-auto whitespace-normal h-auto py-2.5 text-center sm:whitespace-nowrap" asChild>
-                        <Link href="/signup">Join the {chapter.name} chapter</Link>
-                    </Button>
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto" asChild>
-                        <Link href="/login">Log in</Link>
-                    </Button>
-                    <Button size="lg" variant="ghost" className="w-full sm:w-auto" asChild>
-                        <Link href="/home">Continue as guest</Link>
-                    </Button>
-                </div>
-            </div>
-        )
-    }
 
     return (
         <>
