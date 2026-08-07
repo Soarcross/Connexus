@@ -28,6 +28,10 @@ type Props = React.ComponentProps<"form"> & {
   chapters?: ChapterOption[]
 }
 
+// Sentinel values for the two non-chapter choices in the school select.
+const OPEN_A_CHAPTER = "__open__"
+const NO_CHAPTER = "__none__"
+
 export function SignupForm({
   className,
   chapterId: defaultChapterId,
@@ -58,7 +62,7 @@ export function SignupForm({
     setName(nameResult.value)
 
     if (!chapterId) {
-      setError("Please select your chapter.")
+      setError("Please select your school, or choose to continue without a chapter.")
       return
     }
 
@@ -85,7 +89,7 @@ export function SignupForm({
           // client-trusted (see supabase/sql/001_chapters.sql section 4).
           // The DB trigger defaults it to 'member'; only the platform-admin
           // approve-chapter route can elevate a profile to chapter_admin.
-          chapter_id: chapterId,
+          chapter_id: chapterId === NO_CHAPTER ? null : chapterId,
         },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
@@ -164,13 +168,22 @@ export function SignupForm({
             id="chapter"
             required
             value={chapterId}
-            onChange={(e) => setChapterId(e.target.value)}
+            onChange={(e) => {
+              if (e.target.value === OPEN_A_CHAPTER) {
+                // Not a signup choice — hand them to the chapter application.
+                router.push("/apply")
+                return
+              }
+              setChapterId(e.target.value)
+            }}
             className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
           >
-            <option value="">Select your chapter&hellip;</option>
+            <option value="">Select your school&hellip;</option>
             {chapters.map((c) => (
               <option key={c.id} value={c.id}>{c.school_name}</option>
             ))}
+            <option value={OPEN_A_CHAPTER}>My school isn&apos;t listed &mdash; open a chapter</option>
+            <option value={NO_CHAPTER}>I&apos;m not a student &mdash; continue without a chapter</option>
           </select>
         </Field>
         <Field>
