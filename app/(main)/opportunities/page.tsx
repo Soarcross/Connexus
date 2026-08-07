@@ -1,11 +1,22 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { OpportunitiesClient } from "@/app/components/opportunities/opportunities-client"
+import { LockedPage } from "@/app/components/layout/locked-page"
 import { activeFilter, getPurgeCutoff } from "@/lib/lifecycle"
 
 export default async function OpportunitiesPage() {
     const supabase = await createSupabaseServerClient()
 
     const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+        return (
+            <LockedPage
+                variant="opportunities"
+                title="Opportunities are for members"
+                description="Create a free account to browse internships, research programs, scholarships and more."
+            />
+        )
+    }
 
     const { data: viewerProfile } = await supabase
         .from("profiles")
