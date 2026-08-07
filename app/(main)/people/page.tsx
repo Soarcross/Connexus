@@ -11,10 +11,45 @@ export default async function PeoplePage({
 
     const { data: { user } } = await supabase.auth.getUser()
 
+    if (!user) {
+        // Guests see the whole directory, but only the anon-granted columns.
+        // Selecting anything else (bio, chapter_id, *) would 42501 as anon.
+        const { data: publicProfiles } = await supabase
+            .from("profiles")
+            .select("id, full_name, avatar_url, grad_year, interests, club_roles")
+            .not("full_name", "is", null)
+            .order("grad_year", { ascending: false })
+
+        const profiles = (publicProfiles ?? []).map(p => ({
+            ...p,
+            looking_for: null,
+            bio: null,
+            chapter_id: null,
+            chapters: null,
+        }))
+
+        return (
+            <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-2xl font-semibold tracking-tight">People</h1>
+                    <p className="text-sm text-muted-foreground">
+                        Students and alumni on High School Connections. Sign up to see full profiles and connect.
+                    </p>
+                </div>
+                <PeopleClient
+                    profiles={profiles}
+                    initialSearch={search ?? ""}
+                    viewerChapterId={null}
+                    isGuest
+                />
+            </div>
+        )
+    }
+
     const { data: viewerProfile } = await supabase
         .from("profiles")
         .select("chapter_id")
-        .eq("id", user?.id ?? "")
+        .eq("id", user.id)
         .single()
 
     const viewerChapterId = viewerProfile?.chapter_id ?? null

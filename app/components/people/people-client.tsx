@@ -28,6 +28,9 @@ type Props = {
     profiles: Profile[]
     initialSearch: string
     viewerChapterId: string | null
+    // Guests receive only the anon-granted columns (no looking_for/bio), so
+    // hide the filter that would silently match nothing for them.
+    isGuest?: boolean
 }
 
 const INTEREST_OPTIONS = [
@@ -41,7 +44,7 @@ const LOOKING_FOR_OPTIONS = [
     "Internships", "Jobs", "Mentorship", "Networking", "Collaborators"
 ]
 
-export function PeopleClient({ profiles, initialSearch, viewerChapterId }: Props) {
+export function PeopleClient({ profiles, initialSearch, viewerChapterId, isGuest = false }: Props) {
     const router = useRouter()
     const [search, setSearch] = useState(initialSearch)
     const [selectedInterests, setSelectedInterests] = useState<string[]>([])
@@ -199,21 +202,23 @@ export function PeopleClient({ profiles, initialSearch, viewerChapterId }: Props
                 </div>
 
                 {/* Looking For */}
-                <div className="flex flex-col gap-2">
-                    <p className="text-sm font-medium">Looking For</p>
-                    <div className="flex flex-wrap gap-1.5">
-                        {LOOKING_FOR_OPTIONS.map(option => (
-                            <Badge
-                                key={option}
-                                variant={selectedLookingFor.includes(option) ? "default" : "outline"}
-                                className="cursor-pointer transition-colors"
-                                onClick={() => toggleLookingFor(option)}
-                            >
-                                {option}
-                            </Badge>
-                        ))}
+                {!isGuest && (
+                    <div className="flex flex-col gap-2">
+                        <p className="text-sm font-medium">Looking For</p>
+                        <div className="flex flex-wrap gap-1.5">
+                            {LOOKING_FOR_OPTIONS.map(option => (
+                                <Badge
+                                    key={option}
+                                    variant={selectedLookingFor.includes(option) ? "default" : "outline"}
+                                    className="cursor-pointer transition-colors"
+                                    onClick={() => toggleLookingFor(option)}
+                                >
+                                    {option}
+                                </Badge>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 {hasActiveFilters && (
                     <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-muted-foreground w-fit">
