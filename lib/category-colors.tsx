@@ -8,6 +8,10 @@ import {
     Layers,
     Users,
     Calendar,
+    CalendarClock,
+    Bus,
+    PiggyBank,
+    Megaphone,
 } from "lucide-react"
 
 // Single source of truth for category chips across home, community,
@@ -21,6 +25,24 @@ export const CATEGORY_META: Record<string, { icon: React.ReactNode; chip: string
     Events: {
         icon: <Calendar className="size-4" />,
         chip: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300",
+    },
+    // Chapter-page-only categories (chapter admins post these; they are not in
+    // the national opportunities/home category lists on purpose).
+    Meetings: {
+        icon: <CalendarClock className="size-4" />,
+        chip: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300",
+    },
+    Trips: {
+        icon: <Bus className="size-4" />,
+        chip: "bg-lime-100 text-lime-700 dark:bg-lime-900/30 dark:text-lime-300",
+    },
+    Fundraisers: {
+        icon: <PiggyBank className="size-4" />,
+        chip: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
+    },
+    Announcements: {
+        icon: <Megaphone className="size-4" />,
+        chip: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
     },
     Internships: {
         icon: <Briefcase className="size-4" />,

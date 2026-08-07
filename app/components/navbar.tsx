@@ -22,7 +22,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/app/components/ui/sheet"
-import { Home, Users, Briefcase, Info, Mail, Search, LogOut, User, Menu, MessageCircle, Newspaper } from "lucide-react"
+import { Home, Users, Briefcase, Info, Mail, Search, LogOut, User, Menu, MessageCircle, Newspaper, School } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
@@ -39,6 +39,7 @@ const NAV_TABS = [
     { label: "Home", href: "/home", icon: Home },
     { label: "People", href: "/people", icon: Users },
     { label: "Opportunities", href: "/opportunities", icon: Briefcase },
+    { label: "Chapters", href: "/chapters", icon: School },
     { label: "Community", href: "/community", icon: Newspaper },
 ]
 
