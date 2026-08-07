@@ -57,6 +57,8 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
 
     useEffect(() => {
         if (!userId) return
+        // TS can't carry the null-narrowing into the nested closure below.
+        const uid = userId
 
         const supabase = getSupaBrowserClient()
 
@@ -65,7 +67,7 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                 .from("messages")
                 .select("id", { count: "exact", head: true })
                 .eq("read", false)
-                .neq("sender_id", userId)
+                .neq("sender_id", uid)
 
             setUnreadCount(count ?? 0)
         }
