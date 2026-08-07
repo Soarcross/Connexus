@@ -35,6 +35,9 @@ export default async function MarketingHomePage() {
                     <Button size="lg" variant="outline" className="w-full sm:w-auto" asChild>
                         <Link href="/login">Log in</Link>
                     </Button>
+                    <Button size="lg" variant="ghost" className="w-full sm:w-auto" asChild>
+                        <Link href="/home">Continue as guest</Link>
+                    </Button>
                 </div>
             </div>
         )
@@ -57,6 +60,9 @@ export default async function MarketingHomePage() {
                     </Button>
                     <Button size="lg" variant="outline" className="w-full sm:w-auto" asChild>
                         <Link href="/login">Log in</Link>
+                    </Button>
+                    <Button size="lg" variant="ghost" className="w-full sm:w-auto" asChild>
+                        <Link href="/home">Continue as guest</Link>
                     </Button>
                 </div>
             </section>
