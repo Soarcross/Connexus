@@ -1,11 +1,22 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { PostsFeed } from "@/app/components/community/posts-feed"
+import { LockedPage } from "@/app/components/layout/locked-page"
 import { activeFilter, notPurgedFilter } from "@/lib/lifecycle"
 
 export default async function CommunityPage() {
     const supabase = await createSupabaseServerClient()
 
     const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+        return (
+            <LockedPage
+                variant="community"
+                title="Join the community"
+                description="Create a free account to see what students and alumni in your chapter are sharing."
+            />
+        )
+    }
 
     const POST_SELECT = `
         *,

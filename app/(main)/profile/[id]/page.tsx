@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 import { ProfileView } from "@/app/components/profile/profile-view"
+import { LockedPage } from "@/app/components/layout/locked-page"
 import { formatFullName } from "@/lib/name-validation"
 
 type Props = {
@@ -13,6 +14,16 @@ export default async function ProfilePage({ params }: Props) {
 
     // get the logged in user so we know if this is their own profile
     const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+        return (
+            <LockedPage
+                variant="profile"
+                title="This profile is for members"
+                description="Create a free account to view member profiles and connect."
+            />
+        )
+    }
 
     // get the profile being viewed
     let { data: profile, error } = await supabase

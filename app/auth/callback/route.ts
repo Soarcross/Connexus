@@ -1,6 +1,4 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
-import { getChapterSlug } from "@/lib/chapter"
-import { getChapterHomeUrl } from "@/lib/chapter-shared"
 import { resolveCookieDomain } from "@/lib/supabase/cookie-domain"
 import { AUTH_COOKIE_PREFIX, clearAuthCookies } from "@/lib/supabase/clear-auth-cookies"
 import { formatFullName } from "@/lib/name-validation"
@@ -69,7 +67,7 @@ export async function GET(request: NextRequest) {
         if (user) {
             let { data: profile } = await supabase
                 .from("profiles")
-                .select("grad_year, interests, chapter_id, chapters(slug)")
+                .select("grad_year, interests, chapter_id")
                 .eq("id", user.id)
                 .single()
 
@@ -89,40 +87,18 @@ export async function GET(request: NextRequest) {
                         // this is the only normalization they ever get.
                         full_name: formatFullName(rawName) || rawName,
                     })
-                    .select("grad_year, interests, chapter_id, chapters(slug)")
+                    .select("grad_year, interests, chapter_id")
                     .single()
                 profile = created
             }
 
-            let chapterSlug = profile?.chapters?.slug ?? null
-
-            // OAuth signups (e.g. Google) don't carry our custom chapter metadata,
-            // so backfill from the subdomain here if the profile has no chapter yet.
-            if (!profile?.chapter_id) {
-                const currentSlug = await getChapterSlug()
-                if (currentSlug) {
-                    const { data: chapter } = await supabase
-                        .from("chapters")
-                        .select("id, slug")
-                        .eq("slug", currentSlug)
-                        .eq("status", "Active")
-                        .maybeSingle()
-                    if (chapter) {
-                        await supabase.from("profiles").update({ chapter_id: chapter.id }).eq("id", user.id)
-                        chapterSlug = chapter.slug
-                    }
-                }
-            }
-
+            // OAuth signups (e.g. Google) can't carry the signup form's chapter
+            // choice, so they land chapterless — the profile page offers a
+            // one-time chapter join. (The subdomain backfill that used to live
+            // here went away with per-chapter subdomains.)
             const destinationPath = (!profile?.grad_year || !profile?.interests?.length)
                 ? `/profile/${user.id}`
                 : "/home"
-
-            // Always land the user on their own chapter's subdomain, not whichever
-            // one they happened to authenticate from.
-            if (chapterSlug && chapterSlug !== (await getChapterSlug())) {
-                return NextResponse.redirect(getChapterHomeUrl(chapterSlug, destinationPath, origin))
-            }
 
             return NextResponse.redirect(`${origin}${destinationPath}`)
         }

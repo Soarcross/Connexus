@@ -1,45 +1,14 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextRequest, NextResponse } from "next/server"
-import { CHAPTER_SLUG_HEADER, ROOT_DOMAIN, DEV_HOSTS, SLUG_PATTERN, DEFAULT_CHAPTER_SLUG } from "@/lib/chapter-shared"
 import { resolveCookieDomain } from "@/lib/supabase/cookie-domain"
 import { AUTH_COOKIE_PREFIX, clearAuthCookies, isUnrecoverableAuthError } from "@/lib/supabase/clear-auth-cookies"
 
-function resolveSlug(request: NextRequest): string | null {
-    const host = (request.headers.get("host") ?? "").split(":")[0].toLowerCase()
-
-    if (process.env.NODE_ENV !== "production") {
-        const queryChapter = request.nextUrl.searchParams.get("chapter")?.toLowerCase()
-        if (queryChapter && SLUG_PATTERN.test(queryChapter)) return queryChapter
-    }
-
-    const isDevHost = DEV_HOSTS.some((devHost) => host === devHost || host.endsWith(`.${devHost}`))
-    const root = isDevHost ? DEV_HOSTS.find((devHost) => host.endsWith(devHost)) : ROOT_DOMAIN
-    if (!root) return null
-
-    // The apex/www domain is the flagship chapter's home, not a "no chapter"
-    // state -- see DEFAULT_CHAPTER_SLUG in lib/chapter-shared.ts.
-    if (host === root || host === `www.${root}`) return DEFAULT_CHAPTER_SLUG
-
-    if (host.endsWith(`.${root}`)) {
-        const subdomain = host.slice(0, -(`.${root}`.length))
-        // guard against multi-level subdomains resolving to something unexpected
-        if (subdomain && !subdomain.includes(".")) return subdomain
-    }
-
-    return null
-}
+// Chapter subdomain resolution used to live here (x-chapter-slug); chapters
+// all share one site now and chapter identity comes from profiles.chapter_id.
+// What remains is the session refresh, and it is load-bearing — see below.
 
 export async function proxy(request: NextRequest) {
-    const slug = resolveSlug(request)
-
-    const requestHeaders = new Headers(request.headers)
-    if (slug) {
-        requestHeaders.set(CHAPTER_SLUG_HEADER, slug)
-    } else {
-        requestHeaders.delete(CHAPTER_SLUG_HEADER)
-    }
-
-    let response = NextResponse.next({ request: { headers: requestHeaders } })
+    let response = NextResponse.next()
 
     // Refreshing the session is the only place in the app that can actually
     // persist a rotated token: server components cannot write cookies (their
@@ -79,7 +48,7 @@ export async function proxy(request: NextRequest) {
                 // rendering later in this same pass reads the refreshed token
                 // rather than the expired one.
                 cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-                response = NextResponse.next({ request: { headers: requestHeaders } })
+                response = NextResponse.next()
                 cookiesToSet.forEach(({ name, value, options }) =>
                     response.cookies.set(name, value, options)
                 )

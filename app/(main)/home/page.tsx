@@ -14,6 +14,83 @@ export default async function HomePage() {
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  if (!user) {
+    // Guest dashboard: real People carousel (anon-granted columns only) plus a
+    // blurred placeholder opportunities section. No member-only data fetched.
+    const { data: guestPeople } = await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url, grad_year, interests, club_roles")
+      .not("full_name", "is", null)
+      .limit(12)
+
+    const carouselPeople = (guestPeople ?? []).map(p => ({
+      ...p,
+      looking_for: null,
+      bio: null,
+      score: 0,
+    }))
+
+    return (
+      <div className="flex flex-col gap-8">
+        <Card className="bg-primary/5 border-primary/15">
+          <CardContent className="flex flex-col gap-1">
+            <h1 className="text-2xl font-semibold tracking-tight">Welcome, guest</h1>
+            <p className="text-sm text-muted-foreground">
+              You&apos;re browsing High School Connections as a guest. Sign up to unlock opportunities, community posts and messaging.
+            </p>
+          </CardContent>
+        </Card>
+
+        {carouselPeople.length > 0 && (
+          <section className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold tracking-tight">People on HSC</h2>
+              <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" asChild>
+                <Link href="/people">
+                  See all <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+            </div>
+            <PeopleCarousel people={carouselPeople} currentUserId="" />
+          </section>
+        )}
+
+        <section className="relative">
+          <div className="blur-[6px] pointer-events-none select-none opacity-70" aria-hidden="true">
+            <div className="flex flex-col gap-4">
+              <h2 className="text-xl font-semibold tracking-tight">Opportunities of the Month</h2>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {["Summer Research Program", "Software Engineering Internship", "Community Volunteering Day", "National Math Competition"].map(title => (
+                  <Card key={title} size="sm">
+                    <CardHeader className="pb-0">
+                      <CardTitle className="text-sm font-semibold leading-snug">{title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-2">
+                      <div className="h-3.5 w-full rounded bg-muted" />
+                      <div className="h-3.5 w-2/3 rounded bg-muted" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Card className="w-full max-w-sm mx-4 shadow-lg">
+              <CardContent className="pt-6 flex flex-col items-center gap-3 text-center">
+                <p className="font-semibold">Featured opportunities are for members</p>
+                <p className="text-sm text-muted-foreground">Sign up free to see this month&apos;s picks.</p>
+                <div className="flex gap-2">
+                  <Button asChild><Link href="/signup">Sign up</Link></Button>
+                  <Button variant="outline" asChild><Link href="/login">Log in</Link></Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      </div>
+    )
+  }
+
   // fetch current user's profile for matching
   const { data: currentProfile } = await supabase
     .from("profiles")

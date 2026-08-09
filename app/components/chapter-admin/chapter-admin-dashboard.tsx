@@ -67,7 +67,14 @@ type Props = {
     opportunities: Opportunity[]
 }
 
-const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering", "Programs"]
+// Chapter admins also get the chapter-life categories (meetings, trips, …)
+// shown on the /chapters page. Those stay out of the national opportunities
+// and home lists on purpose — every category list in this codebase is
+// hand-maintained (see CLAUDE.md).
+const CATEGORIES = [
+    "Announcements", "Meetings", "Events", "Trips", "Fundraisers", "Clubs",
+    "Internships", "Jobs", "Research", "Scholarships", "Competitions", "Volunteering", "Programs",
+]
 
 const EMPTY_FORM = {
     title: "",

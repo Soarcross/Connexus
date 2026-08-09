@@ -12,19 +12,16 @@ import {
 import { Input } from "./ui/input"
 import { PasswordInput } from "./ui/password-input"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
-import { getChapterHomeUrl } from "@/lib/chapter-shared"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 
 type Props = React.ComponentProps<"form"> & {
-    currentChapterSlug?: string | null
     /** Message for a `?error=` the auth callback redirected here with. */
     initialError?: string | null
 }
 
 export function LoginForm({
     className,
-    currentChapterSlug,
     initialError = null,
     ...props
 }: Props) {
@@ -68,22 +65,13 @@ export function LoginForm({
         if (user) {
             const { data: profile } = await supabase
                 .from("profiles")
-                .select("grad_year, interests, chapters(slug)")
+                .select("grad_year, interests")
                 .eq("id", user.id)
                 .single()
 
             const destinationPath = (!profile?.grad_year || !profile?.interests?.length)
                 ? `/profile/${user.id}`
                 : "/home"
-
-            const chapterSlug = profile?.chapters?.slug ?? null
-
-            // Always land on the user's own chapter's subdomain, not whichever
-            // one they happened to log in from.
-            if (chapterSlug && chapterSlug !== currentChapterSlug) {
-                window.location.href = getChapterHomeUrl(chapterSlug, destinationPath, window.location.origin)
-                return
-            }
 
             router.push(destinationPath)
             router.refresh()

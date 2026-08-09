@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
 import { Input } from "@/app/components/ui/input"
+import { Button } from "@/app/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { ThemeToggle } from "@/app/components/theme-toggle"
 import {
@@ -21,12 +22,12 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/app/components/ui/sheet"
-import { Home, Users, Briefcase, Info, Mail, Search, LogOut, User, Menu, MessageCircle, Newspaper } from "lucide-react"
+import { Home, Users, Briefcase, Info, Mail, Search, LogOut, User, Menu, MessageCircle, Newspaper, School } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
 type Props = {
-    userId: string
+    userId: string | null
     avatarUrl: string | null
     fullName: string | null
     isAdmin: boolean
@@ -38,6 +39,7 @@ const NAV_TABS = [
     { label: "Home", href: "/home", icon: Home },
     { label: "People", href: "/people", icon: Users },
     { label: "Opportunities", href: "/opportunities", icon: Briefcase },
+    { label: "Chapters", href: "/chapters", icon: School },
     { label: "Community", href: "/community", icon: Newspaper },
 ]
 
@@ -54,6 +56,10 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
     const [unreadCount, setUnreadCount] = useState(0)
 
     useEffect(() => {
+        if (!userId) return
+        // TS can't carry the null-narrowing into the nested closure below.
+        const uid = userId
+
         const supabase = getSupaBrowserClient()
 
         async function fetchUnreadCount() {
@@ -61,7 +67,7 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                 .from("messages")
                 .select("id", { count: "exact", head: true })
                 .eq("read", false)
-                .neq("sender_id", userId)
+                .neq("sender_id", uid)
 
             setUnreadCount(count ?? 0)
         }
@@ -115,7 +121,7 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
             <div className="max-w-[1128px] mx-auto px-4 h-14 flex items-center gap-3">
 
                 {/* Logo */}
-                <Link href="/home" className="shrink-0" aria-label="Home">
+                <Link href={userId ? "/home" : "/"} className="shrink-0" aria-label="Home">
                     <Image
                         src="/brand/hsc-logo.svg"
                         alt="High School Connections"
@@ -146,24 +152,33 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                             <span className="hidden lg:block">{label}</span>
                         </Link>
                     ))}
-                    <Link href="/messages" className={tabClass(pathname.startsWith("/messages"))}>
-                        <span className="relative">
-                            <MessageCircle className="size-5" />
-                            {unreadCount > 0 && (
-                                <span className="absolute -top-1 -right-1.5 size-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                                    {unreadCount > 9 ? "9+" : unreadCount}
-                                </span>
-                            )}
-                        </span>
-                        <span className="hidden lg:block">Messages</span>
-                    </Link>
+                    {userId && (
+                        <Link href="/messages" className={tabClass(pathname.startsWith("/messages"))}>
+                            <span className="relative">
+                                <MessageCircle className="size-5" />
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1.5 size-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                                        {unreadCount > 9 ? "9+" : unreadCount}
+                                    </span>
+                                )}
+                            </span>
+                            <span className="hidden lg:block">Messages</span>
+                        </Link>
+                    )}
                 </nav>
 
                 {/* Right side */}
                 <div className="shrink-0 flex items-center gap-1.5 md:ml-2 ml-auto">
                     <ThemeToggle />
 
-                    {/* Account dropdown */}
+                    {/* Account dropdown (members) / auth buttons (guests) */}
+                    {!userId && (
+                        <div className="hidden sm:flex items-center gap-1.5">
+                            <Button variant="ghost" size="sm" asChild><Link href="/login">Log in</Link></Button>
+                            <Button size="sm" asChild><Link href="/signup">Sign up</Link></Button>
+                        </div>
+                    )}
+                    {userId && (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <button className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
@@ -216,6 +231,7 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
+                    )}
 
                     {/* Mobile menu */}
                     <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -230,7 +246,7 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                         <SheetContent side="right" className="w-72">
                             <SheetHeader>
                                 <SheetTitle className="text-left text-sm">
-                                    {fullName ?? "Menu"}
+                                    {fullName ?? (userId ? "Menu" : "Welcome, guest")}
                                     {chapterName && (
                                         <span className="block text-xs font-normal text-muted-foreground">{chapterName}</span>
                                     )}
@@ -266,23 +282,35 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                                         {label}
                                     </Link>
                                 ))}
-                                <Link
-                                    href="/messages"
-                                    onClick={() => setMobileOpen(false)}
-                                    className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                                        pathname.startsWith("/messages")
-                                            ? "bg-primary/10 text-primary"
-                                            : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                                    }`}
-                                >
-                                    <MessageCircle className="size-4" />
-                                    Messages
-                                    {unreadCount > 0 && (
-                                        <span className="ml-auto size-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
-                                            {unreadCount > 9 ? "9+" : unreadCount}
-                                        </span>
-                                    )}
-                                </Link>
+                                {userId && (
+                                    <Link
+                                        href="/messages"
+                                        onClick={() => setMobileOpen(false)}
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                            pathname.startsWith("/messages")
+                                                ? "bg-primary/10 text-primary"
+                                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                        }`}
+                                    >
+                                        <MessageCircle className="size-4" />
+                                        Messages
+                                        {unreadCount > 0 && (
+                                            <span className="ml-auto size-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
+                                                {unreadCount > 9 ? "9+" : unreadCount}
+                                            </span>
+                                        )}
+                                    </Link>
+                                )}
+                                {!userId && (
+                                    <div className="mt-2 flex flex-col gap-2">
+                                        <Button asChild onClick={() => setMobileOpen(false)}>
+                                            <Link href="/signup">Sign up</Link>
+                                        </Button>
+                                        <Button variant="outline" asChild onClick={() => setMobileOpen(false)}>
+                                            <Link href="/login">Log in</Link>
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         </SheetContent>
                     </Sheet>
