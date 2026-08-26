@@ -834,7 +834,9 @@ export function AdminDashboard({
             const json = await res.json()
             if (!res.ok) throw new Error(json.error ?? "Failed to assign chapter admin.")
 
-            setUsers(prev => prev.map(u => u.id === userId ? { ...u, chapter_role: "chapter_admin" } : u))
+            // Also set chapter_id: a chapterless assignee joins the chapter
+            // as part of the assignment (mirrors the API's update).
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, chapter_role: "chapter_admin", chapter_id: chapter.id } : u))
             const assignedUser = users.find(u => u.id === userId)
             showSuccess(`${assignedUser?.full_name ?? "User"} is now the admin for ${chapter.name}.`)
         } catch (err) {
@@ -1756,6 +1758,11 @@ export function AdminDashboard({
                             chapters.map(chapter => {
                                 const chapterMembers = users.filter(u => u.chapter_id === chapter.id)
                                 const chapterAdmins = chapterMembers.filter(u => u.chapter_role === "chapter_admin")
+                                // A new chapter has no members to promote, so
+                                // chapterless users are assignable too — the
+                                // API joins them to the chapter on assignment.
+                                const chapterless = users.filter(u => !u.chapter_id && !u.is_admin)
+                                const assignable = [...chapterMembers, ...chapterless]
                                 return (
                                     <Card key={chapter.id}>
                                         <CardContent className="py-4 flex flex-col gap-3">
@@ -1784,19 +1791,22 @@ export function AdminDashboard({
                                                             value={chapterAdminSelection[chapter.id] ?? ""}
                                                             onChange={(e) => setChapterAdminSelection(prev => ({ ...prev, [chapter.id]: e.target.value }))}
                                                             className="h-9 flex-1 max-w-[280px] rounded-md border border-input bg-background px-3 text-sm"
-                                                            disabled={chapterMembers.length === 0}
+                                                            disabled={assignable.length === 0}
                                                         >
                                                             <option value="">
-                                                                {chapterMembers.length === 0 ? "No members yet" : "Select a member…"}
+                                                                {assignable.length === 0 ? "No assignable users" : "Select a user…"}
                                                             </option>
                                                             {chapterMembers.map(m => (
                                                                 <option key={m.id} value={m.id}>{m.full_name ?? "Unnamed"}</option>
+                                                            ))}
+                                                            {chapterless.map(m => (
+                                                                <option key={m.id} value={m.id}>{(m.full_name ?? "Unnamed") + " — no chapter yet, will join"}</option>
                                                             ))}
                                                         </select>
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            disabled={chapterMembers.length === 0 || assigningChapterAdminId === chapter.id}
+                                                            disabled={assignable.length === 0 || assigningChapterAdminId === chapter.id}
                                                             onClick={() => handleAssignChapterAdmin(chapter)}
                                                         >
                                                             {assigningChapterAdminId === chapter.id ? "Assigning…" : "Assign Admin"}

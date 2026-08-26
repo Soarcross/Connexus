@@ -36,21 +36,23 @@ export async function POST(req: NextRequest) {
 
     const supabaseAdmin = createSupabaseAdminClient()
 
-    // The target must already belong to this chapter -- this route promotes
-    // an existing member, it doesn't move someone between chapters.
+    // The target must belong to this chapter, or to none yet -- a brand-new
+    // chapter has zero members, so assigning a chapterless user also joins
+    // them to the chapter. Members of OTHER chapters are still rejected:
+    // this route never moves someone between chapters.
     const { data: targetProfile } = await supabaseAdmin
         .from("profiles")
         .select("chapter_id")
         .eq("id", userId)
         .single()
 
-    if (!targetProfile || targetProfile.chapter_id !== chapterId) {
-        return NextResponse.json({ error: "That user isn't a member of this chapter." }, { status: 400 })
+    if (!targetProfile || (targetProfile.chapter_id !== null && targetProfile.chapter_id !== chapterId)) {
+        return NextResponse.json({ error: "That user belongs to a different chapter." }, { status: 400 })
     }
 
     const { error } = await supabaseAdmin
         .from("profiles")
-        .update({ chapter_role: "chapter_admin" })
+        .update({ chapter_role: "chapter_admin", chapter_id: chapterId })
         .eq("id", userId)
 
     if (error) {
