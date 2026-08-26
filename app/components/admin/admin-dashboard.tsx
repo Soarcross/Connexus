@@ -220,7 +220,7 @@ const FIELDS = [
     "Computer Science", "Law", "Medicine", "Finance",
     "Engineering", "Research", "Business", "Design",
     "Journalism", "Education", "Biology", "Mathematics",
-    "Cybersecurity", "Architecture", "Consulting", "Other"
+    "Cybersecurity", "Architecture", "Consulting", "STEM", "Other"
 ]
 
 const EMPTY_FORM = {
@@ -228,6 +228,8 @@ const EMPTY_FORM = {
     description: "",
     category: "Internships",
     field: "",
+    // Free text shown when field is "Other"; persisted into `field` itself.
+    custom_field: "",
     organization: "",
     location: "",
     url: "",
@@ -345,11 +347,14 @@ export function AdminDashboard({
     }
 
     function startEdit(opp: Opportunity) {
+        // A stored field outside the picker list is a custom "Other" value.
+        const isCustomField = Boolean(opp.field) && !FIELDS.includes(opp.field ?? "")
         setForm({
             title: opp.title,
             description: opp.description,
             category: opp.category,
-            field: opp.field ?? "",
+            field: isCustomField ? "Other" : (opp.field ?? ""),
+            custom_field: isCustomField ? (opp.field ?? "") : "",
             organization: opp.organization ?? "",
             location: opp.location ?? "",
             url: opp.url ?? "",
@@ -380,7 +385,9 @@ export function AdminDashboard({
                 title: form.title,
                 description: form.description,
                 category: form.category,
-                field: form.field || null,
+                field: form.field === "Other" && form.custom_field.trim()
+                    ? form.custom_field.trim()
+                    : (form.field || null),
                 organization: form.organization || null,
                 location: form.location || null,
                 url: form.url || null,
@@ -408,7 +415,10 @@ export function AdminDashboard({
             cancelForm()
             router.refresh()
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Something went wrong.")
+            // Supabase errors are plain objects, not Error instances — an
+            // instanceof check here masked a constraint violation for weeks.
+            const message = (err as { message?: string })?.message
+            setError(message || "Something went wrong.")
         } finally {
             setLoading(false)
         }
@@ -824,7 +834,9 @@ export function AdminDashboard({
             const json = await res.json()
             if (!res.ok) throw new Error(json.error ?? "Failed to assign chapter admin.")
 
-            setUsers(prev => prev.map(u => u.id === userId ? { ...u, chapter_role: "chapter_admin" } : u))
+            // Also set chapter_id: a chapterless assignee joins the chapter
+            // as part of the assignment (mirrors the API's update).
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, chapter_role: "chapter_admin", chapter_id: chapter.id } : u))
             const assignedUser = users.find(u => u.id === userId)
             showSuccess(`${assignedUser?.full_name ?? "User"} is now the admin for ${chapter.name}.`)
         } catch (err) {
@@ -1030,6 +1042,14 @@ export function AdminDashboard({
                                             <option value="">Select a field</option>
                                             {FIELDS.map(field => <option key={field} value={field}>{field}</option>)}
                                         </select>
+                                        {form.field === "Other" && (
+                                            <Input
+                                                placeholder="Specify the field (e.g. Marine Robotics)"
+                                                value={form.custom_field}
+                                                maxLength={60}
+                                                onChange={(e) => setForm(f => ({ ...f, custom_field: e.target.value }))}
+                                            />
+                                        )}
                                     </div>
                                 </div>
                                 <div className="grid gap-4 sm:grid-cols-2">
@@ -1738,6 +1758,11 @@ export function AdminDashboard({
                             chapters.map(chapter => {
                                 const chapterMembers = users.filter(u => u.chapter_id === chapter.id)
                                 const chapterAdmins = chapterMembers.filter(u => u.chapter_role === "chapter_admin")
+                                // A new chapter has no members to promote, so
+                                // chapterless users are assignable too — the
+                                // API joins them to the chapter on assignment.
+                                const chapterless = users.filter(u => !u.chapter_id && !u.is_admin)
+                                const assignable = [...chapterMembers, ...chapterless]
                                 return (
                                     <Card key={chapter.id}>
                                         <CardContent className="py-4 flex flex-col gap-3">
@@ -1766,19 +1791,22 @@ export function AdminDashboard({
                                                             value={chapterAdminSelection[chapter.id] ?? ""}
                                                             onChange={(e) => setChapterAdminSelection(prev => ({ ...prev, [chapter.id]: e.target.value }))}
                                                             className="h-9 flex-1 max-w-[280px] rounded-md border border-input bg-background px-3 text-sm"
-                                                            disabled={chapterMembers.length === 0}
+                                                            disabled={assignable.length === 0}
                                                         >
                                                             <option value="">
-                                                                {chapterMembers.length === 0 ? "No members yet" : "Select a member…"}
+                                                                {assignable.length === 0 ? "No assignable users" : "Select a user…"}
                                                             </option>
                                                             {chapterMembers.map(m => (
                                                                 <option key={m.id} value={m.id}>{m.full_name ?? "Unnamed"}</option>
+                                                            ))}
+                                                            {chapterless.map(m => (
+                                                                <option key={m.id} value={m.id}>{(m.full_name ?? "Unnamed") + " — no chapter yet, will join"}</option>
                                                             ))}
                                                         </select>
                                                         <Button
                                                             size="sm"
                                                             variant="outline"
-                                                            disabled={chapterMembers.length === 0 || assigningChapterAdminId === chapter.id}
+                                                            disabled={assignable.length === 0 || assigningChapterAdminId === chapter.id}
                                                             onClick={() => handleAssignChapterAdmin(chapter)}
                                                         >
                                                             {assigningChapterAdminId === chapter.id ? "Assigning…" : "Assign Admin"}
