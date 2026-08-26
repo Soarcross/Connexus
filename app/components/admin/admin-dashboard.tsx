@@ -220,7 +220,7 @@ const FIELDS = [
     "Computer Science", "Law", "Medicine", "Finance",
     "Engineering", "Research", "Business", "Design",
     "Journalism", "Education", "Biology", "Mathematics",
-    "Cybersecurity", "Architecture", "Consulting", "Other"
+    "Cybersecurity", "Architecture", "Consulting", "STEM", "Other"
 ]
 
 const EMPTY_FORM = {
@@ -228,6 +228,8 @@ const EMPTY_FORM = {
     description: "",
     category: "Internships",
     field: "",
+    // Free text shown when field is "Other"; persisted into `field` itself.
+    custom_field: "",
     organization: "",
     location: "",
     url: "",
@@ -345,11 +347,14 @@ export function AdminDashboard({
     }
 
     function startEdit(opp: Opportunity) {
+        // A stored field outside the picker list is a custom "Other" value.
+        const isCustomField = Boolean(opp.field) && !FIELDS.includes(opp.field ?? "")
         setForm({
             title: opp.title,
             description: opp.description,
             category: opp.category,
-            field: opp.field ?? "",
+            field: isCustomField ? "Other" : (opp.field ?? ""),
+            custom_field: isCustomField ? (opp.field ?? "") : "",
             organization: opp.organization ?? "",
             location: opp.location ?? "",
             url: opp.url ?? "",
@@ -380,7 +385,9 @@ export function AdminDashboard({
                 title: form.title,
                 description: form.description,
                 category: form.category,
-                field: form.field || null,
+                field: form.field === "Other" && form.custom_field.trim()
+                    ? form.custom_field.trim()
+                    : (form.field || null),
                 organization: form.organization || null,
                 location: form.location || null,
                 url: form.url || null,
@@ -408,7 +415,10 @@ export function AdminDashboard({
             cancelForm()
             router.refresh()
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Something went wrong.")
+            // Supabase errors are plain objects, not Error instances — an
+            // instanceof check here masked a constraint violation for weeks.
+            const message = (err as { message?: string })?.message
+            setError(message || "Something went wrong.")
         } finally {
             setLoading(false)
         }
@@ -1030,6 +1040,14 @@ export function AdminDashboard({
                                             <option value="">Select a field</option>
                                             {FIELDS.map(field => <option key={field} value={field}>{field}</option>)}
                                         </select>
+                                        {form.field === "Other" && (
+                                            <Input
+                                                placeholder="Specify the field (e.g. Marine Robotics)"
+                                                value={form.custom_field}
+                                                maxLength={60}
+                                                onChange={(e) => setForm(f => ({ ...f, custom_field: e.target.value }))}
+                                            />
+                                        )}
                                     </div>
                                 </div>
                                 <div className="grid gap-4 sm:grid-cols-2">
