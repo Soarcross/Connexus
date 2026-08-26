@@ -239,10 +239,7 @@ export function ChapterAdminDashboard({ chapterId, communityPosts: initialCommun
             cancelForm()
             router.refresh()
         } catch (err) {
-            // Supabase errors are plain objects, not Error instances — an
-            // instanceof check here masked a constraint violation for weeks.
-            const message = (err as { message?: string })?.message
-            setError(message || "Something went wrong.")
+            setError(err instanceof Error ? err.message : "Something went wrong.")
         }
     }
 

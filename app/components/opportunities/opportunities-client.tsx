@@ -47,7 +47,7 @@ const FIELDS = [
     "Computer Science", "Law", "Medicine", "Finance",
     "Engineering", "Research", "Business", "Design",
     "Journalism", "Education", "Biology", "Mathematics",
-    "Cybersecurity", "Architecture", "Consulting", "STEM", "Other"
+    "Cybersecurity", "Architecture", "Consulting", "Other"
 ]
 
 export function OpportunitiesClient({
