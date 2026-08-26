@@ -74,7 +74,7 @@ export function ApplyForm() {
                     <div className="flex flex-col gap-2">
                         <h2 className="text-2xl font-bold">Application received!</h2>
                         <p className="text-muted-foreground">
-                            Thanks for your interest in starting a High School Connections chapter. We&apos;ll review your application and follow up by email.
+                            Thanks for your interest in starting a Connexus chapter. We&apos;ll review your application and follow up by email.
                         </p>
                     </div>
                 </div>
@@ -87,7 +87,7 @@ export function ApplyForm() {
             <div className="flex flex-col gap-2 text-center">
                 <h1 className="text-4xl font-bold tracking-tight">Start a chapter</h1>
                 <p className="text-muted-foreground text-lg">
-                    Bring High School Connections to your school. Tell us a bit about yourself and we&apos;ll be in touch.
+                    Bring Connexus to your school. Tell us a bit about yourself and we&apos;ll be in touch.
                 </p>
             </div>
 
@@ -190,7 +190,7 @@ export function ApplyForm() {
                 <div className="flex flex-col gap-2">
                     <label className="text-sm font-semibold">Why do you want to start a chapter?</label>
                     <Textarea
-                        placeholder="Tell us about your school's community and why you'd like to bring High School Connections there..."
+                        placeholder="Tell us about your school's community and why you'd like to bring Connexus there..."
                         value={motivation}
                         onChange={(e) => setMotivation(e.target.value)}
                         rows={5}

@@ -14,11 +14,11 @@ export default function MarketingLayout({
                     <Link href="/" className="flex items-center gap-2 shrink-0">
                         <Image
                             src="/brand/hsc-logo.svg"
-                            alt="High School Connections"
+                            alt="Connexus"
                             width={32}
                             height={32}
                         />
-                        <span className="hidden sm:inline font-bold text-base">High School Connections</span>
+                        <span className="hidden sm:inline font-bold text-base">Connexus</span>
                     </Link>
 
                     <div className="flex items-center gap-2">
@@ -43,7 +43,7 @@ export default function MarketingLayout({
 
             <footer className="border-t py-8">
                 <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-muted-foreground">
-                    <p>&copy; {new Date().getFullYear()} High School Connections</p>
+                    <p>&copy; {new Date().getFullYear()} Connexus</p>
                     <div className="flex items-center gap-4">
                         <Link href="/apply" className="hover:text-foreground transition-colors">Start a chapter</Link>
                         <Link href="/login" className="hover:text-foreground transition-colors">Log in</Link>

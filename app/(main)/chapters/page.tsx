@@ -61,7 +61,7 @@ export default async function ChaptersPage() {
             <div className="flex flex-col gap-1">
                 <h1 className="text-2xl font-semibold tracking-tight">Chapters</h1>
                 <p className="text-sm text-muted-foreground">
-                    Browse every High School Connections chapter and see who&apos;s in each one.
+                    Browse every Connexus chapter and see who&apos;s in each one.
                 </p>
             </div>
 

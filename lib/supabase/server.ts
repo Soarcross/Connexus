@@ -20,7 +20,7 @@ export async function createSupabaseServerClient() {
     const { supabaseUrl, supabaseAnonKey } = getEnvironmentVariables();
     const cookieStore = await cookies();
     // Deliberately shared across every chapter subdomain (e.g.
-    // ".stuyconnections.com") so a session survives moving between chapters.
+    // ".hsconnexus.com") so a session survives moving between chapters.
     // Resolved from the request's own Host header rather than NODE_ENV, so
     // that hosts outside the root domain -- preview deployments, localhost --
     // get a host-only cookie instead of one the browser will discard. See

@@ -1,4 +1,4 @@
-# High School Connections
+# Connexus
 
 A multi-school networking platform organized into per-school "chapters": profiles, a people directory, opportunities, a moderated community board, direct messaging, and a public chapter-application flow for schools that want to join. Built with Next.js 16 (App Router) + React 19, Tailwind v4, shadcn/ui, and Supabase (auth, Postgres, storage, realtime), deployed on Vercel.
 

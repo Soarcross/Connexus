@@ -8,7 +8,7 @@ export const AUTH_COOKIE_PREFIX = "sb-"
  * the `domain`-scoped variant.
  *
  * A cookie's identity is the triple `(name, domain, path)`, so expiring
- * `sb-x-auth-token` with `Domain=stuyconnections.com` does **not** remove a
+ * `sb-x-auth-token` with `Domain=hsconnexus.com` does **not** remove a
  * host-only cookie of the same name — the browser keeps sending the leftover
  * one, and the app reads a session that can never be refreshed. Sessions issued
  * before the apex-domain move are host-only; everything written since is
