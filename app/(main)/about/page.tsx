@@ -35,7 +35,7 @@ export default async function AboutPage() {
                         Connecting High School Communities
                     </h1>
                     <p className="text-muted-foreground text-lg max-w-2xl leading-relaxed">
-                        {(aboutContent as any)?.mission || "High School Connections is a platform built to bridge the gap between students and alumni at high schools across the country, creating meaningful connections that help everyone grow personally and professionally."}
+                        {(aboutContent as any)?.mission || "Connexus is a platform built to bridge the gap between students and alumni at high schools across the country, creating meaningful connections that help everyone grow personally and professionally."}
                     </p>
                 </section>
 
@@ -45,7 +45,7 @@ export default async function AboutPage() {
                         <div className="flex flex-col gap-1 text-center">
                             <h2 className="text-2xl font-bold">Meet the Team</h2>
                             <p className="text-muted-foreground text-sm">
-                                The people behind High School Connections
+                                The people behind Connexus
                             </p>
                         </div>
                         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

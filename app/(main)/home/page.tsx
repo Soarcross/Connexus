@@ -36,7 +36,7 @@ export default async function HomePage() {
           <CardContent className="flex flex-col gap-1">
             <h1 className="text-2xl font-semibold tracking-tight">Welcome, guest</h1>
             <p className="text-sm text-muted-foreground">
-              You&apos;re browsing High School Connections as a guest. Sign up to unlock opportunities, community posts and messaging.
+              You&apos;re browsing Connexus as a guest. Sign up to unlock opportunities, community posts and messaging.
             </p>
           </CardContent>
         </Card>
@@ -44,7 +44,7 @@ export default async function HomePage() {
         {carouselPeople.length > 0 && (
           <section className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold tracking-tight">People on HSC</h2>
+              <h2 className="text-xl font-semibold tracking-tight">People on Connexus</h2>
               <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" asChild>
                 <Link href="/people">
                   See all <ArrowRight className="size-4" />
@@ -171,7 +171,7 @@ export default async function HomePage() {
           <p className="text-sm text-muted-foreground">
             {chapterName
               ? `Here's what's happening in the ${chapterName} chapter.`
-              : "Here's what's happening across High School Connections."}
+              : "Here's what's happening across Connexus."}
           </p>
         </CardContent>
       </Card>

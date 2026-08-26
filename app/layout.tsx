@@ -12,7 +12,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: "High School Connections",
+  title: "Connexus",
   description: "Connect with students and alumni from high schools across the country",
 }
 

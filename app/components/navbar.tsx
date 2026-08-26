@@ -124,7 +124,7 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                 <Link href={userId ? "/home" : "/"} className="shrink-0" aria-label="Home">
                     <Image
                         src="/brand/hsc-logo.svg"
-                        alt="High School Connections"
+                        alt="Connexus"
                         width={34}
                         height={34}
                         priority

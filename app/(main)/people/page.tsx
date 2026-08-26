@@ -33,7 +33,7 @@ export default async function PeoplePage({
                 <div className="flex flex-col gap-1">
                     <h1 className="text-2xl font-semibold tracking-tight">People</h1>
                     <p className="text-sm text-muted-foreground">
-                        Students and alumni on High School Connections. Sign up to see full profiles and connect.
+                        Students and alumni on Connexus. Sign up to see full profiles and connect.
                     </p>
                 </div>
                 <PeopleClient

@@ -1421,12 +1421,12 @@ export function AdminDashboard({
                         <CardContent className="flex flex-col gap-4">
                             <div className="flex flex-col gap-2">
                                 <label className="text-sm font-medium">Mission Statement</label>
-                                <Textarea value={missionEdit} onChange={(e) => setMissionEdit(e.target.value)} placeholder="Describe the mission of High School Connections..." rows={4} />
+                                <Textarea value={missionEdit} onChange={(e) => setMissionEdit(e.target.value)} placeholder="Describe the mission of Connexus..." rows={4} />
                             </div>
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div className="flex flex-col gap-2">
                                     <label className="text-sm font-medium">Contact Email</label>
-                                    <Input value={contactEmailEdit} onChange={(e) => setContactEmailEdit(e.target.value)} placeholder="contact@stuyconnections.com" type="email" />
+                                    <Input value={contactEmailEdit} onChange={(e) => setContactEmailEdit(e.target.value)} placeholder="contact@hsconnexus.com" type="email" />
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <label className="text-sm font-medium">Contact Phone</label>

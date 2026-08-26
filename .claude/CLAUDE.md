@@ -53,7 +53,7 @@ Next.js 16 App Router + React 19, Tailwind v4, shadcn/ui (`radix-vega` style, co
 
 **Auth gating lives in `app/(main)/layout.tsx`, not middleware.** There is no `middleware.ts`. That layout calls `supabase.auth.getUser()` server-side and redirects to `/login`, which is what protects every route inside the `(main)` group. Public routes are the ones deliberately placed outside it: `/` (landing), `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/verify-email`, and `/auth/callback`. Adding a page under `(main)` makes it authed; adding one at `app/` root makes it public — so place new routes accordingly rather than adding per-page auth checks.
 
-**`/` is the public landing page (`app/page.tsx`, branded "Highschool Connections"); the signed-in dashboard is `/home` (`app/(main)/home/page.tsx`).** Anything sending a logged-in user "home" must target `/home`, not `/` — there are six such call sites (`login-form.tsx`, `navbar.tsx` logo, `reset-password/page.tsx`, `profile-view.tsx`, `auth/callback/route.ts`, the non-admin redirect in `admin/page.tsx`). Grep for `"/"` before adding a seventh.
+**`/` is the public landing page (`app/page.tsx`, branded "Connexus"); the signed-in dashboard is `/home` (`app/(main)/home/page.tsx`).** Anything sending a logged-in user "home" must target `/home`, not `/` — there are six such call sites (`login-form.tsx`, `navbar.tsx` logo, `reset-password/page.tsx`, `profile-view.tsx`, `auth/callback/route.ts`, the non-admin redirect in `admin/page.tsx`). Grep for `"/"` before adding a seventh.
 
 `app/auth/callback/route.ts` exchanges the OAuth/email code for a session and doubles as the onboarding gate: a user missing `grad_year` or `interests` is redirected to their own `/profile/[id]` instead of `/home`.
 

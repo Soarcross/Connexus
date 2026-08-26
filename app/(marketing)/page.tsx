@@ -18,7 +18,7 @@ export default async function MarketingHomePage() {
                     The networking platform for high schools everywhere
                 </h1>
                 <p className="text-muted-foreground text-lg max-w-2xl">
-                    High School Connections helps students and alumni from your school connect, share career opportunities, and build their network &mdash; organized by chapter, one per school.
+                    Connexus helps students and alumni from your school connect, share career opportunities, and build their network &mdash; organized by chapter, one per school.
                 </p>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
                     <Button size="lg" className="w-full sm:w-auto" asChild>

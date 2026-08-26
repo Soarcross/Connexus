@@ -33,7 +33,7 @@ Write it from **Bash, not PowerShell** — PowerShell's `>` encodes UTF-16, whic
 
 ## Architecture
 
-Next.js 16 App Router + React 19, Tailwind v4, shadcn/ui (`radix-vega` style, components in `app/components/ui`), Supabase for auth/Postgres/storage/realtime, deployed on Vercel at `stuy-connections.vercel.app`. It's High School Connections: a multi-school networking platform organized into per-school "chapters" (profiles, people directory, opportunities, a moderated community board, DMs, plus a public chapter-application flow). Originally single-tenant for Stuyvesant; rebuilt for multi-chapter in 2026-07, with the old data backfilled as the `stuy` chapter.
+Next.js 16 App Router + React 19, Tailwind v4, shadcn/ui (`radix-vega` style, components in `app/components/ui`), Supabase for auth/Postgres/storage/realtime, deployed on Vercel at `hsconnexus.com`. It's Connexus: a multi-school networking platform organized into per-school "chapters" (profiles, people directory, opportunities, a moderated community board, DMs, plus a public chapter-application flow). Originally single-tenant for Stuyvesant; rebuilt for multi-chapter in 2026-07, with the old data backfilled as the `stuy` chapter.
 
 **Auth gating lives in `app/(main)/layout.tsx`, not `proxy.ts`.** `proxy.ts` is this project's Next 16.2+ `middleware.ts` replacement (renamed upstream — keep the export named `proxy`). It resolves the chapter subdomain into an `x-chapter-slug` header and **refreshes the Supabase session**, but it does **not** gate auth. The gate is `app/(main)/layout.tsx`, which calls `supabase.auth.getUser()` and redirects to `/login`, protecting everything in the `(main)` group.
 
