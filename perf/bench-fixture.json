@@ -1,0 +1,54 @@
+{
+  "note": "Temporary objects created by perf/setup-account.mjs for navigation benchmarking. Delete with perf/teardown-account.mjs.",
+  "createdAt": "2026-08-27T19:23:26.624Z",
+  "chapter": {
+    "slug": "stuy",
+    "id": "d9193d68-e60e-40f2-9b1e-881af1f395be"
+  },
+  "users": [
+    {
+      "role": "viewer",
+      "email": "perf-bench-viewer@connexus-perf.example.com",
+      "id": "4deba1d9-c14f-444f-a39b-5c1e8fbe06b1",
+      "createdByThisScript": false
+    },
+    {
+      "role": "partner-1",
+      "email": "perf-bench-partner-1@connexus-perf.example.com",
+      "id": "2918663f-ad93-4353-afe8-cec95e16965b",
+      "createdByThisScript": true
+    },
+    {
+      "role": "partner-2",
+      "email": "perf-bench-partner-2@connexus-perf.example.com",
+      "id": "1d42aa31-dc92-4907-b943-bac575014126",
+      "createdByThisScript": true
+    },
+    {
+      "role": "partner-3",
+      "email": "perf-bench-partner-3@connexus-perf.example.com",
+      "id": "0b532217-7e35-4533-9336-365ff11c84bb",
+      "createdByThisScript": true
+    }
+  ],
+  "conversations": [
+    {
+      "id": "a9adbad0-2714-41b8-8d4a-04c790f0361e",
+      "with": "perf-bench-partner-1@connexus-perf.example.com",
+      "createdByThisScript": true,
+      "messagesInserted": 8
+    },
+    {
+      "id": "36d3627d-5169-4e4f-9d04-a1a4c63f6f6c",
+      "with": "perf-bench-partner-2@connexus-perf.example.com",
+      "createdByThisScript": true,
+      "messagesInserted": 8
+    },
+    {
+      "id": "cd2a659f-3d20-47b4-a9fb-bc7454b92c19",
+      "with": "perf-bench-partner-3@connexus-perf.example.com",
+      "createdByThisScript": true,
+      "messagesInserted": 8
+    }
+  ]
+}
