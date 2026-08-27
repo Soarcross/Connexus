@@ -16,6 +16,17 @@
  * PNGs are kept side by side for a human to look at — some diffs are legitimate
  * (a timestamp, an avatar that loaded in one run and not the other) and this
  * script deliberately does not decide that on its own.
+ *
+ * KNOWN LIMITATION — chapter-detail is bistable.
+ * That page renders ~56 avatars from Supabase storage. One of them
+ * intermittently fails to load and falls back to its initials, so the page
+ * alternates between exactly two byte sizes (desktop 500436/500481, mobile
+ * 503422/503441). Both states were observed on BOTH servers with identical
+ * code, so a difference reported for chapter-detail alone is environmental.
+ * Waiting on every image's load/error plus document.fonts.ready (below) fixed
+ * the ordinary races but cannot fix an image that genuinely fails half the time.
+ * Verify a chapter-detail difference by re-capturing the SAME build twice
+ * before treating it as a regression; the other eight routes are byte-stable.
  */
 import { chromium } from "@playwright/test"
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "node:fs"
@@ -73,6 +84,22 @@ async function capture(label) {
                     transition-delay: 0s !important;
                     caret-color: transparent !important;
                 }`,
+            })
+            // Wait for every image to finish (or fail) and for fonts to load.
+            // Without this the check is not deterministic: chapter-detail renders
+            // ~56 avatars from Supabase storage, and capturing the SAME build
+            // twice produced differing bytes because some images had not painted
+            // yet. `networkidle` alone does not guarantee decode has completed.
+            await page.evaluate(async () => {
+                await Promise.all(
+                    Array.from(document.images)
+                        .filter((img) => !img.complete)
+                        .map((img) => new Promise((resolve) => {
+                            img.addEventListener("load", resolve, { once: true })
+                            img.addEventListener("error", resolve, { once: true })
+                        }))
+                )
+                if (document.fonts?.ready) await document.fonts.ready
             })
             await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
             await page.screenshot({ path: join(dir, `${name}__${vpName}.png`), fullPage: true })

@@ -34,18 +34,21 @@ export default async function ConversationPage({ params }: Props) {
         return; // or show an error, or redirect
     }
 
-    const { data: otherProfile } = await supabase
-        .from("profiles")
-        .select("id, full_name, avatar_url")
-        .eq("id", otherId)
-        .single();
-
-    // fetch messages
-    const { data: messages } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true })
+    // The other participant's profile and the message history both depend only
+    // on the conversation row already in hand, not on each other, so they go out
+    // together rather than as two sequential round trips.
+    const [{ data: otherProfile }, { data: messages }] = await Promise.all([
+        supabase
+            .from("profiles")
+            .select("id, full_name, avatar_url")
+            .eq("id", otherId)
+            .single(),
+        supabase
+            .from("messages")
+            .select("*")
+            .eq("conversation_id", conversationId)
+            .order("created_at", { ascending: true }),
+    ])
 
     // Mark unread messages as read. This is a write whose result the page never
     // reads, so awaiting it inside the render held the HTML back for a whole
