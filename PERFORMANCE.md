@@ -186,10 +186,69 @@ by definition the tail, where the measured cold connections (120–600 ms) domin
 
 ---
 
+## 3a. Measured phase breakdown — server vs client (run 2, 2026-08-27)
+
+Before ranking experiments, the benchmark was made to report where each
+navigation's time actually goes. Both endpoints are on the page's
+`performance.now()` clock, and the middle is taken from the
+`PerformanceResourceTiming` entry of the RSC fetch the navigation issued:
+
+| phase | meaning |
+|---|---|
+| `dispatch` | click → the RSC request goes on the wire |
+| `ttfb` | request sent → first byte. Next flushes the shell early, so this is **not** the data-fetching cost |
+| `stream` | first byte → last byte. The RSC response is **streamed**, so this is where the page's sequential Supabase awaits are actually paid |
+| `client` | last byte → destination usable (React render + paint) |
+
+Median split, 4 samples/route (larger runs agree):
+
+| navigation | dispatch | ttfb | stream | **server total** | **client** | bytes |
+|---|---|---|---|---|---|---|
+| home→opportunities | 0.6 | 45.4 | 220.5 | **272.4** | **7.3** | 3,153 |
+| home→messages | 0.6 | 38.4 | 259.8 | **298.2** | **5.0** | 2,232 |
+| messages→conversation | 0.4 | 49.6 | 210.1 | **260.5** | **6.1** | 2,207 |
+| home→people | 0.6 | 46.4 | 143.5 | **189.9** | **14.0** | 5,458 |
+| home→community | 0.5 | 46.0 | 136.6 | **182.6** | **8.8** | 1,868 |
+| home→chapters | 0.6 | 44.7 | 148.7 | **181.7** | **5.1** | 4,998 |
+| chapters→detail | 0.6 | 44.0 | 129.4 | **173.4** | **15.6** | 6,050 |
+| people→profile | 0.4 | 45.9 | 124.1 | **170.2** | **6.9** | 2,113 |
+| home→profile | 0.4 | 39.3 | 123.0 | **162.3** | **6.0** | 2,222 |
+
+Four conclusions, and they redirect the whole effort:
+
+1. **Server think-time is 85–95 % of every navigation. Client render is 5–16 ms.**
+   Bundle size, hydration cost, and rerender count are irrelevant to navigation
+   latency in this app. Any experiment aimed at them is unjustified against this
+   objective. (E10 is demoted accordingly.)
+2. **Server total tracks the sequential-stage count almost linearly** — roughly
+   `40 ms + 45 ms × stages`. 3-stage routes land at 162–190 ms; 5-stage routes at
+   260–298 ms. This is direct confirmation of the §3 analysis and makes the
+   expected saving of removing one stage ≈ **45 ms**, quantitatively.
+3. **`ttfb` is a near-constant 40–50 ms on every route**, independent of how much
+   data the page fetches. That is one Supabase round trip paid *before Next
+   starts rendering* — i.e. `proxy.ts`'s `auth.getUser()`. It is on the critical
+   path of every single navigation. This promotes E8 sharply.
+4. **The layout is not on the critical path.** `/profile` costs 162 ms for its 3
+   page stages; if the layout's 2 stages were serialised ahead of it, it would
+   cost ~265 ms. Layout and page render concurrently, as expected — which
+   *demotes* E1, whose saving is a duplicate request rather than a stage.
+
+Also measured: `<Link>` prefetching **is** active in Next 16 (≈3,500 `_rsc`
+prefetches per run, aborted when the real navigation supersedes them), yet the
+`<Link>` routes are not faster than the `router.push` routes. A prefetch of a
+dynamic route with no loading boundary yields nothing reusable. This is evidence
+*for* the §2 loading-boundary analysis and *against* E7 being worth much.
+
 ## 4. Ranked hypotheses / proposed experiments
 
-Ordered by expected effect ÷ risk. **One hypothesis per experiment.** None of these
-changes a pixel of rendered output; each will be pixel-verified before acceptance.
+**Re-ranked after §3a.** Ordered by expected effect ÷ risk, where "expected
+effect" is now grounded in the measured ≈45 ms per sequential stage rather than
+estimated. **One hypothesis per experiment.** None of these changes a pixel of
+rendered output; each will be pixel-verified before acceptance.
+
+Execution order: **E2 → E8 → E3 → E4 → E6 → E5 → E9**, with E1 first only because
+it creates the seam E2 needs. E7 and E10 are demoted to "measure only if time
+remains"; E11 stays gated on your decision.
 
 | # | Hypothesis | Expected saving | Risk | Visual risk |
 |---|---|---|---|---|
@@ -210,6 +269,49 @@ any schema change, any layout/spacing/typography change, removing the guest blur
 lowering image quality, deferring visible content.
 
 ---
+
+## 4a. Pre-flight for E2 (`getClaims()`) — verified before touching app code
+
+`perf/probe-getclaims.mjs` exercises the real project with the benchmark
+account. Result:
+
+| check | outcome |
+|---|---|
+| `getUser()` cost | **37.8 ms, 1 network call** (`/auth/v1/user`) |
+| `getClaims()` cold | 36.3 ms, 1 network call (`/auth/v1/.well-known/jwks.json`) |
+| `getClaims()` warm | **0.22–0.47 ms, zero network calls** ×5 |
+| `getUser().id === getClaims().sub` | YES |
+| `email` claim matches | YES |
+| signing algorithm | **ES256** — verified locally, no `getUser()` fallback |
+| forged `sub` | **rejected** — `Invalid JWT signature` |
+| expired token | **rejected** — but see hazard below |
+
+So the saving is real and quantified: **≈38 ms per call site**, on a path that
+has 13 server-component call sites and pays one per navigation.
+
+**Hazard the probe caught.** `getClaims()` does *not* mirror `getUser()`'s error
+contract for an expired token. `validateExp` throws a plain `Error`, and
+`getClaims` only converts `AuthError`s into a result object — so an expired
+token **throws** rather than returning `{ error }`. A naive swap would turn the
+guest/redirect path into an unhandled exception and a 500 page. The helper must
+catch and return `null`, matching the existing `user === null` contract exactly.
+
+**Security reasoning for E2.** What `getUser()` provides that `getClaims()` does
+not is a live revocation check; the exposure window is the remaining access-token
+lifetime (measured at 3600 s). That is acceptable *at these call sites* because:
+
+1. **RLS is the authorization boundary, not the page query** (CLAUDE.md says so
+   explicitly, and all 13 public tables have RLS enabled with policies). Every
+   read still sends the JWT to PostgREST, which validates it independently.
+2. The signature *is* cryptographically verified locally against the published
+   JWKS — this is `getClaims()`, not `getSession()`, which trusts the cookie blindly.
+3. `exp` is enforced.
+4. `proxy.ts` keeps its networked `getUser()` and its `clearAuthCookies` path, so
+   a revoked or deleted session is still caught there.
+
+**Not applied to:** `app/api/admin/*` (service-role clients that bypass RLS, where
+the identity check *is* the only boundary), `app/auth/callback/route.ts`, or
+`proxy.ts`. None of those are on the navigation critical path.
 
 ## 5. Benchmark design (to be built in run 2)
 

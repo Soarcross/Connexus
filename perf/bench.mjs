@@ -51,8 +51,11 @@ const argValue = (name, fallback) => {
 }
 
 const BASE = process.env.BENCH_BASE_URL ?? "http://localhost:3100"
-const REPS = Number(argValue("--reps", "30"))
-const WARMUP = Number(argValue("--warmup", "3"))
+const REPS = Number(argValue("--reps", "40"))
+// The first measured repetition consistently carried the run's worst outliers
+// when only 3 warmups ran (4 of the 6 samples over 1s in baseline-run1 landed
+// on rep 0), so the warmup is deliberately generous.
+const WARMUP = Number(argValue("--warmup", "6"))
 const LABEL = argValue("--label", "baseline")
 
 const fixture = JSON.parse(readFileSync(join(ROOT, "perf", "bench-fixture.json"), "utf8"))
@@ -230,7 +233,33 @@ window.__bench = {
   result() {
     const s = window.__benchState
     if (!s || s.t0 === null || s.t1 === null) return null
-    return { t0: s.t0, t1: s.t1, ms: s.t1 - s.t0 }
+    // Phase breakdown, on the same performance.now() clock as t0/t1, from the
+    // RSC fetch this navigation actually issued. Purely diagnostic: it never
+    // feeds the primary metric, which stays t1 - t0.
+    //   dispatch  click -> the browser put the RSC request on the wire
+    //   ttfb      request sent -> first byte. Next flushes early, so this is
+    //             NOT the data-fetching cost.
+    //   stream    first byte -> last byte. The RSC response is STREAMED, so
+    //             this is where the page's sequential Supabase awaits are
+    //             actually paid. ttfb + stream = server think-time.
+    //   client    last byte -> destination usable (React render + paint)
+    let phases = null
+    try {
+      const entry = performance.getEntriesByType('resource')
+        .filter(e => e.name.includes('_rsc=') && e.startTime >= s.t0 && e.responseEnd > 0 && e.responseEnd <= s.t1)
+        .sort((a, b) => b.responseEnd - a.responseEnd)[0]
+      if (entry) {
+        phases = {
+          dispatch: +(entry.startTime - s.t0).toFixed(1),
+          ttfb: +(entry.responseStart - entry.startTime).toFixed(1),
+          stream: +(entry.responseEnd - entry.responseStart).toFixed(1),
+          serverTotal: +(entry.responseEnd - entry.startTime).toFixed(1),
+          client: +(s.t1 - entry.responseEnd).toFixed(1),
+          bytes: entry.transferSize || 0,
+        }
+      }
+    } catch (e) { /* diagnostics only */ }
+    return { t0: s.t0, t1: s.t1, ms: s.t1 - s.t0, phases }
   }
 }
 `
@@ -331,19 +360,11 @@ page.on("response", async (r) => {
     if (!currentWindow) return
     const len = Number(r.headers()["content-length"] ?? 0)
     if (Number.isFinite(len)) currentWindow.bytes += len
-    // Server think-time for the RSC payload of the destination route. This is
-    // the part of the navigation the server owns -- the whole Supabase chain
-    // lives inside it -- so it isolates server work from client rendering.
-    // Supabase calls are made server-side and are invisible to the browser, so
-    // this is the only browser-observable handle on them.
-    const url = r.url()
-    if (url.startsWith(BASE) && url.includes("_rsc=")) {
-        const t = r.request().timing()
-        if (t && t.responseStart > 0 && t.requestStart >= 0) {
-            const ttfb = t.responseStart - t.requestStart
-            if (ttfb > currentWindow.rscTtfb) currentWindow.rscTtfb = ttfb
-        }
-    }
+    // Per-navigation phase timing is taken in-page from PerformanceResourceTiming
+    // instead, so it shares the performance.now() clock with t0/t1 — see
+    // window.__bench.result(). Supabase calls are made server-side and are
+    // invisible to the browser; the streamed RSC response is the only
+    // browser-observable handle on them.
     if (r.status() >= 400 && !isEnvironmentalNoise(r.url())) {
         currentWindow.httpErrors += 1
         diagnostics.failedRequests.push(`HTTP ${r.status()} ${r.url().slice(0, 160)}`)
@@ -366,7 +387,7 @@ async function measure(route) {
 
     await page.evaluate((spec) => window.__bench.arm(spec), route.ready)
 
-    currentWindow = { route: route.id, requests: 0, bytes: 0, failedRequests: 0, cancelledRequests: 0, httpErrors: 0, rscTtfb: 0, consoleErrors: { app: 0, env: 0 }, pageErrors: 0 }
+    currentWindow = { route: route.id, requests: 0, bytes: 0, failedRequests: 0, cancelledRequests: 0, httpErrors: 0, consoleErrors: { app: 0, env: 0 }, pageErrors: 0 }
 
     await page.locator(route.click).first().click()
 
@@ -375,7 +396,7 @@ async function measure(route) {
 
     const win = currentWindow
     currentWindow = null
-    diagnostics.windows.push({ ...win, ms: res.ms })
+    diagnostics.windows.push({ ...win, ms: res.ms, phases: res.phases })
     return res.ms
 }
 
@@ -424,10 +445,22 @@ const result = {
             const ws = diagnostics.windows.filter((w) => w.route === r.id)
             return [r.id, +(ws.reduce((a, w) => a + w.requests, 0) / (ws.length || 1)).toFixed(2)]
         })),
-        // p95 of server RSC time-to-first-byte, per route. This is where the
-        // sequential Supabase round trips show up.
-        serverRscTtfbP95PerRoute: Object.fromEntries(ROUTES.map((r) => {
-            const vals = diagnostics.windows.filter((w) => w.route === r.id && w.rscTtfb > 0).map((w) => w.rscTtfb).sort((a, b) => a - b)
+        // Median phase split per route -- says whether a route's latency is
+        // server chain or client rendering, which decides what to optimise.
+        phasesMedianPerRoute: Object.fromEntries(ROUTES.map((r) => {
+            const ps = diagnostics.windows.filter((w) => w.route === r.id && w.phases).map((w) => w.phases)
+            if (!ps.length) return [r.id, null]
+            const med = (k) => {
+                const v = ps.map((x) => x[k]).sort((a, b) => a - b)
+                return +percentile(v, 50).toFixed(1)
+            }
+            return [r.id, { n: ps.length, dispatch: med("dispatch"), ttfb: med("ttfb"), stream: med("stream"), serverTotal: med("serverTotal"), client: med("client"), bytes: med("bytes") }]
+        })),
+        // p95 of server think-time (ttfb + stream) per route — the part of the
+        // navigation the sequential Supabase chain is responsible for, and the
+        // number the experiments are trying to move.
+        serverTotalP95PerRoute: Object.fromEntries(ROUTES.map((r) => {
+            const vals = diagnostics.windows.filter((w) => w.route === r.id && w.phases).map((w) => w.phases.serverTotal).sort((a, b) => a - b)
             return [r.id, vals.length ? +percentile(vals, 95).toFixed(1) : null]
         })),
         appConsoleErrors: diagnostics.consoleErrors.length,
@@ -459,11 +492,20 @@ console.log(pad("navigation", 26) + num("median") + num("p90") + num("p95") + nu
 console.log("-".repeat(26 + 8 * 7))
 for (const r of ROUTES) {
     const s = result.perRoute[r.id]
-    console.log(pad(r.id, 26) + num(s.median) + num(s.p90) + num(s.p95) + num(s.p99) + num(s.max) + num(result.secondary.requestsPerRoute[r.id]) + num(result.secondary.serverRscTtfbP95PerRoute[r.id]))
+    console.log(pad(r.id, 26) + num(s.median) + num(s.p90) + num(s.p95) + num(s.p99) + num(s.max) + num(result.secondary.requestsPerRoute[r.id]) + num(result.secondary.serverTotalP95PerRoute[r.id]))
 }
 console.log("-".repeat(26 + 8 * 7))
 const o = result.overall
 console.log(pad("OVERALL", 26) + num(o.median) + num(o.p90) + num(o.p95) + num(o.p99) + num(o.max) + num(result.secondary.avgRequestsPerNavigation))
+console.log("\nmedian phase split (ms) — ttfb+stream = server think-time, client = React render")
+console.log(pad("navigation", 26) + num("dispatch") + num("ttfb") + num("stream") + num("server") + num("client") + num("bytes", 9))
+console.log("-".repeat(26 + 8 * 5 + 9))
+for (const r of ROUTES) {
+    const ph = result.secondary.phasesMedianPerRoute[r.id]
+    if (!ph) { console.log(pad(r.id, 26) + "  (no RSC entry captured)"); continue }
+    console.log(pad(r.id, 26) + num(ph.dispatch) + num(ph.ttfb) + num(ph.stream) + num(ph.serverTotal) + num(ph.client) + num(ph.bytes, 9))
+}
+
 console.log(`\n  PRIMARY  p95_navigation_ms = ${o.p95} ms`)
 console.log(`  app console errors ${result.secondary.appConsoleErrors} | page errors ${result.secondary.pageErrors} | failed requests ${result.secondary.failedRequests} | cancelled prefetches ${result.secondary.cancelledPrefetches} | measurement failures ${failures.length}`)
 if (failures.length) console.log("  FAILURES:", JSON.stringify(failures.slice(0, 5), null, 1))
