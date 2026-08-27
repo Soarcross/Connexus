@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { getServerUser } from "@/lib/supabase/user"
 import { redirect, notFound } from "next/navigation"
 import { ChatWindow } from "@/app/components/messages/chat-window"
 
@@ -10,7 +11,7 @@ export default async function ConversationPage({ params }: Props) {
     const { conversationId } = await params
     const supabase = await createSupabaseServerClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getServerUser(supabase)
     if (!user) redirect("/login")
 
     // verify user is part of this conversation

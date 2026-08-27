@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { getServerUser } from "@/lib/supabase/user"
 import { OpportunitiesClient } from "@/app/components/opportunities/opportunities-client"
 import { LockedPage } from "@/app/components/layout/locked-page"
 import { activeFilter, getPurgeCutoff } from "@/lib/lifecycle"
@@ -7,7 +8,7 @@ import { activeFilter, getPurgeCutoff } from "@/lib/lifecycle"
 export default async function OpportunitiesPage() {
     const supabase = await createSupabaseServerClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getServerUser(supabase)
 
     if (!user) {
         return (

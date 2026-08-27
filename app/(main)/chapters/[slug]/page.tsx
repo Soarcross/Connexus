@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { getServerUser } from "@/lib/supabase/user"
 import { LockedPage } from "@/app/components/layout/locked-page"
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app/components/ui/card"
@@ -26,7 +27,7 @@ export default async function ChapterDetailPage({
     const { slug } = await params
     const supabase = await createSupabaseServerClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getServerUser(supabase)
 
     if (!user) {
         return (

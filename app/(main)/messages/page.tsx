@@ -1,11 +1,12 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { getServerUser } from "@/lib/supabase/user"
 import { redirect } from "next/navigation"
 import { ConversationList } from "@/app/components/messages/conversation-list"
 
 export default async function MessagesPage() {
     const supabase = await createSupabaseServerClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getServerUser(supabase)
     if (!user) redirect("/login")
 
     const { data: conversations } = await supabase
