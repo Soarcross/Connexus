@@ -208,6 +208,12 @@ window.__bench = {
     return true
   },
   arm(spec) {
+    // The resource-timing buffer is capped (250 entries) and this page never
+    // reloads during a run, so without clearing it the buffer fills with stale
+    // prefetch entries and result() can no longer find the RSC fetch belonging
+    // to the current navigation. Clearing per measurement keeps the phase
+    // breakdown correct and the lookup cheap. It cannot affect t0/t1.
+    try { performance.clearResourceTimings() } catch (e) { /* diagnostics only */ }
     const state = { t0: null, t1: null, spec }
     window.__benchState = state
     state.onClick = () => { if (state.t0 === null) state.t0 = performance.now() }
@@ -305,7 +311,7 @@ const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
 })
 await context.addInitScript(PAGE_HELPERS)
-const page = await context.newPage()
+let page = await context.newPage()
 
 // --- diagnostics collection ------------------------------------------------
 const diagnostics = {
@@ -325,61 +331,80 @@ let currentWindow = null
 // rather than being allowed to mask a real regression.
 const isEnvironmentalNoise = (text) => /_vercel\/(insights|speed-insights)/.test(text)
 
-page.on("console", (m) => {
-    if (m.type() !== "error") return
-    // The text of a resource-load failure is just "Failed to load resource: ...
-    // 404" with no URL, so classification has to use the message's location.
-    const text = m.text()
-    const where = m.location()?.url ?? ""
-    const bucket = isEnvironmentalNoise(text) || isEnvironmentalNoise(where) ? "env" : "app"
-    if (bucket === "app") diagnostics.consoleErrors.push(`${text.slice(0, 200)} @ ${where.slice(0, 120)}`)
-    if (currentWindow) currentWindow.consoleErrors[bucket] += 1
-})
-page.on("pageerror", (e) => {
-    diagnostics.pageErrors.push(String(e).slice(0, 300))
-    if (currentWindow) currentWindow.pageErrors += 1
-})
-page.on("request", () => { if (currentWindow) currentWindow.requests += 1 })
-page.on("requestfailed", (r) => {
-    const url = r.url()
-    const err = r.failure()?.errorText ?? ""
-    // Chromium aborts an in-flight RSC prefetch the moment the navigation it was
-    // speculating about actually starts. That is normal and expected; counting
-    // it as a failed request would swamp the signal.
-    const cancelled = err.includes("ERR_ABORTED")
-    if (cancelled) {
-        diagnostics.cancelledRequests += 1
-        if (currentWindow) currentWindow.cancelledRequests += 1
-        return
-    }
-    if (isEnvironmentalNoise(url)) return
-    diagnostics.failedRequests.push(`${err} ${url.slice(0, 160)}`)
-    if (currentWindow) currentWindow.failedRequests += 1
-})
-page.on("response", async (r) => {
-    if (!currentWindow) return
-    const len = Number(r.headers()["content-length"] ?? 0)
-    if (Number.isFinite(len)) currentWindow.bytes += len
-    // Per-navigation phase timing is taken in-page from PerformanceResourceTiming
-    // instead, so it shares the performance.now() clock with t0/t1 — see
-    // window.__bench.result(). Supabase calls are made server-side and are
-    // invisible to the browser; the streamed RSC response is the only
-    // browser-observable handle on them.
-    if (r.status() >= 400 && !isEnvironmentalNoise(r.url())) {
-        currentWindow.httpErrors += 1
-        diagnostics.failedRequests.push(`HTTP ${r.status()} ${r.url().slice(0, 160)}`)
-    }
-})
+// Diagnostics are attached per page object, so a recycled page keeps
+// reporting into the same accumulators.
+function attachDiagnostics(page) {
+    page.on("console", (m) => {
+        if (m.type() !== "error") return
+        // The text of a resource-load failure is just "Failed to load resource: ...
+        // 404" with no URL, so classification has to use the message's location.
+        const text = m.text()
+        const where = m.location()?.url ?? ""
+        const bucket = isEnvironmentalNoise(text) || isEnvironmentalNoise(where) ? "env" : "app"
+        if (bucket === "app") diagnostics.consoleErrors.push(`${text.slice(0, 200)} @ ${where.slice(0, 120)}`)
+        if (currentWindow) currentWindow.consoleErrors[bucket] += 1
+    })
+    page.on("pageerror", (e) => {
+        diagnostics.pageErrors.push(String(e).slice(0, 300))
+        if (currentWindow) currentWindow.pageErrors += 1
+    })
+    page.on("request", () => { if (currentWindow) currentWindow.requests += 1 })
+    page.on("requestfailed", (r) => {
+        const url = r.url()
+        const err = r.failure()?.errorText ?? ""
+        // Chromium aborts an in-flight RSC prefetch the moment the navigation it was
+        // speculating about actually starts. That is normal and expected; counting
+        // it as a failed request would swamp the signal.
+        const cancelled = err.includes("ERR_ABORTED")
+        if (cancelled) {
+            diagnostics.cancelledRequests += 1
+            if (currentWindow) currentWindow.cancelledRequests += 1
+            return
+        }
+        if (isEnvironmentalNoise(url)) return
+        diagnostics.failedRequests.push(`${err} ${url.slice(0, 160)}`)
+        if (currentWindow) currentWindow.failedRequests += 1
+    })
+    page.on("response", async (r) => {
+        if (!currentWindow) return
+        const len = Number(r.headers()["content-length"] ?? 0)
+        if (Number.isFinite(len)) currentWindow.bytes += len
+        // Per-navigation phase timing is taken in-page from PerformanceResourceTiming
+        // instead, so it shares the performance.now() clock with t0/t1 — see
+        // window.__bench.result(). Supabase calls are made server-side and are
+        // invisible to the browser; the streamed RSC response is the only
+        // browser-observable handle on them.
+        if (r.status() >= 400 && !isEnvironmentalNoise(r.url())) {
+            currentWindow.httpErrors += 1
+            diagnostics.failedRequests.push(`HTTP ${r.status()} ${r.url().slice(0, 160)}`)
+        }
+    })
+}
+
+attachDiagnostics(page)
+
+// `networkidle` is deliberately bounded. A first attempt at this benchmark used
+// an unbounded wait and degraded from ~40s/rep to ~5min/rep after roughly 30
+// minutes: the app holds an open realtime WebSocket and Next re-prefetches on
+// every navigation, so "no network activity for 500ms" stops being reachable in
+// a long-lived SPA session and each settle ran to its 30s default timeout.
+// The deterministic `isReady` check above is what actually establishes the
+// origin state; this is only a best-effort quiet period, so timing out here is
+// fine and must not stall the run.
+const SETTLE_QUIET_MS = 2500
+const settleDurations = []
 
 async function settleOn(originKey) {
+    const started = Date.now()
     const spec = ORIGIN_READY[originKey]
     if (page.url() !== BASE + ORIGIN_PATH[originKey]) {
         await page.goto(BASE + ORIGIN_PATH[originKey], { waitUntil: "domcontentloaded" })
     }
     await page.waitForFunction((s) => window.__bench.isReady(s), spec, { timeout: 30000 })
-    // Let any in-flight client work (navbar unread count, realtime subscribe)
-    // finish so it cannot land inside the next measurement window.
-    await page.waitForLoadState("networkidle")
+    // Let in-flight client work (navbar unread count, realtime subscribe) finish
+    // so it cannot land inside the next measurement window.
+    await page.waitForLoadState("networkidle", { timeout: SETTLE_QUIET_MS }).catch(() => {})
+    settleDurations.push(Date.now() - started)
 }
 
 async function measure(route) {
@@ -391,7 +416,9 @@ async function measure(route) {
 
     await page.locator(route.click).first().click()
 
-    await page.waitForFunction(() => window.__bench.result() !== null, undefined, { timeout: 30000 })
+    // 15s rather than 30s: a hung measurement is a failure either way, and the
+    // shorter bound halves what one costs the run.
+    await page.waitForFunction(() => window.__bench.result() !== null, undefined, { timeout: 15000 })
     const res = await page.evaluate(() => window.__bench.result())
 
     const win = currentWindow
@@ -408,8 +435,30 @@ const started = Date.now()
 console.log(`Connexus navigation benchmark — label "${LABEL}"`)
 console.log(`  base ${BASE}   reps ${REPS} (+${WARMUP} warmup)   paths ${ROUTES.length}\n`)
 
+// A single page held across hundreds of client-side navigations degrades: the
+// renderer's memory climbs, the router cache and prefetch set grow, and the run
+// slows down over its own length — which would silently bias later reps against
+// earlier ones and make two runs incomparable. Recycling the page on a fixed
+// cadence bounds that. It happens outside every measurement window, and the
+// cadence is fixed so every run pays it identically.
+const RECYCLE_EVERY = 8
+
+async function recyclePage() {
+    const fresh = await context.newPage()
+    attachDiagnostics(fresh)
+    await fresh.goto(BASE + "/home", { waitUntil: "domcontentloaded" })
+    const old = page
+    page = fresh
+    await old.close().catch(() => {})
+}
+
 for (let rep = 0; rep < WARMUP + REPS; rep += 1) {
     const isWarmup = rep < WARMUP
+    if (rep > 0 && rep % RECYCLE_EVERY === 0) {
+        await recyclePage().catch((err) => {
+            failures.push({ rep, route: "(page recycle)", error: String(err).slice(0, 300) })
+        })
+    }
     for (const route of ROUTES) {
         try {
             const ms = await measure(route)
@@ -463,6 +512,14 @@ const result = {
             const vals = diagnostics.windows.filter((w) => w.route === r.id && w.phases).map((w) => w.phases.serverTotal).sort((a, b) => a - b)
             return [r.id, vals.length ? +percentile(vals, 95).toFixed(1) : null]
         })),
+        // Settle time is outside every measurement window and so cannot bias
+        // the metric — but it is reported because a settle that starts running
+        // long is the signature of the SPA-session degradation that ruined the
+        // first baseline attempt. If p95 settle approaches SETTLE_QUIET_MS,
+        // treat the run as suspect.
+        settleMsMedian: settleDurations.length ? +percentile([...settleDurations].sort((a, b) => a - b), 50).toFixed(0) : null,
+        settleMsP95: settleDurations.length ? +percentile([...settleDurations].sort((a, b) => a - b), 95).toFixed(0) : null,
+        settleMsMax: settleDurations.length ? Math.max(...settleDurations) : null,
         appConsoleErrors: diagnostics.consoleErrors.length,
         cancelledPrefetches: diagnostics.cancelledRequests,
         pageErrors: diagnostics.pageErrors.length,
@@ -508,6 +565,7 @@ for (const r of ROUTES) {
 
 console.log(`\n  PRIMARY  p95_navigation_ms = ${o.p95} ms`)
 console.log(`  app console errors ${result.secondary.appConsoleErrors} | page errors ${result.secondary.pageErrors} | failed requests ${result.secondary.failedRequests} | cancelled prefetches ${result.secondary.cancelledPrefetches} | measurement failures ${failures.length}`)
+console.log(`  settle ms (outside the measurement window): median ${result.secondary.settleMsMedian}  p95 ${result.secondary.settleMsP95}  max ${result.secondary.settleMsMax}`)
 if (failures.length) console.log("  FAILURES:", JSON.stringify(failures.slice(0, 5), null, 1))
 console.log(`\n  saved ${outPath.replace(ROOT + "\\", "")}`)
 
