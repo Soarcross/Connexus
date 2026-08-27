@@ -25,7 +25,8 @@ export default async function LoginPage({
             <div className="flex flex-col gap-4 p-6 md:p-10">
                 <div className="flex justify-center gap-2 md:justify-start">
                     <a href="#" className="flex items-center gap-2 font-medium">
-                        <img src="/brand/hsc-logo.svg" alt="Connexus" className="size-9" />
+                        <img src="/brand/connexus-logomark-black.svg" alt="Connexus" className="size-9 dark:hidden" />
+                        <img src="/brand/connexus-logomark-white.svg" alt="" aria-hidden="true" className="size-9 hidden dark:block" />
                         Connexus
                     </a>
                 </div>

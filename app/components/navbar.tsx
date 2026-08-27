@@ -123,11 +123,21 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                 {/* Logo */}
                 <Link href={userId ? "/home" : "/"} className="shrink-0" aria-label="Home">
                     <Image
-                        src="/brand/hsc-logo.svg"
+                        src="/brand/connexus-logomark-black.svg"
                         alt="Connexus"
                         width={34}
                         height={34}
                         priority
+                        className="dark:hidden"
+                    />
+                    <Image
+                        src="/brand/connexus-logomark-white.svg"
+                        alt=""
+                        aria-hidden="true"
+                        width={34}
+                        height={34}
+                        priority
+                        className="hidden dark:block"
                     />
                 </Link>
 

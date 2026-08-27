@@ -13,10 +13,19 @@ export default function MarketingLayout({
                 <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
                     <Link href="/" className="flex items-center gap-2 shrink-0">
                         <Image
-                            src="/brand/hsc-logo.svg"
+                            src="/brand/connexus-logomark-black.svg"
                             alt="Connexus"
                             width={32}
                             height={32}
+                            className="dark:hidden"
+                        />
+                        <Image
+                            src="/brand/connexus-logomark-white.svg"
+                            alt=""
+                            aria-hidden="true"
+                            width={32}
+                            height={32}
+                            className="hidden dark:block"
                         />
                         <span className="hidden sm:inline font-bold text-base">Connexus</span>
                     </Link>
