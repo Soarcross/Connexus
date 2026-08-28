@@ -5,6 +5,9 @@ What worked, what didn't, and what still needs attention. Written after the
 
 Companion documents:
 
+- **`docs/FOLLOW-UPS.md`** — **the actionable list.** Everything flagged and not
+  fixed, categorised with evidence, suggested fix and effort. Section 3 below
+  summarises; that file is the one to work from.
 - **`PERFORMANCE.md`** (repo root) — the full investigation, benchmark design,
   every experiment with its numbers, and the final verification.
 - **`perf/`** — the benchmark harness, raw results, and fixture scripts.

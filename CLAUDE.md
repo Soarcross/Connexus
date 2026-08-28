@@ -139,10 +139,16 @@ The audit found three exploitable issues — any user could self-promote to plat
 
 ## Navigation performance (2026-08)
 
-**Before touching anything for speed, read `docs/PERFORMANCE-RETROSPECTIVE.md`** —
-what worked, what didn't, and the open items. `PERFORMANCE.md` at the repo root has
-the full investigation and every experiment's numbers; `perf/` holds the benchmark
-harness and raw results.
+**`docs/FOLLOW-UPS.md` is the open list** — every issue flagged during this work and
+deliberately not fixed, categorised: production bugs, remaining performance wins,
+benchmark caveats, and decisions needing a human call. Start there.
+**`docs/PERFORMANCE-RETROSPECTIVE.md`** covers what worked and what didn't;
+`PERFORMANCE.md` at the repo root has the full investigation and every experiment's
+numbers; `perf/` holds the benchmark harness and raw results.
+
+Two of the follow-ups are **not** performance issues and are worth a look regardless:
+a chapter-application approval can half-complete on a valid-looking applicant name,
+and five clickable cards are mouse-only. Both are in `docs/FOLLOW-UPS.md` §A.
 
 The one-line summary: `p95_navigation_ms` went **1118.6 → 354.6 ms (−68%)** and
 median **224.1 → 110.0 ms**, entirely by removing sequential Supabase round trips.
