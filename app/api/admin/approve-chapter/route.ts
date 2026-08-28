@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
     // The invited applicant joins as a regular member (chapter_role defaults
     // to 'member' via the new-user trigger, same as any other signup) — a
     // new chapter has no chapter_admin until a platform admin explicitly
-    // assigns one via /api/admin/assign-chapter-admin. This is intentional:
+    // assigns one via /api/chapter-admin/set-role. This is intentional:
     // don't assume the applicant is who should run moderation for the chapter.
 
     return NextResponse.json({ success: true, chapter })

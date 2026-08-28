@@ -42,6 +42,7 @@ type Member = {
     avatar_url: string | null
     grad_year: number | null
     chapter_role: string
+    is_admin: boolean
     created_at: string | null
 }
 
@@ -67,6 +68,7 @@ type Props = {
     extensionRequests: ExtensionRequest[]
     members: Member[]
     opportunities: Opportunity[]
+    currentUserId: string
 }
 
 // Chapter admins also get the chapter-life categories (meetings, trips, …)
@@ -93,11 +95,13 @@ const EMPTY_FORM = {
 const LOGO_MIME = ["image/jpeg", "image/png", "image/webp", "image/gif"]
 const LOGO_MAX_BYTES = 2 * 1024 * 1024
 
-export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, communityPosts: initialCommunityPosts, extensionRequests: initialExtensionRequests, members, opportunities: initialOpportunities }: Props) {
+export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, communityPosts: initialCommunityPosts, extensionRequests: initialExtensionRequests, members: initialMembers, opportunities: initialOpportunities, currentUserId }: Props) {
     const router = useRouter()
     const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(initialCommunityPosts)
     const [extensionRequests, setExtensionRequests] = useState<ExtensionRequest[]>(initialExtensionRequests)
     const [opportunities, setOpportunities] = useState<Opportunity[]>(initialOpportunities)
+    const [members, setMembers] = useState<Member[]>(initialMembers)
+    const [roleBusyId, setRoleBusyId] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [success, setSuccess] = useState<string | null>(null)
     const [rejectionReason, setRejectionReason] = useState<Record<string, string>>({})
@@ -116,6 +120,35 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
     function showSuccess(msg: string) {
         setSuccess(msg)
         setTimeout(() => setSuccess(null), 3000)
+    }
+
+    // chapter_role is not writable from the browser client -- the column is
+    // revoked from `authenticated` (002_security_hardening.sql), so this goes
+    // through the service-role route, which re-checks that the caller admins
+    // this member's chapter.
+    async function handleSetMemberRole(member: Member, role: "member" | "chapter_admin") {
+        if (role === "member" && !confirm(`Remove ${member.full_name ?? "this member"} as a chapter admin? They stay a member of the chapter.`)) return
+        setRoleBusyId(member.id)
+        setError(null)
+        try {
+            const res = await fetch("/api/chapter-admin/set-role", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId: member.id, role }),
+            })
+            const json = await res.json()
+            if (!res.ok) throw new Error(json.error ?? "Failed to update role.")
+            setMembers(prev => prev.map(m => m.id === member.id ? { ...m, chapter_role: role } : m))
+            showSuccess(
+                role === "chapter_admin"
+                    ? `${member.full_name ?? "Member"} is now a chapter admin.`
+                    : `${member.full_name ?? "Member"} is no longer a chapter admin.`
+            )
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to update role.")
+        } finally {
+            setRoleBusyId(null)
+        }
     }
 
     function releasePreview() {
@@ -509,9 +542,38 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
                                             <p className="text-xs text-muted-foreground">{member.grad_year ? `Class of ${member.grad_year}` : ""}</p>
                                         </div>
                                     </div>
-                                    {member.chapter_role === "chapter_admin" && (
-                                        <Badge variant="secondary" className="shrink-0">Chapter Admin</Badge>
-                                    )}
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        {member.is_admin && <Badge>Site Admin</Badge>}
+                                        {member.chapter_role === "chapter_admin" && (
+                                            <Badge variant="secondary">Chapter Admin</Badge>
+                                        )}
+                                        {/* You cannot change your own role -- the route refuses it,
+                                            so the chapter is never left with no admin by accident.
+                                            Platform admins are off-limits here too: the route rejects
+                                            a chapter admin touching one, so no button is offered. */}
+                                        {member.id !== currentUserId && !member.is_admin && (
+                                            member.chapter_role === "chapter_admin" ? (
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    className="text-destructive hover:text-destructive"
+                                                    disabled={roleBusyId === member.id}
+                                                    onClick={() => handleSetMemberRole(member, "member")}
+                                                >
+                                                    {roleBusyId === member.id ? "Removing…" : "Remove Admin"}
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    disabled={roleBusyId === member.id}
+                                                    onClick={() => handleSetMemberRole(member, "chapter_admin")}
+                                                >
+                                                    {roleBusyId === member.id ? "Promoting…" : "Make Admin"}
+                                                </Button>
+                                            )
+                                        )}
+                                    </div>
                                 </CardContent>
                             </Card>
                         ))

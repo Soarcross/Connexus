@@ -39,7 +39,7 @@ export default async function ChapterAdminPage() {
             .order("created_at", { ascending: false }),
         supabase
             .from("profiles")
-            .select("id, full_name, avatar_url, grad_year, chapter_role, created_at")
+            .select("id, full_name, avatar_url, grad_year, chapter_role, is_admin, created_at")
             .eq("chapter_id", chapterId)
             .order("created_at", { ascending: false }),
         supabase
@@ -63,7 +63,8 @@ export default async function ChapterAdminPage() {
                 chapterLogoUrl={profile?.chapters?.logo_url ?? null}
                 communityPosts={communityPosts ?? []}
                 extensionRequests={extensionRequests ?? []}
-                members={members ?? []}
+                members={(members ?? []).map(m => ({ ...m, is_admin: m.is_admin ?? false }))}
+                currentUserId={user.id}
                 opportunities={opportunities ?? []}
             />
         </div>

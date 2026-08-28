@@ -313,6 +313,7 @@ export function AdminDashboard({
     const [chapterAdminSelection, setChapterAdminSelection] = useState<Record<string, string>>({})
     const [assigningChapterAdminId, setAssigningChapterAdminId] = useState<string | null>(null)
     const [chapterAdminError, setChapterAdminError] = useState<Record<string, string>>({})
+    const [removingChapterAdminId, setRemovingChapterAdminId] = useState<string | null>(null)
 
     const opportunitiesByCategory = CATEGORIES.map(cat => ({
         category: cat.slice(0, 4),
@@ -454,7 +455,7 @@ export function AdminDashboard({
     }
 
     async function handleToggleAdmin(user: User) {
-        if (!confirm(`${user.is_admin ? "Remove" : "Grant"} admin access for ${user.full_name}?`)) return
+        if (!confirm(`${user.is_admin ? "Remove" : "Grant"} site-admin access for ${user.full_name}? Site admins can manage every chapter.`)) return
         try {
             const res = await fetch("/api/admin/set-admin", {
                 method: "POST",
@@ -464,7 +465,7 @@ export function AdminDashboard({
             const json = await res.json()
             if (!res.ok) throw new Error(json.error ?? "Failed to update.")
             setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_admin: !u.is_admin } : u))
-            showSuccess(`Admin access ${!user.is_admin ? "granted" : "removed"} for ${user.full_name}.`)
+            showSuccess(`Site-admin access ${!user.is_admin ? "granted" : "removed"} for ${user.full_name}.`)
         } catch (err) {
             setError(err instanceof Error ? err.message : "Failed to update.")
         }
@@ -826,10 +827,10 @@ export function AdminDashboard({
         setAssigningChapterAdminId(chapter.id)
         setChapterAdminError(prev => ({ ...prev, [chapter.id]: "" }))
         try {
-            const res = await fetch("/api/admin/assign-chapter-admin", {
+            const res = await fetch("/api/chapter-admin/set-role", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ chapterId: chapter.id, userId }),
+                body: JSON.stringify({ chapterId: chapter.id, userId, role: "chapter_admin" }),
             })
             const json = await res.json()
             if (!res.ok) throw new Error(json.error ?? "Failed to assign chapter admin.")
@@ -838,11 +839,36 @@ export function AdminDashboard({
             // as part of the assignment (mirrors the API's update).
             setUsers(prev => prev.map(u => u.id === userId ? { ...u, chapter_role: "chapter_admin", chapter_id: chapter.id } : u))
             const assignedUser = users.find(u => u.id === userId)
-            showSuccess(`${assignedUser?.full_name ?? "User"} is now the admin for ${chapter.name}.`)
+            // The assignee drops out of the promotable list, so leaving them
+            // selected would leave the <select> showing a value it no longer has.
+            setChapterAdminSelection(prev => ({ ...prev, [chapter.id]: "" }))
+            showSuccess(`${assignedUser?.full_name ?? "User"} is now an admin for ${chapter.name}.`)
         } catch (err) {
             setChapterAdminError(prev => ({ ...prev, [chapter.id]: err instanceof Error ? err.message : "Failed to assign chapter admin." }))
         } finally {
             setAssigningChapterAdminId(null)
+        }
+    }
+
+    async function handleRemoveChapterAdmin(chapter: Chapter, user: User) {
+        if (!confirm(`Remove ${user.full_name ?? "this user"} as an admin of ${chapter.name}? They stay a member of the chapter.`)) return
+        setRemovingChapterAdminId(user.id)
+        setChapterAdminError(prev => ({ ...prev, [chapter.id]: "" }))
+        try {
+            const res = await fetch("/api/chapter-admin/set-role", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ chapterId: chapter.id, userId: user.id, role: "member" }),
+            })
+            const json = await res.json()
+            if (!res.ok) throw new Error(json.error ?? "Failed to remove chapter admin.")
+
+            setUsers(prev => prev.map(u => u.id === user.id ? { ...u, chapter_role: "member" } : u))
+            showSuccess(`${user.full_name ?? "User"} is no longer an admin for ${chapter.name}.`)
+        } catch (err) {
+            setChapterAdminError(prev => ({ ...prev, [chapter.id]: err instanceof Error ? err.message : "Failed to remove chapter admin." }))
+        } finally {
+            setRemovingChapterAdminId(null)
         }
     }
 
@@ -1125,7 +1151,14 @@ export function AdminDashboard({
                                         <div className="flex flex-col min-w-0">
                                             <div className="flex items-center gap-2">
                                                 <p className="text-sm font-semibold truncate">{user.full_name ?? "No name"}</p>
-                                                {user.is_admin && <Badge className="text-xs">Admin</Badge>}
+                                                {/* The two admin tiers, shown side by side: is_admin is
+                                                    platform-wide ("Site Admin"), chapter_role is scoped to
+                                                    one chapter. They are independent -- a site admin need
+                                                    not be a chapter admin, and vice versa. */}
+                                                {user.is_admin && <Badge className="text-xs">Site Admin</Badge>}
+                                                {user.chapter_role === "chapter_admin" && (
+                                                    <Badge variant="secondary" className="text-xs">Chapter Admin</Badge>
+                                                )}
                                             </div>
                                             <p className="text-xs text-muted-foreground">
                                                 {user.grad_year ? `Class of ${user.grad_year}` : "No grad year"}{" · "}Joined {new Date(user.created_at).toLocaleDateString()}
@@ -1134,7 +1167,7 @@ export function AdminDashboard({
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0">
                                         <Button size="sm" variant={user.is_admin ? "destructive" : "outline"} onClick={() => handleToggleAdmin(user)}>
-                                            {user.is_admin ? "Remove Admin" : "Make Admin"}
+                                            {user.is_admin ? "Remove Site Admin" : "Make Site Admin"}
                                         </Button>
                                         <Button size="sm" variant="ghost" onClick={() => router.push(`/profile/${user.id}`)}>View</Button>
                                         <Button size="sm" variant="destructive" onClick={() => handleRemoveUser(user)}>
@@ -1762,7 +1795,10 @@ export function AdminDashboard({
                                 // chapterless users are assignable too — the
                                 // API joins them to the chapter on assignment.
                                 const chapterless = users.filter(u => !u.chapter_id && !u.is_admin)
-                                const assignable = [...chapterMembers, ...chapterless]
+                                // Already-admins are listed above with a Remove button, so they
+                                // are not offered for assignment again.
+                                const promotable = chapterMembers.filter(u => u.chapter_role !== "chapter_admin")
+                                const assignable = [...promotable, ...chapterless]
                                 return (
                                     <Card key={chapter.id}>
                                         <CardContent className="py-4 flex flex-col gap-3">
@@ -1779,44 +1815,60 @@ export function AdminDashboard({
                                                 </div>
                                             </div>
 
-                                            {chapterAdmins.length > 0 ? (
-                                                <p className="text-xs text-muted-foreground">
-                                                    Admin{chapterAdmins.length > 1 ? "s" : ""}: {chapterAdmins.map(a => a.full_name ?? "Unnamed").join(", ")}
-                                                </p>
-                                            ) : (
-                                                <div className="flex flex-col gap-2 pt-1 border-t">
-                                                    <p className="text-xs text-amber-600 dark:text-amber-500 pt-2">No admin assigned yet.</p>
-                                                    <div className="flex items-center gap-2">
-                                                        <select
-                                                            value={chapterAdminSelection[chapter.id] ?? ""}
-                                                            onChange={(e) => setChapterAdminSelection(prev => ({ ...prev, [chapter.id]: e.target.value }))}
-                                                            className="h-9 flex-1 max-w-[280px] rounded-md border border-input bg-background px-3 text-sm"
-                                                            disabled={assignable.length === 0}
-                                                        >
-                                                            <option value="">
-                                                                {assignable.length === 0 ? "No assignable users" : "Select a user…"}
-                                                            </option>
-                                                            {chapterMembers.map(m => (
-                                                                <option key={m.id} value={m.id}>{m.full_name ?? "Unnamed"}</option>
-                                                            ))}
-                                                            {chapterless.map(m => (
-                                                                <option key={m.id} value={m.id}>{(m.full_name ?? "Unnamed") + " — no chapter yet, will join"}</option>
-                                                            ))}
-                                                        </select>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            disabled={assignable.length === 0 || assigningChapterAdminId === chapter.id}
-                                                            onClick={() => handleAssignChapterAdmin(chapter)}
-                                                        >
-                                                            {assigningChapterAdminId === chapter.id ? "Assigning…" : "Assign Admin"}
-                                                        </Button>
+                                            <div className="flex flex-col gap-2 pt-1 border-t">
+                                                {chapterAdmins.length > 0 ? (
+                                                    <div className="flex flex-col gap-1.5 pt-2">
+                                                        <p className="text-xs font-medium text-muted-foreground">
+                                                            Chapter admin{chapterAdmins.length > 1 ? "s" : ""}
+                                                        </p>
+                                                        {chapterAdmins.map(admin => (
+                                                            <div key={admin.id} className="flex items-center justify-between gap-2">
+                                                                <p className="text-sm truncate">{admin.full_name ?? "Unnamed"}</p>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    className="text-destructive hover:text-destructive shrink-0"
+                                                                    disabled={removingChapterAdminId === admin.id}
+                                                                    onClick={() => handleRemoveChapterAdmin(chapter, admin)}
+                                                                >
+                                                                    {removingChapterAdminId === admin.id ? "Removing…" : "Remove Admin"}
+                                                                </Button>
+                                                            </div>
+                                                        ))}
                                                     </div>
-                                                    {chapterAdminError[chapter.id] && (
-                                                        <p className="text-xs text-destructive">{chapterAdminError[chapter.id]}</p>
-                                                    )}
+                                                ) : (
+                                                    <p className="text-xs text-amber-600 dark:text-amber-500 pt-2">No admin assigned yet.</p>
+                                                )}
+                                                <div className="flex items-center gap-2">
+                                                    <select
+                                                        value={chapterAdminSelection[chapter.id] ?? ""}
+                                                        onChange={(e) => setChapterAdminSelection(prev => ({ ...prev, [chapter.id]: e.target.value }))}
+                                                        className="h-9 flex-1 max-w-[280px] rounded-md border border-input bg-background px-3 text-sm"
+                                                        disabled={assignable.length === 0}
+                                                    >
+                                                        <option value="">
+                                                            {assignable.length === 0 ? "No assignable users" : "Select a user…"}
+                                                        </option>
+                                                        {promotable.map(m => (
+                                                            <option key={m.id} value={m.id}>{m.full_name ?? "Unnamed"}</option>
+                                                        ))}
+                                                        {chapterless.map(m => (
+                                                            <option key={m.id} value={m.id}>{(m.full_name ?? "Unnamed") + " — no chapter yet, will join"}</option>
+                                                        ))}
+                                                    </select>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        disabled={assignable.length === 0 || assigningChapterAdminId === chapter.id}
+                                                        onClick={() => handleAssignChapterAdmin(chapter)}
+                                                    >
+                                                        {assigningChapterAdminId === chapter.id ? "Assigning…" : "Add Admin"}
+                                                    </Button>
                                                 </div>
-                                            )}
+                                                {chapterAdminError[chapter.id] && (
+                                                    <p className="text-xs text-destructive">{chapterAdminError[chapter.id]}</p>
+                                                )}
+                                            </div>
                                         </CardContent>
                                     </Card>
                                 )

@@ -105,8 +105,8 @@ const [
     return (
         <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-1">
-                <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-                <p className="text-muted-foreground">Manage opportunities, users and monitor activity.</p>
+                <h1 className="text-3xl font-bold tracking-tight">Site Admin</h1>
+                <p className="text-muted-foreground">Manage every chapter, its admins, opportunities and users across the whole site.</p>
             </div>
             <AdminDashboard
                 opportunities={(opportunities ?? []) as any}
