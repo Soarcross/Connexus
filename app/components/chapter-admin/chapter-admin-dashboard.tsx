@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs"
@@ -9,7 +9,7 @@ import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
-import { Check, X, Plus, Pencil, Trash2, Star, StarOff } from "lucide-react"
+import { Check, X, Plus, Pencil, Trash2, Star, StarOff, Camera, Loader2 } from "lucide-react"
 
 type CommunityPost = {
     id: string
@@ -61,6 +61,8 @@ type Opportunity = {
 
 type Props = {
     chapterId: string
+    chapterName: string | null
+    chapterLogoUrl: string | null
     communityPosts: CommunityPost[]
     extensionRequests: ExtensionRequest[]
     members: Member[]
@@ -88,7 +90,10 @@ const EMPTY_FORM = {
     is_featured: false,
 }
 
-export function ChapterAdminDashboard({ chapterId, communityPosts: initialCommunityPosts, extensionRequests: initialExtensionRequests, members, opportunities: initialOpportunities }: Props) {
+const LOGO_MIME = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+const LOGO_MAX_BYTES = 2 * 1024 * 1024
+
+export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, communityPosts: initialCommunityPosts, extensionRequests: initialExtensionRequests, members, opportunities: initialOpportunities }: Props) {
     const router = useRouter()
     const [communityPosts, setCommunityPosts] = useState<CommunityPost[]>(initialCommunityPosts)
     const [extensionRequests, setExtensionRequests] = useState<ExtensionRequest[]>(initialExtensionRequests)
@@ -102,9 +107,85 @@ export function ChapterAdminDashboard({ chapterId, communityPosts: initialCommun
     const [editingId, setEditingId] = useState<string | null>(null)
     const [form, setForm] = useState(EMPTY_FORM)
 
+    const [logoUrl, setLogoUrl] = useState<string | null>(chapterLogoUrl)
+    const [logoBusy, setLogoBusy] = useState(false)
+    // Tracks the blob: URL of the optimistic preview so it can be revoked once
+    // the real public URL lands -- otherwise every upload leaks one.
+    const previewUrlRef = useRef<string | null>(null)
+
     function showSuccess(msg: string) {
         setSuccess(msg)
         setTimeout(() => setSuccess(null), 3000)
+    }
+
+    function releasePreview() {
+        if (previewUrlRef.current) {
+            URL.revokeObjectURL(previewUrlRef.current)
+            previewUrlRef.current = null
+        }
+    }
+
+    async function handleLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0]
+        // Always clear the input: without this, re-picking the same file after a
+        // rejection never re-fires onChange.
+        e.target.value = ""
+        if (!file) return
+
+        // Mirrors the checks in app/api/chapter-admin/logo/route.ts so an
+        // obviously-bad file fails instantly instead of after an upload.
+        if (!LOGO_MIME.includes(file.type)) {
+            setError("Logo must be a PNG, JPG, WebP or GIF.")
+            return
+        }
+        if (file.size > LOGO_MAX_BYTES) {
+            setError("Logo must be under 2MB.")
+            return
+        }
+
+        setError(null)
+        setLogoBusy(true)
+        releasePreview()
+        previewUrlRef.current = URL.createObjectURL(file)
+        setLogoUrl(previewUrlRef.current)
+
+        try {
+            const body = new FormData()
+            body.append("file", file)
+            const res = await fetch("/api/chapter-admin/logo", { method: "POST", body })
+            const json = await res.json()
+            if (!res.ok) throw new Error(json.error ?? "Failed to upload the logo.")
+
+            setLogoUrl(json.logoUrl)
+            releasePreview()
+            showSuccess("Chapter picture updated!")
+            router.refresh()
+        } catch (err) {
+            setLogoUrl(chapterLogoUrl)
+            releasePreview()
+            setError(err instanceof Error ? err.message : "Failed to upload the logo.")
+        } finally {
+            setLogoBusy(false)
+        }
+    }
+
+    async function handleRemoveLogo() {
+        setError(null)
+        setLogoBusy(true)
+        try {
+            const res = await fetch("/api/chapter-admin/logo", { method: "DELETE" })
+            const json = await res.json()
+            if (!res.ok) throw new Error(json.error ?? "Failed to remove the logo.")
+
+            releasePreview()
+            setLogoUrl(null)
+            showSuccess("Chapter picture removed.")
+            router.refresh()
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Failed to remove the logo.")
+        } finally {
+            setLogoBusy(false)
+        }
     }
 
     async function handleApprovePost(id: string) {
@@ -280,7 +361,7 @@ export function ChapterAdminDashboard({ chapterId, communityPosts: initialCommun
             {success && <div className="bg-primary/10 text-primary text-sm rounded-lg px-4 py-3">{success}</div>}
 
             <Tabs defaultValue="posts">
-                <TabsList className="w-full justify-start sm:grid sm:grid-cols-3">
+                <TabsList className="w-full justify-start sm:grid sm:grid-cols-4">
                     <TabsTrigger value="posts">
                         Posts
                         {totalPostsBadge > 0 && (
@@ -291,6 +372,7 @@ export function ChapterAdminDashboard({ chapterId, communityPosts: initialCommun
                     </TabsTrigger>
                     <TabsTrigger value="members">Members ({members.length})</TabsTrigger>
                     <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
+                    <TabsTrigger value="chapter">Chapter</TabsTrigger>
                 </TabsList>
 
                 {/* Posts + Extension Requests */}
@@ -521,6 +603,61 @@ export function ChapterAdminDashboard({ chapterId, communityPosts: initialCommun
                             </Card>
                         ))
                     )}
+                </TabsContent>
+
+                {/* Chapter settings — currently just the profile picture */}
+                <TabsContent value="chapter" className="mt-6">
+                    <Card>
+                        <CardContent className="py-6 flex flex-col sm:flex-row sm:items-center gap-6">
+                            <div className="relative shrink-0 self-center sm:self-start">
+                                <Avatar className="size-24 ring-4 ring-card">
+                                    <AvatarImage src={logoUrl ?? ""} alt={chapterName ?? "Chapter"} />
+                                    <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+                                        {chapterName?.[0] ?? "?"}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <label
+                                    htmlFor="chapter-logo"
+                                    className={`absolute -bottom-1 -right-1 size-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center ring-2 ring-card has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring ${logoBusy ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
+                                >
+                                    {logoBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Camera className="size-3.5" />}
+                                    {/* sr-only, not `hidden`: a hidden input is not focusable, which
+                                        would make this the only entry point and leave it unreachable
+                                        by keyboard. The label supplies the accessible name. */}
+                                    <input
+                                        id="chapter-logo"
+                                        type="file"
+                                        accept="image/png,image/jpeg,image/webp,image/gif"
+                                        className="sr-only"
+                                        disabled={logoBusy}
+                                        onChange={handleLogoChange}
+                                    />
+                                    <span className="sr-only">Upload chapter picture</span>
+                                </label>
+                            </div>
+
+                            <div className="flex flex-col gap-2 min-w-0">
+                                <p className="font-semibold">Chapter picture</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Shown on the chapters directory and on your chapter&apos;s page.
+                                    PNG, JPG, WebP or GIF, up to 2MB.
+                                </p>
+                                {logoUrl && (
+                                    <div>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="gap-2 text-destructive hover:text-destructive"
+                                            disabled={logoBusy}
+                                            onClick={handleRemoveLogo}
+                                        >
+                                            <Trash2 className="size-3.5" />Remove picture
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
                 </TabsContent>
             </Tabs>
         </div>

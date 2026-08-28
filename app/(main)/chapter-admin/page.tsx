@@ -10,7 +10,7 @@ export default async function ChapterAdminPage() {
 
     const { data: profile } = await supabase
         .from("profiles")
-        .select("is_admin, chapter_role, chapter_id, chapters(name)")
+        .select("is_admin, chapter_role, chapter_id, chapters(name, logo_url)")
         .eq("id", user.id)
         .single()
 
@@ -54,11 +54,13 @@ export default async function ChapterAdminPage() {
             <div className="flex flex-col gap-1">
                 <h1 className="text-3xl font-bold tracking-tight">Chapter Admin</h1>
                 <p className="text-muted-foreground">
-                    Manage {profile?.chapters?.name ?? "your chapter"}&apos;s posts, members and opportunities.
+                    Manage {profile?.chapters?.name ?? "your chapter"}&apos;s posts, members, opportunities and profile picture.
                 </p>
             </div>
             <ChapterAdminDashboard
                 chapterId={chapterId}
+                chapterName={profile?.chapters?.name ?? null}
+                chapterLogoUrl={profile?.chapters?.logo_url ?? null}
                 communityPosts={communityPosts ?? []}
                 extensionRequests={extensionRequests ?? []}
                 members={members ?? []}
