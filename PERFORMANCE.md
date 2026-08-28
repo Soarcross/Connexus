@@ -643,3 +643,57 @@ rather than accepted or dismissed:
 
 The flag was an artifact of the visual-check capture path, which walks nine
 routes in sequence through one browser context. **No visual regression.**
+
+---
+
+## 9. E11 — route-level `loading.tsx` (added on developer request)
+
+Nine `loading.tsx` files under `app/(main)/`. Each renders the **real static
+chrome** (heading + description, which depend on no query) and skeletons only the
+data-dependent regions, so the heading does not move when content arrives.
+Verified rendering during real client-side navigation on all five list routes
+(52/18/12/9/9 skeleton elements), with the real heading already present.
+
+**This is the one change that made the measured metric worse, and it should be
+understood before keeping it.**
+
+| statistic | no-loading | loading.tsx | delta |
+|---|---|---|---|
+| **paired median (time to real content)** | — | — | **+222.8 ms**, CI [220.3, 225.2] |
+| median | 103.5 | 327.1 | +223.6 |
+| p95 | 362.1 | 337.5 | −24.6 |
+| p99 | 763.6 | 623.5 | −140.1 |
+| **server p95** | 253.8 | **202.4** | **−51.4** |
+| **server p99** | 742.9 | **615.4** | **−127.5** |
+
+The regression is **+216 to +242 ms on every route**, strikingly uniform — while
+**server think-time is unchanged or better**. So the server is not slower; the
+extra time is client-side.
+
+**Leading explanation.** Without a loading boundary, Next's prefetch of a dynamic
+route can populate the router cache with the full payload, and the benchmark's
+settle step (which waits for network quiet before clicking) gives that prefetch
+time to finish — so the click is served from cache. With a loading boundary, the
+prefetch caches only the shell, so the real payload is fetched at click time. The
+benchmark therefore measures the loss of a prefetch it was unusually well-placed
+to benefit from. A real user who clicks quickly never had that cached payload
+either.
+
+**What the metric does not capture.** Before: the old page stays frozen for the
+whole server chain. After: the destination's real heading and a correctly-shaped
+skeleton paint immediately. Time-to-first-meaningful-paint improves
+dramatically; time-to-real-data regresses by ~223 ms. `p95_navigation_ms` as
+defined measures only the latter.
+
+**Benchmark validity note.** `home→community` reads −97.7 ms because its usable
+condition is `h1` + ≥2 `[data-slot="card"]`, and the community skeleton renders
+three real `Card` components — so the skeleton itself satisfies it. That route is
+measuring the skeleton, not content. **The condition was deliberately left
+unchanged:** adjusting a usable condition after seeing a result is exactly the
+manipulation the brief prohibits. Any future measurement of loading states needs
+conditions that skeletons provably cannot satisfy (e.g. asserting real text
+content), decided *before* the run.
+
+**Status: kept at the developer's explicit request**, with the trade-off recorded
+here. It is a perceived-performance improvement that costs measured
+time-to-content. Reverting is `git revert` of the `loading.tsx` commit.

@@ -10,7 +10,8 @@
       "role": "viewer",
       "email": "perf-bench-viewer@connexus-perf.example.com",
       "id": "4deba1d9-c14f-444f-a39b-5c1e8fbe06b1",
-      "createdByThisScript": false
+      "createdByThisScript": true,
+      "note": "Corrected 2026-08-27: created by this benchmark during the setup script's first run, which aborted on a later user, so the successful re-run recorded it as 'reused'. Verified in auth.users: created 19:22:52Z during this session, non-admin, owns no pre-existing content."
     },
     {
       "role": "partner-1",

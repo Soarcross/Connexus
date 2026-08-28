@@ -37,7 +37,9 @@ Next.js 16 App Router + React 19, Tailwind v4, shadcn/ui (`radix-vega` style, co
 
 **Auth gating lives in `app/(main)/layout.tsx`, not `proxy.ts`.** `proxy.ts` is this project's Next 16.2+ `middleware.ts` replacement (renamed upstream — keep the export named `proxy`). It resolves the chapter subdomain into an `x-chapter-slug` header and **refreshes the Supabase session**, but it does **not** gate auth. The gate is `app/(main)/layout.tsx`, which calls `supabase.auth.getUser()` and redirects to `/login`, protecting everything in the `(main)` group.
 
-**`proxy.ts` is the only place that can persist a rotated refresh token.** Server components cannot write cookies — `createSupabaseServerClient()`'s `setAll` throws there and is deliberately swallowed — so without the middleware refresh the access token expires and every subsequent refresh replays the same spent token. That is not theoretical: it ran for weeks, produced ~89 failed `/token` calls a day (`refresh_token_already_used`, `refresh_token_not_found`, plus 429s), and left the browser client in a state where `signInWithOAuth` never persisted the PKCE `code_verifier`, so every Google login died at `/auth/callback` with `pkce_code_verifier_not_found`. The refresh is skipped for requests carrying no `sb-*` cookie (no session to refresh) and for `/auth/callback` (which owns the jar mid-exchange).
+**`proxy.ts` is the only place that can persist a rotated refresh token.** Server components cannot write cookies — `createSupabaseServerClient()`'s `setAll` throws there and is deliberately swallowed — so without the middleware refresh the access token expires and every subsequent refresh replays the same spent token. That is not theoretical: it ran for weeks, produced ~89 failed `/token` calls a day (`refresh_token_already_used`, `refresh_token_not_found`, plus 429s), and left the browser client in a state where `signInWithOAuth` never persisted the PKCE `code_verifier`, so every Google login died at `/auth/callback` with `pkce_code_verifier_not_found`. The refresh is skipped for requests carrying no `sb-*` cookie (no session to refresh), for `/auth/callback` (which owns the jar mid-exchange), and — since the 2026-08 performance work — **while the access token still has more than 5 minutes of life**, since a token with nothing to rotate does not justify a blocking round trip before every render. Anything that cannot be parsed takes the full refresh path.
+
+**Server components read the session with `getServerUser()` (`lib/supabase/user.ts`), not `auth.getUser()`.** `getUser()` is a *network call* to the Auth server on every invocation (~38 ms); `getClaims()` verifies the same ES256 token locally against the cached JWKS (~0.3 ms). The app used to make three such calls per navigation to establish one identity. **Keep `getUser()` where identity is the only boundary** — `app/api/admin/*`, the two admin dashboards, `auth/callback`, and `proxy.ts` — and note that `getClaims()` does *not* mirror `getUser()`'s error contract: an expired token **throws** instead of returning `{ error }`, which `getServerUser()` catches and turns into `null`.
 
 **Deleting a Supabase auth cookie takes two `Set-Cookie` headers, not one.** A cookie's identity is `(name, domain, path)`, so sessions issued before the apex-domain move are host-only and survive any expiry written with `Domain=`. `lib/supabase/clear-auth-cookies.ts` emits both variants, appending to the `set-cookie` header directly because `NextResponse.cookies` is keyed by name alone and collapses the pair into one. It only fires on a 4xx from `getUser()` — clearing on a 5xx or a network error would log valid sessions out. Public routes are the ones deliberately outside it: `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/verify-email`, `/auth/callback`, and the `(marketing)` group (`/`, `/apply`). Adding a page under `(main)` makes it authed; outside it, public. The authed home is `/home` — `/` is the marketing landing, which redirects logged-in visitors to `/home`.
 
@@ -134,3 +136,33 @@ The audit found three exploitable issues — any user could self-promote to plat
 - **Check `git diff HEAD -- <file>` before trusting a finder agent's flag.** Two of ten candidates were real smells but provably pre-existing — the lines sat outside every diff hunk. That check separates "in scope" from "real but unrelated."
 - **Front-load scope into large-diff review prompts.** An unscoped Explore agent asked to read a ~3000-line diff hit a stream idle timeout; retrying with an explicit priority order ("these 3 highest-risk files first") succeeded.
 - **Show, don't describe, for design decisions.** An ASCII-sketch logo pitch was rejected; three real rendered SVG tiles at multiple sizes got a fast, clean decision. Same for color: run a palette through the dataviz skill's `validate_palette.js` *before* committing — a first-draft violet ramp failed lightness, chroma, and contrast checks outright.
+
+## Navigation performance (2026-08)
+
+**Before touching anything for speed, read `docs/PERFORMANCE-RETROSPECTIVE.md`** —
+what worked, what didn't, and the open items. `PERFORMANCE.md` at the repo root has
+the full investigation and every experiment's numbers; `perf/` holds the benchmark
+harness and raw results.
+
+The one-line summary: `p95_navigation_ms` went **1118.6 → 354.6 ms (−68%)** and
+median **224.1 → 110.0 ms**, entirely by removing sequential Supabase round trips.
+
+Things worth knowing before optimising this app again:
+
+- **Server think-time is 85–95% of a navigation here; client render is 5–16 ms.**
+  Bundle size, hydration and rerender count are not the bottleneck. Measure before
+  assuming otherwise — `node perf/bench-ab.mjs` reports the phase split.
+- **Server time ≈ `40 ms + 45 ms × sequential Supabase round trips`.** Count the
+  awaits on a page and you know the prize before writing code. Queries that do not
+  depend on each other belong in one `Promise.all`.
+- **Never compare two separate benchmark runs.** Two identical baselines differed
+  by 55.9 ms in p95 (CI [−267, +126]). Use `perf/bench-ab.mjs`, which serves both
+  variants simultaneously and pairs them; that gets resolution to ±4 ms. Per-route
+  effects below ~15 ms are not credible on this rig regardless of the CI.
+- **Ask what a green benchmark would miss, and test that separately.** A deferred
+  write that silently fails, or a session refresh that stops firing, both look
+  *excellent* to a latency benchmark. `perf/verify-read-receipts.mjs` is the model.
+- **Route-level `loading.tsx` exists under `app/(main)/`.** Each renders the real
+  static chrome (headings) and skeletons only the data-dependent regions, so the
+  heading does not move when real content arrives. Keep that contract when adding
+  a route: a loading state that re-lays-out on swap is worse than none.
