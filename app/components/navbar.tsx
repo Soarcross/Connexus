@@ -230,7 +230,7 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                                 <>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={() => router.push("/admin")}>
-                                        Admin Dashboard
+                                        Site Admin
                                     </DropdownMenuItem>
                                 </>
                             )}

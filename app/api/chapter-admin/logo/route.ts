@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server"
 // admin cannot set their own chapter's logo from the browser client. This route
 // is the escape hatch: it re-checks chapter_role server-side and then writes
 // with the service-role client, the same shape as
-// app/api/admin/assign-chapter-admin/route.ts.
+// app/api/chapter-admin/set-role/route.ts.
 //
 // Identity is the only boundary here, so this keeps the networked getUser()
 // rather than getServerUser() -- see the note in lib/supabase/user.ts.
