@@ -390,12 +390,256 @@ Options:
 
 ---
 
+## 6a. The benchmark had to be rebuilt twice before it could decide anything
+
+Two failures were found and fixed *before* any experiment was judged. Both would
+have silently corrupted every result.
+
+### Failure 1 — the harness degraded over its own length
+
+The first baseline attempt slowed from ~40 s/rep to ~5 min/rep after roughly 30
+minutes. Left alone it would have biased later repetitions against earlier ones
+and made two runs incomparable. Three causes, all in the harness:
+
+- `settleOn()` used an unbounded `waitForLoadState("networkidle")`. Connexus
+  holds an open realtime WebSocket and Next re-prefetches on every navigation,
+  so "no network activity for 500 ms" stops being reachable in a long-lived SPA
+  session and each settle ran to its 30 s default. Now bounded to 2.5 s and
+  allowed to time out — the deterministic `isReady` check is what actually
+  establishes the origin state.
+- One page held across hundreds of client-side navigations accumulated renderer
+  memory, router cache and prefetch set. Now recycled every 8 reps, outside any
+  measurement window, on a fixed cadence so every run pays it identically.
+- The resource-timing buffer is capped at 250 entries and the page never reloads
+  mid-run, so it filled with stale prefetch entries and the phase breakdown could
+  no longer find the current navigation's RSC fetch. Now cleared per measurement.
+
+Result: 12 reps in 2 m 21 s (~11.8 s/rep) with **identical phase splits**, which
+is what confirms the fix removed harness overhead rather than changing what is
+measured.
+
+### Failure 2 — run-to-run comparison could not resolve the effect
+
+With the harness fixed, two **identical** baseline runs gave:
+
+| | p95 |
+|---|---|
+| baseline-A | 540.1 ms |
+| baseline-B | 484.2 ms |
+
+A 55.9 ms apparent "improvement" from changing nothing, bootstrap 95 % CI
+**[−267, +126]**. The expected effect of removing one Supabase round trip is
+~45 ms. **Unpaired comparison was incapable of judging any experiment**, and
+would have let a chance result be reported as a win.
+
+Diagnosis, from the raw samples: outliers cluster by **repetition, not route**.
+In baseline-A one repetition held 4 of the run's outliers; in baseline-B two
+adjacent repetitions held 7. Only 12 of 40 (A) and 6 of 40 (B) repetitions
+contained any sample over 600 ms, and when one did, several unrelated routes were
+hit together. That is transient machine/network interference — common-mode noise.
+
+**Fix: paired A/B measurement** (`perf/bench-ab.mjs`). Both variants run against
+two servers within the same repetition, alternating which goes first so neither
+gets a systematic warming advantage. An episode hits both and cancels in the
+difference. Pairs where either side failed are discarded.
+
+Infrastructure: a git worktree at the baseline commit with its own `node_modules`
+(Turbopack rejects a directory junction — "points out of the filesystem root")
+serving on `:3101`, versus the main tree on `:3100`. Route definitions and usable
+conditions live in `perf/shared.mjs`, imported by both benchmarks so they cannot
+silently diverge.
+
+### Resolution achieved, verified by an A/A test
+
+Both ports serving **identical** code:
+
+| statistic | A/A result | resolution |
+|---|---|---|
+| p95 of pooled samples (unpaired) | — | ±200 ms |
+| p95 of pooled samples (paired bootstrap) | +9.8 ms, CI [−98.6, +400.9] | ±250 ms |
+| **paired per-navigation delta (median)** | **+3.1 ms, CI [−2.3, +6.2]** | **±4 ms** |
+| paired delta, 5 % trimmed mean | +2.1 ms | — |
+
+The A/A test correctly returned INCONCLUSIVE. The paired per-navigation delta has
+~±4 ms resolution against expected effects of ~45 ms — a 10× margin.
+
+**p95_navigation_ms remains the stated objective and is reported every run.** But
+the *decision* is made on the paired estimator, because p95 is an extreme
+statistic driven by the very environmental episodes that pairing removes. The
+trimmed mean and q90 of the paired delta are reported alongside the median, so a
+change that moves the median without moving the tail is flagged rather than
+accepted — that pattern would mean the assumed mechanism is wrong.
+
 ## 7. Experiment log
 
-*(empty — no application code has been modified)*
-
-### Current best
+### Baseline (locked)
 
 | metric | value |
 |---|---|
-| baseline p95 | **not yet measured** |
+| p95_navigation_ms (baseline-A, 360 samples) | **540.1 ms** |
+| p95_navigation_ms (baseline-B, 360 samples) | **484.2 ms** |
+| median | 217.1 / 214.9 ms |
+| slowest routes (p95) | chapters→detail, messages→conversation, home→messages, home→opportunities |
+| console errors / page errors / failed requests | 0 / 0 / 0 |
+
+Both runs: `perf/results/*__baseline-A.json`, `*__baseline-B.json`.
+
+
+### Accepted experiments
+
+Every experiment below was measured with `perf/bench-ab.mjs`: both variants served
+simultaneously from two servers, alternating order within each repetition, 30
+repetitions after 6 warmups. Per-route intervals are **Bonferroni-corrected** for
+the simultaneous route tests (99.44% for nine routes, 99.5% for ten).
+
+Empirical noise floor, from the A/A run on identical code: per-route paired
+medians spanned **−12.2 to +10.4 ms** (mean offset +1.9 ms). **Per-route effects
+below ~15 ms are not credible on this rig regardless of what a CI says** — the
+bootstrap resamples within a run and cannot see run-level offsets.
+
+| # | change | effect | interval | commit |
+|---|---|---|---|---|
+| **E2** | `getClaims()` (local ES256 verify) instead of networked `getUser()` in 10 server components | **−41.8 ms, every route** | [−48.2, −36.7] | `58e5ae5` |
+| **E3** | `/opportunities`: 4 sequential round trips → 2 stages | **−90.5 ms** on that route | [−103.5, −74.1] | `193fccb` |
+| **E4** | `/messages`: N+1 (2+3N reqs, 3 stages) → 2+N reqs, 1 stage | **−91.2 ms** on that route | [−130.8, −58.3] | `6dbd0a6` |
+| **E8** | `proxy.ts`: skip session refresh while token has >5 min life | **−45.6 ms, every route** | [−48.2, −42.2] | `6db8d66` |
+| **E6** | conversation: read-receipt write moved to `after()` | **−65.1 ms** on that route | [−91.2, −48.9] | `c3e4918` |
+| **E10a** | conversation: profile ∥ messages | **−24.6 ms** on that route (×3 runs) | [−33.4, −17.8] | `666d139` |
+
+Every accepted change: zero console errors, zero page errors, zero failed
+requests, zero measurement failures, and screenshots byte-identical across nine
+routes × desktop + mobile.
+
+Two changes carried functional tests the latency benchmark structurally could not
+provide:
+
+- **E8** — the benchmark runs with a fresh token throughout, so it only ever
+  exercises the skip path; a broken refresh would sail through it and surface in
+  production as users being logged out. Tested directly: fresh token → 0
+  `Set-Cookie`, token inside the margin → 1 rotated `Set-Cookie`.
+- **E6** — `after()` runs post-response, so a silent failure would leave messages
+  unread forever while every timing number looked excellent.
+  `perf/verify-read-receipts.mjs` seeds unread rows and polls until the write
+  lands (4 → 0 in 250 ms, matching the awaited control).
+
+### Rejected
+
+**E5 + E10b — `/home` single featured query, and chapter-mates ∥ featured. REVERTED.**
+
+Large and reproducible on the page itself (`opportunities→home` **−73.5 / −71.0 ms**
+across two runs, server think-time 162.3 → 94.7 ms), but it carried a reproducible
+cost on an untouched route: `home→messages` **+30.5 then +46.6 ms**, far outside
+that route's A/A offset of +6.4 ms. Reverting only `/home` dropped it to a
+non-significant +15.9 ms, so the cost tracks the change.
+
+Best explanation is a benchmark artifact: a faster origin page means `settleOn`
+returns sooner, leaving more in-flight prefetch competing with the measured click
+over localhost's limited connections, which inflates measured time without any
+real slowdown. That would mean real users never see it — but it is a hypothesis,
+not a demonstration, and an unexplained reproducible regression is not something
+to ship on "probably fine". Revisit with a dwell-controlled settle.
+
+**E1 — `cache()` dedupe of the server user lookup. Dropped before running.**
+The pre-flight measured `getClaims()` at 0.22–0.47 ms, so deduplicating it saves
+nothing; the layout was also shown to be off the critical path.
+
+**E9 — `/chapters` member counts via aggregate. Dropped before running.**
+Today's code ships 55 `chapter_id` values (~2 KB) in one request. One count query
+per chapter would trade 1 request for N — worse on request count at three chapters
+and unmeasurable on latency. It only wins at a scale this app is not at.
+
+### Benchmark limitations found and documented
+
+1. **`/home` was never a measured destination** until late. Every route
+   *originated* there, so its render happened during settle. E5's first
+   INCONCLUSIVE verdict was uninformative rather than negative. Fixed by adding
+   `opportunities→home`; no existing route definition changed, so earlier
+   per-route results remain comparable.
+2. **End-to-end p95/p99/max are not decidable on this machine.** Of the samples
+   over 1000 ms in one run, only 25% hit both variants in the same repetition
+   (one rep: 1667 ms control vs 9584 ms treatment, same route, seconds apart), so
+   the extreme tail is partly idiosyncratic and pairing cannot cancel it. Server
+   think-time percentiles were added because they exclude browser-side stalls and
+   read the tail cleanly.
+3. **The visual check was nondeterministic** and was caught only by testing it
+   against itself: capturing the *same* build twice produced differing bytes.
+   Fixed by awaiting every image's load/error and `document.fonts.ready`. A
+   residual bistability remains on `chapter-detail` (one of ~56 avatars
+   intermittently 404s); both byte-states occur on both servers, so a difference
+   there alone is environmental. The other eight routes are byte-stable.
+
+---
+
+## 8. Final verification — complete accepted stack vs the original app
+
+Both builds served simultaneously, paired, 300 paired navigations, 859 s.
+Control = `fed29a6` (the app exactly as found); treatment = `666d139`.
+
+### Objective
+
+| metric | original | optimised | change |
+|---|---|---|---|
+| **p95_navigation_ms** | **1118.6 ms** | **354.6 ms** | **−764.0 ms (−68%)**, CI [−1225.9, −197.8] |
+| median | 224.1 | 110.0 | −114.1 (−51%) |
+| p90 | 490.8 | 207.9 | −282.9 (−58%) |
+| p99 | 2678.3 | 1225.1 | −1453.2 (−54%) |
+
+This is the one run in which the end-to-end p95 confidence interval **excludes
+zero**, so the objective metric itself is demonstrated, not merely indicated.
+
+### Decision statistic
+
+| | value |
+|---|---|
+| paired median delta | **−90.3 ms**, CI [−95.9, −81.0] |
+| trimmed mean | −115.7 ms, CI [−139.1, −102.0] |
+| q10 / q90 of paired delta | **−281.1 / −33.9** |
+
+Both tails are negative: the whole distribution moved, which is the signature of
+removing fixed work rather than a distributional artefact.
+
+### Server think-time
+
+| | median | p90 | p95 | p99 | max |
+|---|---|---|---|---|---|
+| original | 209.8 | 419.2 | 880.2 | 2649.4 | 3912.6 |
+| optimised | **93.8** | **186.8** | **296.5** | **1166.5** | **2513.4** |
+| delta | −116.0 | −232.4 | **−583.7** | **−1482.9** | −1399.2 |
+
+### Per navigation — 10/10 improved, 0 regressions
+
+Bonferroni-corrected 99.5% intervals.
+
+| navigation | paired median | CI | server think-time |
+|---|---|---|---|
+| messages→conversation | **−189.9** | [−215.6, −154.8] | 271.7 → 85.1 |
+| home→messages | **−160.8** | [−200.5, −132.8] | 265.8 → 101.7 |
+| home→opportunities | **−137.9** | [−173.6, −117.1] | 253.8 → 100.5 |
+| home→people | −77.5 | [−91.2, −61.4] | 163.3 → 85.9 |
+| home→profile | −76.8 | [−98.8, −63.6] | 153.6 → 77.7 |
+| home→chapters | −75.3 | [−90.8, −65.4] | 167.7 → 87.7 |
+| home→community | −75.2 | [−100.9, −28.1] | 188.8 → 116.4 |
+| people→profile | −75.0 | [−103.7, −59.2] | 164.8 → 77.7 |
+| chapters→detail | −72.0 | [−86.8, −57.6] | 168.3 → 91.8 |
+| opportunities→home | −71.3 | [−114.7, −43.5] | 250.1 → 174.7 |
+
+### Constraints
+
+Zero console errors, zero page errors, zero failed requests, zero measurement
+failures. Requests per navigation 4.08 → 3.91.
+
+**Visual:** the capture pass initially flagged `people__desktop`. Investigated
+rather than accepted or dismissed:
+
+1. Rendered HTML is byte-identical in length (203,269 both); the only textual
+   difference is the CSS chunk's content hash.
+2. The generated CSS differs by exactly one selector — `.contents` — present only
+   in the optimised build.
+3. `.contents` matches **zero elements** in the rendered HTML on either server,
+   so it is dead CSS with no rendering path.
+4. Decisive test (`perf/people-stability.mjs`): five fresh captures of
+   `/people` desktop per build gave **identical bytes and identical SHA on both**
+   (496498, `204d6fc0…`, zero broken images).
+
+The flag was an artifact of the visual-check capture path, which walks nine
+routes in sequence through one browser context. **No visual regression.**

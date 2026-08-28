@@ -1,0 +1,2255 @@
+{
+  "label": "E2-getClaims",
+  "startedAt": "2026-08-27T21:03:18.357Z",
+  "durationSec": 1186,
+  "design": "paired A/B, two servers, alternating order within each repetition",
+  "config": {
+    "baseA": "http://localhost:3101",
+    "baseB": "http://localhost:3100",
+    "nameA": "baseline",
+    "nameB": "E2-getClaims",
+    "reps": 30,
+    "warmup": 6,
+    "viewport": "1440x900",
+    "browser": "chromium"
+  },
+  "overall": {
+    "baseline": {
+      "n": 50,
+      "min": 162.7,
+      "mean": 236.1,
+      "median": 219.6,
+      "p90": 313.4,
+      "p95": 348.7,
+      "p99": 377,
+      "max": 385.8
+    },
+    "E2-getClaims": {
+      "n": 50,
+      "min": 113.4,
+      "mean": 226.7,
+      "median": 164.5,
+      "p90": 280.5,
+      "p95": 369,
+      "p99": 1289.4,
+      "max": 1740.4
+    }
+  },
+  "p95Delta": 20.3,
+  "p95DeltaCI": {
+    "lo": -76.8,
+    "hi": 1347.6
+  },
+  "pairedDelta": {
+    "n": 50,
+    "median": -48.8,
+    "medianCI": {
+      "lo": -56.2,
+      "hi": -32.3
+    },
+    "trimmedMean": -44.8,
+    "trimmedMeanCI": {
+      "lo": -59.2,
+      "hi": 15.4
+    },
+    "q10": -98.6,
+    "q90": 16.8
+  },
+  "verdict": "IMPROVEMENT",
+  "verdictBasis": "median paired per-navigation delta and its bootstrap CI; p95-of-pooled is reported but is too noisy to decide (A/A CI was [-98.6, +400.9])",
+  "perRoute": {
+    "home->opportunities": {
+      "a": {
+        "n": 6,
+        "min": 239.9,
+        "mean": 303.1,
+        "median": 289.6,
+        "p90": 368.1,
+        "p95": 376.9,
+        "p99": 384,
+        "max": 385.8
+      },
+      "b": {
+        "n": 6,
+        "min": 199.3,
+        "mean": 492.8,
+        "median": 250.4,
+        "p90": 1016,
+        "p95": 1378.2,
+        "p99": 1668,
+        "max": 1740.4
+      },
+      "pairedMedianDelta": -31.5,
+      "n": 6
+    },
+    "home->people": {
+      "a": {
+        "n": 6,
+        "min": 175.3,
+        "mean": 205.3,
+        "median": 207.1,
+        "p90": 222.4,
+        "p95": 226.8,
+        "p99": 230.4,
+        "max": 231.3
+      },
+      "b": {
+        "n": 6,
+        "min": 122.7,
+        "mean": 144,
+        "median": 144.5,
+        "p90": 160.8,
+        "p95": 163.2,
+        "p99": 165,
+        "max": 165.5
+      },
+      "pairedMedianDelta": -68,
+      "n": 6
+    },
+    "home->community": {
+      "a": {
+        "n": 6,
+        "min": 172.9,
+        "mean": 209.4,
+        "median": 196.7,
+        "p90": 253.8,
+        "p95": 271.6,
+        "p99": 285.8,
+        "max": 289.4
+      },
+      "b": {
+        "n": 6,
+        "min": 136.5,
+        "mean": 280.3,
+        "median": 187.7,
+        "p90": 509.4,
+        "p95": 664.7,
+        "p99": 788.9,
+        "max": 820
+      },
+      "pairedMedianDelta": -15.1,
+      "n": 6
+    },
+    "home->chapters": {
+      "a": {
+        "n": 6,
+        "min": 162.7,
+        "mean": 212.2,
+        "median": 200.7,
+        "p90": 266.4,
+        "p95": 289,
+        "p99": 307.1,
+        "max": 311.6
+      },
+      "b": {
+        "n": 6,
+        "min": 113.4,
+        "mean": 133.3,
+        "median": 136.7,
+        "p90": 147.6,
+        "p95": 148.4,
+        "p99": 149,
+        "max": 149.2
+      },
+      "pairedMedianDelta": -75.7,
+      "n": 6
+    },
+    "home->messages": {
+      "a": {
+        "n": 6,
+        "min": 251.5,
+        "mean": 301.5,
+        "median": 291.1,
+        "p90": 357.3,
+        "p95": 362.6,
+        "p99": 366.8,
+        "max": 367.8
+      },
+      "b": {
+        "n": 6,
+        "min": 205.6,
+        "mean": 270.7,
+        "median": 247.3,
+        "p90": 351.5,
+        "p95": 392,
+        "p99": 424.3,
+        "max": 432.4
+      },
+      "pairedMedianDelta": -53.7,
+      "n": 6
+    },
+    "home->profile": {
+      "a": {
+        "n": 5,
+        "min": 162.9,
+        "mean": 199.7,
+        "median": 189.6,
+        "p90": 238.6,
+        "p95": 240.5,
+        "p99": 242.1,
+        "max": 242.5
+      },
+      "b": {
+        "n": 5,
+        "min": 119.3,
+        "mean": 143.8,
+        "median": 137.2,
+        "p90": 168.5,
+        "p95": 170.2,
+        "p99": 171.6,
+        "max": 171.9
+      },
+      "pairedMedianDelta": -69.2,
+      "n": 5
+    },
+    "messages->conversation": {
+      "a": {
+        "n": 5,
+        "min": 221.2,
+        "mean": 282,
+        "median": 285.1,
+        "p90": 322.2,
+        "p95": 325.9,
+        "p99": 328.9,
+        "max": 329.7
+      },
+      "b": {
+        "n": 5,
+        "min": 211.6,
+        "mean": 253.7,
+        "median": 254.2,
+        "p90": 283.2,
+        "p95": 284.3,
+        "p99": 285.2,
+        "max": 285.4
+      },
+      "pairedMedianDelta": -25.7,
+      "n": 5
+    },
+    "chapters->detail": {
+      "a": {
+        "n": 5,
+        "min": 171,
+        "mean": 206.4,
+        "median": 198.4,
+        "p90": 246.6,
+        "p95": 259.8,
+        "p99": 270.4,
+        "max": 273
+      },
+      "b": {
+        "n": 5,
+        "min": 141.1,
+        "mean": 151.3,
+        "median": 147.1,
+        "p90": 162,
+        "p95": 164.5,
+        "p99": 166.5,
+        "max": 167
+      },
+      "pairedMedianDelta": -52.6,
+      "n": 5
+    },
+    "people->profile": {
+      "a": {
+        "n": 5,
+        "min": 167.9,
+        "mean": 195.4,
+        "median": 170.8,
+        "p90": 246.4,
+        "p95": 269.3,
+        "p99": 287.6,
+        "max": 292.2
+      },
+      "b": {
+        "n": 5,
+        "min": 115.4,
+        "mean": 133.2,
+        "median": 120.8,
+        "p90": 159.4,
+        "p95": 165.7,
+        "p99": 170.8,
+        "max": 172.1
+      },
+      "pairedMedianDelta": -50,
+      "n": 5
+    }
+  },
+  "serverTotalMedian": {
+    "home->opportunities": {
+      "baseline": 305.7,
+      "E2-getClaims": 238.3
+    },
+    "home->people": {
+      "baseline": 204.7,
+      "E2-getClaims": 131.9
+    },
+    "home->community": {
+      "baseline": 233.3,
+      "E2-getClaims": 161.4
+    },
+    "home->chapters": {
+      "baseline": 190.4,
+      "E2-getClaims": 137.2
+    },
+    "home->messages": {
+      "baseline": 295.6,
+      "E2-getClaims": 226.9
+    },
+    "home->profile": {
+      "baseline": 181.9,
+      "E2-getClaims": 153.5
+    },
+    "messages->conversation": {
+      "baseline": 330.6,
+      "E2-getClaims": 243.3
+    },
+    "chapters->detail": {
+      "baseline": 199.2,
+      "E2-getClaims": 129.2
+    },
+    "people->profile": {
+      "baseline": 166.6,
+      "E2-getClaims": 123.8
+    }
+  },
+  "secondary": {
+    "requestsPerNavigation": {
+      "baseline": 4.4,
+      "E2-getClaims": 4.33
+    },
+    "appConsoleErrors": 0,
+    "pageErrors": 0,
+    "failedRequests": 443,
+    "settleMsMedian": 977
+  },
+  "failures": [
+    {
+      "rep": 11,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 11,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 11,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 11,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 12,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 12,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 12,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 12,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 12,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 12,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 12,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 12,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 12,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 13,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 13,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 13,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 13,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 13,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 13,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 13,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 13,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 13,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 14,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 14,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 14,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 14,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 14,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 14,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 14,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 14,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 14,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 15,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 15,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 15,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 15,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 15,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 15,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 15,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 15,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 15,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 16,
+      "route": "(recycle E2-getClaims)",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 16,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 16,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 16,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 16,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 16,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 16,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 16,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 16,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 16,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 17,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 17,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 17,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 17,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 17,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 17,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 17,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 17,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 17,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 18,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 18,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 18,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 18,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 18,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 18,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 18,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 18,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 18,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 19,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 19,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 19,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 19,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 19,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 19,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 19,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 19,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 19,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 20,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 20,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 20,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 20,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 20,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 20,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 20,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 20,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 20,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 21,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 21,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 21,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 21,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 21,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 21,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 21,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 21,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 21,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 22,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 22,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 22,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 22,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 22,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 22,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 22,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 22,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 22,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 23,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 23,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 23,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 23,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 23,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 23,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 23,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 23,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 23,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 24,
+      "route": "(recycle E2-getClaims)",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 24,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 24,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 24,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 24,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 24,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 24,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 24,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 24,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 24,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 25,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 25,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 25,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 25,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 25,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 25,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 25,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 25,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 25,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 26,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 26,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 26,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 26,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 26,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 26,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 26,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 26,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 26,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 27,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 27,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 27,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 27,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 27,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 27,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 27,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 27,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 27,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 28,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 28,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 28,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 28,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 28,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 28,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 28,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 28,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 28,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 29,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 29,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 29,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 29,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 29,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 29,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 29,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 29,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 29,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 30,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 30,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 30,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 30,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 30,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 30,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 30,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 30,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 30,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 31,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 31,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 31,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 31,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 31,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 31,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 31,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 31,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 31,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 32,
+      "route": "(recycle E2-getClaims)",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 32,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 32,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 32,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 32,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 32,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 32,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 32,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 32,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 32,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 33,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 33,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 33,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 33,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 33,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 33,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 33,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 33,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 33,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 34,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 34,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 34,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 34,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 34,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 34,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 34,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 34,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 34,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 35,
+      "variant": "E2-getClaims",
+      "route": "home->opportunities",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 35,
+      "variant": "E2-getClaims",
+      "route": "home->people",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 35,
+      "variant": "E2-getClaims",
+      "route": "home->community",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 35,
+      "variant": "E2-getClaims",
+      "route": "home->chapters",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 35,
+      "variant": "E2-getClaims",
+      "route": "home->messages",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 35,
+      "variant": "E2-getClaims",
+      "route": "home->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/home\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/home\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 35,
+      "variant": "E2-getClaims",
+      "route": "messages->conversation",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/messages\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/messages\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 35,
+      "variant": "E2-getClaims",
+      "route": "chapters->detail",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/chapters\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/chapters\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    },
+    {
+      "rep": 35,
+      "variant": "E2-getClaims",
+      "route": "people->profile",
+      "error": "Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:3100/people\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3100/people\", waiting until \"domcontentloaded\"\u001b[22m\n"
+    }
+  ],
+  "raw": {
+    "baseline": {
+      "home->opportunities": [
+        269.1,
+        263.1,
+        350.3,
+        385.8,
+        239.9,
+        310.2,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "home->people": [
+        175.3,
+        197.4,
+        211.6,
+        231.3,
+        202.6,
+        213.4,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "home->community": [
+        182.3,
+        206,
+        289.4,
+        187.4,
+        172.9,
+        218.2,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "home->chapters": [
+        162.7,
+        191.9,
+        221.1,
+        209.4,
+        311.6,
+        176.2,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "home->messages": [
+        251.5,
+        284.3,
+        297.8,
+        367.8,
+        260.7,
+        346.8,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "home->profile": [
+        189.6,
+        170.9,
+        232.7,
+        162.9,
+        242.5,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "messages->conversation": [
+        310.9,
+        329.7,
+        285.1,
+        262.9,
+        221.2,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "chapters->detail": [
+        182.7,
+        273,
+        207,
+        198.4,
+        171,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "people->profile": [
+        167.9,
+        168.5,
+        170.8,
+        292.2,
+        177.8,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    "E2-getClaims": {
+      "home->opportunities": [
+        291.5,
+        240.8,
+        260,
+        224.7,
+        199.3,
+        1740.4,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "home->people": [
+        141.6,
+        122.7,
+        147.4,
+        156.1,
+        130.8,
+        165.5,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "home->community": [
+        198.8,
+        150.9,
+        820,
+        189.9,
+        136.5,
+        185.4,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "home->chapters": [
+        140.2,
+        113.4,
+        145.9,
+        133.2,
+        117.6,
+        149.2,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "home->messages": [
+        270.7,
+        220.8,
+        245.5,
+        432.4,
+        205.6,
+        249,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "home->profile": [
+        119.3,
+        137.2,
+        163.5,
+        171.9,
+        127.2,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "messages->conversation": [
+        285.4,
+        280,
+        254.2,
+        237.2,
+        211.6,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "chapters->detail": [
+        147.1,
+        167,
+        154.4,
+        141.1,
+        147.1,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ],
+      "people->profile": [
+        115.4,
+        140.3,
+        120.8,
+        117.3,
+        172.1,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  },
+  "diagnosticsSample": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [
+      "[E2-getClaims] net::ERR_CONNECTION_REFUSED http://localhost:3100/home",
+      "[E2-getClaims] net::ERR_CONNECTION_REFUSED http://localhost:3100/messages",
+      "[E2-getClaims] net::ERR_CONNECTION_REFUSED http://localhost:3100/chapters",
+      "[E2-getClaims] net::ERR_CONNECTION_REFUSED http://localhost:3100/people"
+    ]
+  }
+}

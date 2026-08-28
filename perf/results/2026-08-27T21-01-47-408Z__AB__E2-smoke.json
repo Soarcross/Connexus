@@ -1,0 +1,410 @@
+{
+  "label": "E2-smoke",
+  "startedAt": "2026-08-27T21:01:47.408Z",
+  "durationSec": 73,
+  "design": "paired A/B, two servers, alternating order within each repetition",
+  "config": {
+    "baseA": "http://localhost:3101",
+    "baseB": "http://localhost:3100",
+    "nameA": "baseline",
+    "nameB": "E2",
+    "reps": 2,
+    "warmup": 1,
+    "viewport": "1440x900",
+    "browser": "chromium"
+  },
+  "overall": {
+    "baseline": {
+      "n": 18,
+      "min": 147.4,
+      "mean": 256.2,
+      "median": 225.8,
+      "p90": 372.5,
+      "p95": 407.2,
+      "p99": 525.8,
+      "max": 555.5
+    },
+    "E2": {
+      "n": 18,
+      "min": 117.9,
+      "mean": 374,
+      "median": 208.3,
+      "p90": 565.3,
+      "p95": 1461.6,
+      "p99": 2158.1,
+      "max": 2332.2
+    }
+  },
+  "p95Delta": 1054.4,
+  "p95DeltaCI": {
+    "lo": -47.4,
+    "hi": 1776.7
+  },
+  "pairedDelta": {
+    "n": 18,
+    "median": -34.9,
+    "medianCI": {
+      "lo": -51.1,
+      "hi": -20.9
+    },
+    "trimmedMean": 117.8,
+    "trimmedMeanCI": {
+      "lo": -63,
+      "hi": 385.5
+    },
+    "q10": -73.8,
+    "q90": 341.1
+  },
+  "verdict": "IMPROVEMENT",
+  "verdictBasis": "median paired per-navigation delta and its bootstrap CI; p95-of-pooled is reported but is too noisy to decide (A/A CI was [-98.6, +400.9])",
+  "perRoute": {
+    "home->opportunities": {
+      "a": {
+        "n": 2,
+        "min": 266.8,
+        "mean": 323.9,
+        "median": 323.9,
+        "p90": 369.6,
+        "p95": 375.3,
+        "p99": 379.9,
+        "max": 381
+      },
+      "b": {
+        "n": 2,
+        "min": 216.7,
+        "mean": 1274.4,
+        "median": 1274.5,
+        "p90": 2120.7,
+        "p95": 2226.4,
+        "p99": 2311,
+        "max": 2332.2
+      },
+      "pairedMedianDelta": 950.5,
+      "n": 2
+    },
+    "home->people": {
+      "a": {
+        "n": 2,
+        "min": 200.1,
+        "mean": 284.4,
+        "median": 284.4,
+        "p90": 351.9,
+        "p95": 360.4,
+        "p99": 367.1,
+        "max": 368.8
+      },
+      "b": {
+        "n": 2,
+        "min": 158.6,
+        "mean": 733.3,
+        "median": 733.3,
+        "p90": 1193.1,
+        "p95": 1250.5,
+        "p99": 1296.5,
+        "max": 1308
+      },
+      "pairedMedianDelta": 448.9,
+      "n": 2
+    },
+    "home->community": {
+      "a": {
+        "n": 2,
+        "min": 211.8,
+        "mean": 260.1,
+        "median": 260.1,
+        "p90": 298.7,
+        "p95": 303.5,
+        "p99": 307.3,
+        "max": 308.3
+      },
+      "b": {
+        "n": 2,
+        "min": 190.9,
+        "mean": 207.7,
+        "median": 207.7,
+        "p90": 221.1,
+        "p95": 222.7,
+        "p99": 224.1,
+        "max": 224.4
+      },
+      "pairedMedianDelta": -52.4,
+      "n": 2
+    },
+    "home->chapters": {
+      "a": {
+        "n": 2,
+        "min": 147.4,
+        "mean": 191.7,
+        "median": 191.7,
+        "p90": 227.1,
+        "p95": 231.6,
+        "p99": 235.1,
+        "max": 236
+      },
+      "b": {
+        "n": 2,
+        "min": 117.9,
+        "mean": 142.2,
+        "median": 142.2,
+        "p90": 161.6,
+        "p95": 164.1,
+        "p99": 166,
+        "max": 166.5
+      },
+      "pairedMedianDelta": -49.5,
+      "n": 2
+    },
+    "home->messages": {
+      "a": {
+        "n": 2,
+        "min": 277.5,
+        "mean": 278.2,
+        "median": 278.2,
+        "p90": 278.8,
+        "p95": 278.8,
+        "p99": 278.9,
+        "max": 278.9
+      },
+      "b": {
+        "n": 2,
+        "min": 222.7,
+        "mean": 234.6,
+        "median": 234.6,
+        "p90": 244.1,
+        "p95": 245.3,
+        "p99": 246.3,
+        "max": 246.5
+      },
+      "pairedMedianDelta": -43.6,
+      "n": 2
+    },
+    "home->profile": {
+      "a": {
+        "n": 2,
+        "min": 161.6,
+        "mean": 170.4,
+        "median": 170.4,
+        "p90": 177.5,
+        "p95": 178.4,
+        "p99": 179.1,
+        "max": 179.3
+      },
+      "b": {
+        "n": 2,
+        "min": 124.1,
+        "mean": 137.7,
+        "median": 137.7,
+        "p90": 148.6,
+        "p95": 149.9,
+        "p99": 151,
+        "max": 151.3
+      },
+      "pairedMedianDelta": -32.8,
+      "n": 2
+    },
+    "messages->conversation": {
+      "a": {
+        "n": 2,
+        "min": 292.9,
+        "mean": 424.2,
+        "median": 424.2,
+        "p90": 529.2,
+        "p95": 542.4,
+        "p99": 552.9,
+        "max": 555.5
+      },
+      "b": {
+        "n": 2,
+        "min": 245.5,
+        "mean": 246.3,
+        "median": 246.3,
+        "p90": 246.8,
+        "p95": 246.9,
+        "p99": 247,
+        "max": 247
+      },
+      "pairedMedianDelta": -177.9,
+      "n": 2
+    },
+    "chapters->detail": {
+      "a": {
+        "n": 2,
+        "min": 178.1,
+        "mean": 186.4,
+        "median": 186.4,
+        "p90": 193.1,
+        "p95": 194,
+        "p99": 194.6,
+        "max": 194.8
+      },
+      "b": {
+        "n": 2,
+        "min": 180.6,
+        "mean": 190.3,
+        "median": 190.3,
+        "p90": 198,
+        "p95": 198.9,
+        "p99": 199.7,
+        "max": 199.9
+      },
+      "pairedMedianDelta": 3.8,
+      "n": 2
+    },
+    "people->profile": {
+      "a": {
+        "n": 2,
+        "min": 157.9,
+        "mean": 186.8,
+        "median": 186.8,
+        "p90": 209.8,
+        "p95": 212.7,
+        "p99": 215,
+        "max": 215.6
+      },
+      "b": {
+        "n": 2,
+        "min": 156.9,
+        "mean": 199.8,
+        "median": 199.8,
+        "p90": 234.1,
+        "p95": 238.4,
+        "p99": 241.8,
+        "max": 242.7
+      },
+      "pairedMedianDelta": 13,
+      "n": 2
+    }
+  },
+  "serverTotalMedian": {
+    "home->opportunities": {
+      "baseline": 369,
+      "E2": 234.8
+    },
+    "home->people": {
+      "baseline": 207.2,
+      "E2": 156.9
+    },
+    "home->community": {
+      "baseline": 228.2,
+      "E2": 183
+    },
+    "home->chapters": {
+      "baseline": 184,
+      "E2": 148.9
+    },
+    "home->messages": {
+      "baseline": 270.5,
+      "E2": 235.6
+    },
+    "home->profile": {
+      "baseline": 150.9,
+      "E2": 141.1
+    },
+    "messages->conversation": {
+      "baseline": 282.9,
+      "E2": 235.9
+    },
+    "chapters->detail": {
+      "baseline": 173.6,
+      "E2": 159.1
+    },
+    "people->profile": {
+      "baseline": 155.1,
+      "E2": 148.5
+    }
+  },
+  "secondary": {
+    "requestsPerNavigation": {
+      "baseline": 5,
+      "E2": 4.52
+    },
+    "appConsoleErrors": 0,
+    "pageErrors": 0,
+    "failedRequests": 0,
+    "settleMsMedian": 947
+  },
+  "failures": [],
+  "raw": {
+    "baseline": {
+      "home->opportunities": [
+        266.8,
+        381
+      ],
+      "home->people": [
+        200.1,
+        368.8
+      ],
+      "home->community": [
+        211.8,
+        308.3
+      ],
+      "home->chapters": [
+        147.4,
+        236
+      ],
+      "home->messages": [
+        277.5,
+        278.9
+      ],
+      "home->profile": [
+        161.6,
+        179.3
+      ],
+      "messages->conversation": [
+        292.9,
+        555.5
+      ],
+      "chapters->detail": [
+        178.1,
+        194.8
+      ],
+      "people->profile": [
+        215.6,
+        157.9
+      ]
+    },
+    "E2": {
+      "home->opportunities": [
+        216.7,
+        2332.2
+      ],
+      "home->people": [
+        158.6,
+        1308
+      ],
+      "home->community": [
+        190.9,
+        224.4
+      ],
+      "home->chapters": [
+        117.9,
+        166.5
+      ],
+      "home->messages": [
+        222.7,
+        246.5
+      ],
+      "home->profile": [
+        124.1,
+        151.3
+      ],
+      "messages->conversation": [
+        245.5,
+        247
+      ],
+      "chapters->detail": [
+        199.9,
+        180.6
+      ],
+      "people->profile": [
+        156.9,
+        242.7
+      ]
+    }
+  },
+  "diagnosticsSample": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": []
+  }
+}
