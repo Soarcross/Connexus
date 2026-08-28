@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { getServerUser } from "@/lib/supabase/user"
 import { notFound } from "next/navigation"
 import { ProfileView } from "@/app/components/profile/profile-view"
 import { LockedPage } from "@/app/components/layout/locked-page"
@@ -13,7 +14,7 @@ export default async function ProfilePage({ params }: Props) {
     const supabase = await createSupabaseServerClient()
 
     // get the logged in user so we know if this is their own profile
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getServerUser(supabase)
 
     if (!user) {
         return (
@@ -38,7 +39,7 @@ export default async function ProfilePage({ params }: Props) {
     // the viewer's own missing profile -- another user's missing row still
     // 404s, since that's a real "doesn't exist" case, not a recoverable one.
     if ((error || !profile) && user?.id === id) {
-        const rawName = user.user_metadata?.full_name ?? user.email ?? "New User"
+        const rawName = user.fullName ?? user.email ?? "New User"
         const { data: created } = await supabase
             .from("profiles")
             .insert({

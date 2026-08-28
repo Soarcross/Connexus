@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { getServerUser } from "@/lib/supabase/user"
 import { PostsFeed } from "@/app/components/community/posts-feed"
 import { LockedPage } from "@/app/components/layout/locked-page"
 import { activeFilter, notPurgedFilter } from "@/lib/lifecycle"
@@ -6,7 +7,7 @@ import { activeFilter, notPurgedFilter } from "@/lib/lifecycle"
 export default async function CommunityPage() {
     const supabase = await createSupabaseServerClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getServerUser(supabase)
 
     if (!user) {
         return (

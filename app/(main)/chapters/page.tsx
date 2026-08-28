@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { getServerUser } from "@/lib/supabase/user"
 import { LockedPage } from "@/app/components/layout/locked-page"
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
@@ -10,7 +11,7 @@ import { ArrowRight, Plus } from "lucide-react"
 export default async function ChaptersPage() {
     const supabase = await createSupabaseServerClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getServerUser(supabase)
 
     if (!user) {
         return (

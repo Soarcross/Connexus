@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { getServerUser } from "@/lib/supabase/user"
 import { OpportunitiesClient } from "@/app/components/opportunities/opportunities-client"
 import { LockedPage } from "@/app/components/layout/locked-page"
 import { activeFilter, getPurgeCutoff } from "@/lib/lifecycle"
@@ -7,7 +8,7 @@ import { activeFilter, getPurgeCutoff } from "@/lib/lifecycle"
 export default async function OpportunitiesPage() {
     const supabase = await createSupabaseServerClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getServerUser(supabase)
 
     if (!user) {
         return (
@@ -19,22 +20,38 @@ export default async function OpportunitiesPage() {
         )
     }
 
-    const { data: viewerProfile } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", user.id)
-        .single()
+    // These three are independent of each other, so they go out together rather
+    // than as three sequential round trips. Only `archived` below genuinely
+    // depends on an earlier result (it needs isAdmin to decide its scope), so
+    // the page costs two round-trip stages instead of four.
+    //
+    // The opportunities query is national-only (chapter_id IS NULL):
+    // chapter-scoped rows live on /chapters now. Chained .or() groups are ANDed
+    // by PostgREST.
+    const [{ data: viewerProfile }, { data: opportunities }, { data: pendingExtensions }] =
+        await Promise.all([
+            supabase
+                .from("profiles")
+                .select("is_admin")
+                .eq("id", user.id)
+                .single(),
+            supabase
+                .from("opportunities")
+                .select("*")
+                .is("chapter_id", null)
+                .or(activeFilter())
+                .order("created_at", { ascending: false }),
+            supabase
+                .from("extension_requests")
+                .select("opportunity_id")
+                // `user` is non-null past the guard above, so this is a real id
+                // rather than the `?? ""` fallback that Postgres rejects as an
+                // invalid uuid (it errors rather than matching zero rows).
+                .eq("user_id", user.id)
+                .eq("status", "Pending"),
+        ])
 
     const isAdmin = Boolean(viewerProfile?.is_admin)
-
-    // This page is national-only (chapter_id IS NULL): chapter-scoped rows
-    // live on /chapters now. Chained .or() groups are ANDed by PostgREST.
-    const { data: opportunities } = await supabase
-        .from("opportunities")
-        .select("*")
-        .is("chapter_id", null)
-        .or(activeFilter())
-        .order("created_at", { ascending: false })
 
     // Archived opportunities the viewer is allowed to see: their own, or all of
     // them for admins. Rows already past the purge cutoff are excluded.
@@ -51,12 +68,6 @@ export default async function OpportunitiesPage() {
     }
 
     const { data: archived } = await archivedQuery
-
-    const { data: pendingExtensions } = await supabase
-        .from("extension_requests")
-        .select("opportunity_id")
-        .eq("user_id", user?.id ?? "")
-        .eq("status", "Pending")
 
     return (
         <div className="flex flex-col gap-6">

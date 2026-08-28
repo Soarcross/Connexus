@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { getServerUser } from "@/lib/supabase/user"
 import { Navbar } from "@/app/components/navbar"
 
 export default async function MainLayout({
@@ -8,7 +9,7 @@ export default async function MainLayout({
 }) {
     const supabase = await createSupabaseServerClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getServerUser(supabase)
 
     // Guests are allowed through: each page under (main) decides its own
     // treatment (blur-gate, public content, or its own redirect to /login).

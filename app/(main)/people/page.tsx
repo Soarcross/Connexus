@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { getServerUser } from "@/lib/supabase/user"
 import { PeopleClient } from "@/app/components/people/people-client"
 
 export default async function PeoplePage({
@@ -9,7 +10,7 @@ export default async function PeoplePage({
     const { search } = await searchParams
     const supabase = await createSupabaseServerClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getServerUser(supabase)
 
     if (!user) {
         // Guests see the whole directory, but only the anon-granted columns.

@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { getServerUser } from "@/lib/supabase/user"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app/components/ui/card"
 import { Button } from "@/app/components/ui/button"
 import { ArrowRight } from "lucide-react"
@@ -12,7 +13,7 @@ const CATEGORIES = ["Internships", "Jobs", "Research", "Scholarships", "Competit
 export default async function HomePage() {
   const supabase = await createSupabaseServerClient()
 
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getServerUser(supabase)
 
   if (!user) {
     // Guest dashboard: real People carousel (anon-granted columns only) plus a
