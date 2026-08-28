@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { getServerUser } from "@/lib/supabase/user"
-import { LockedPage } from "@/app/components/layout/locked-page"
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Badge } from "@/app/components/ui/badge"
@@ -13,41 +12,35 @@ export default async function ChaptersPage() {
 
     const user = await getServerUser(supabase)
 
-    if (!user) {
-        return (
-            <LockedPage
-                variant="chapters"
-                title="Chapter pages are for members"
-                description="Create a free account to see what's happening at every chapter."
-            />
-        )
-    }
-
-    const { data: viewerProfile } = await supabase
-        .from("profiles")
-        .select("chapter_id")
-        .eq("id", user.id)
-        .single()
-
-    const viewerChapterId = viewerProfile?.chapter_id ?? null
-
-    // Only chapter_id is selected here, not names/bios/etc -- this is a
-    // member count, not a directory read, so it should carry no PII.
-    const [{ data: chapters }, { data: allProfiles }] = await Promise.all([
+    // The directory itself is public: chapter names/locations are marketing
+    // info, and the anon chapters policy only exposes Active rows. Member
+    // counts and the join prompt are member-only (the count query reads
+    // profiles.chapter_id, which anon has no grant on); the per-chapter
+    // detail page stays login-gated.
+    const [{ data: viewerProfile }, { data: chapters }, { data: allProfiles }] = await Promise.all([
+        user
+            ? supabase.from("profiles").select("chapter_id").eq("id", user.id).single()
+            : Promise.resolve({ data: null }),
         supabase
             .from("chapters")
             .select("*")
             .eq("status", "Active")
             .order("name"),
-        supabase
-            .from("profiles")
-            .select("chapter_id"),
+        // Only chapter_id is selected here, not names/bios/etc -- this is a
+        // member count, not a directory read, so it should carry no PII.
+        user
+            ? supabase.from("profiles").select("chapter_id")
+            : Promise.resolve({ data: null }),
     ])
 
-    const memberCounts = new Map<string, number>()
-    for (const { chapter_id } of allProfiles ?? []) {
-        if (!chapter_id) continue
-        memberCounts.set(chapter_id, (memberCounts.get(chapter_id) ?? 0) + 1)
+    const viewerChapterId = viewerProfile?.chapter_id ?? null
+
+    const memberCounts = user ? new Map<string, number>() : null
+    if (memberCounts) {
+        for (const { chapter_id } of allProfiles ?? []) {
+            if (!chapter_id) continue
+            memberCounts.set(chapter_id, (memberCounts.get(chapter_id) ?? 0) + 1)
+        }
     }
 
     // Viewer's home chapter first, then the rest (already sorted by name).
@@ -62,11 +55,27 @@ export default async function ChaptersPage() {
             <div className="flex flex-col gap-1">
                 <h1 className="text-2xl font-semibold tracking-tight">Chapters</h1>
                 <p className="text-sm text-muted-foreground">
-                    Browse every Connexus chapter and see who&apos;s in each one.
+                    {user
+                        ? "Browse every Connexus chapter and see who's in each one."
+                        : "Every school on Connexus. Sign up to see who's in each chapter."}
                 </p>
             </div>
 
-            {!viewerChapterId && (
+            {!user && (
+                <Card className="border-primary/30 bg-primary/5">
+                    <CardContent className="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <p className="text-sm text-muted-foreground">
+                            Is your school here? Create a free account to join its chapter and see what&apos;s happening inside.
+                        </p>
+                        <div className="flex gap-2 shrink-0">
+                            <Button size="sm" asChild><Link href="/signup">Sign up</Link></Button>
+                            <Button size="sm" variant="outline" asChild><Link href="/login">Log in</Link></Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {user && !viewerChapterId && (
                 <Card className="border-primary/30 bg-primary/5">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-base">You&apos;re not in a chapter yet</CardTitle>
@@ -89,7 +98,7 @@ export default async function ChaptersPage() {
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {sortedChapters.map(chapter => {
-                    const memberCount = memberCounts.get(chapter.id) ?? 0
+                    const memberCount = memberCounts?.get(chapter.id) ?? 0
                     const isHome = chapter.id === viewerChapterId
                     const location = [chapter.city, chapter.state].filter(Boolean).join(", ")
 
@@ -119,9 +128,13 @@ export default async function ChaptersPage() {
                                             {isHome && (
                                                 <Badge variant="default" className="text-xs">Your chapter</Badge>
                                             )}
-                                            <Badge variant="outline" className="text-xs">
-                                                {memberCount} {memberCount === 1 ? "member" : "members"}
-                                            </Badge>
+                                            {memberCounts ? (
+                                                <Badge variant="outline" className="text-xs">
+                                                    {memberCount} {memberCount === 1 ? "member" : "members"}
+                                                </Badge>
+                                            ) : (
+                                                <Badge variant="outline" className="text-xs">Sign up to see members</Badge>
+                                            )}
                                         </div>
                                         <ArrowRight className="size-4 text-muted-foreground" />
                                     </div>

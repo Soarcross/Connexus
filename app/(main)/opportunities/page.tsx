@@ -2,7 +2,11 @@ import Link from "next/link"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { getServerUser } from "@/lib/supabase/user"
 import { OpportunitiesClient } from "@/app/components/opportunities/opportunities-client"
-import { LockedPage } from "@/app/components/layout/locked-page"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app/components/ui/card"
+import { Badge } from "@/app/components/ui/badge"
+import { Button } from "@/app/components/ui/button"
+import { ExternalLink } from "lucide-react"
+import { categoryChip } from "@/lib/category-colors"
 import { activeFilter, getPurgeCutoff } from "@/lib/lifecycle"
 
 export default async function OpportunitiesPage() {
@@ -11,12 +15,101 @@ export default async function OpportunitiesPage() {
     const user = await getServerUser(supabase)
 
     if (!user) {
+        // Guests get the real FEATURED national listings (the anon RLS policy
+        // is scoped to exactly those rows) plus a blurred placeholder teaser
+        // for the rest. Explicit column list: anon has no grant on created_by.
+        const { data: featured } = await supabase
+            .from("opportunities")
+            .select("id, title, description, category, field, organization, location, url, deadline, is_featured, created_at")
+            .eq("is_featured", true)
+            .is("chapter_id", null)
+            .or(activeFilter())
+            .order("created_at", { ascending: false })
+
         return (
-            <LockedPage
-                variant="opportunities"
-                title="Opportunities are for members"
-                description="Create a free account to browse internships, research programs, scholarships and more."
-            />
+            <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-2xl font-semibold tracking-tight">Opportunities</h1>
+                    <p className="text-sm text-muted-foreground">
+                        A taste of this month&apos;s featured opportunities — sign up free to browse everything.
+                    </p>
+                </div>
+
+                {(featured?.length ?? 0) > 0 && (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        {(featured ?? []).map(opp => (
+                            <Card key={opp.id} className="transition-shadow hover:shadow-md">
+                                <CardHeader className="pb-2">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <CardTitle className="text-sm font-semibold leading-snug">{opp.title}</CardTitle>
+                                        <div className="flex flex-col items-end gap-1 shrink-0">
+                                            <Badge className="text-xs">Featured</Badge>
+                                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${categoryChip(opp.category)}`}>
+                                                {opp.category}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    {opp.organization && (
+                                        <CardDescription className="text-xs">
+                                            {opp.organization}
+                                            {opp.location ? ` · ${opp.location}` : ""}
+                                        </CardDescription>
+                                    )}
+                                </CardHeader>
+                                <CardContent className="flex flex-col gap-3">
+                                    <p className="text-xs text-muted-foreground">{opp.description}</p>
+                                    <div className="flex items-center justify-between gap-2">
+                                        {opp.deadline ? (
+                                            <span className="text-xs text-muted-foreground">
+                                                Due {new Date(opp.deadline).toLocaleDateString()}
+                                            </span>
+                                        ) : <span />}
+                                        {opp.url && (
+                                            <Button size="sm" variant="outline" className="text-xs h-7 gap-1" asChild>
+                                                <a href={opp.url} target="_blank" rel="noopener noreferrer">
+                                                    Apply <ExternalLink className="size-3" />
+                                                </a>
+                                            </Button>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                )}
+
+                {/* Blurred teaser for the non-featured listings. Placeholder
+                    cards, never real rows — a CSS blur is removable in dev tools. */}
+                <section className="relative">
+                    <div className="blur-[6px] pointer-events-none select-none opacity-70" aria-hidden="true">
+                        <div className="grid gap-4 sm:grid-cols-2">
+                            {["Summer Research Assistant", "Hospital Volunteer Program", "City Coding Bootcamp", "Museum Education Internship"].map(title => (
+                                <Card key={title}>
+                                    <CardHeader className="pb-2"><CardTitle className="text-sm">{title}</CardTitle></CardHeader>
+                                    <CardContent className="flex flex-col gap-2">
+                                        <div className="h-3.5 w-full rounded bg-muted" />
+                                        <div className="h-3.5 w-2/3 rounded bg-muted" />
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <Card className="w-full max-w-sm mx-4 shadow-lg">
+                            <CardContent className="pt-6 flex flex-col items-center gap-3 text-center">
+                                <p className="font-semibold">There&apos;s more where that came from</p>
+                                <p className="text-sm text-muted-foreground">
+                                    Create a free account to browse every internship, scholarship, research program and more.
+                                </p>
+                                <div className="flex gap-2">
+                                    <Button asChild><Link href="/signup">Sign up</Link></Button>
+                                    <Button variant="outline" asChild><Link href="/login">Log in</Link></Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </section>
+            </div>
         )
     }
 

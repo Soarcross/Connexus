@@ -78,8 +78,10 @@ export default async function HomePage() {
           <div className="absolute inset-0 flex items-center justify-center">
             <Card className="w-full max-w-sm mx-4 shadow-lg">
               <CardContent className="pt-6 flex flex-col items-center gap-3 text-center">
-                <p className="font-semibold">Featured opportunities are for members</p>
-                <p className="text-sm text-muted-foreground">Sign up free to see this month&apos;s picks.</p>
+                <p className="font-semibold">Members see every opportunity</p>
+                <p className="text-sm text-muted-foreground">
+                  Peek at this month&apos;s <Link href="/opportunities" className="text-primary hover:underline">featured picks</Link> — or sign up free to browse them all.
+                </p>
                 <div className="flex gap-2">
                   <Button asChild><Link href="/signup">Sign up</Link></Button>
                   <Button variant="outline" asChild><Link href="/login">Log in</Link></Button>
