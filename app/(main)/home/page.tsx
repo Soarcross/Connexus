@@ -16,13 +16,24 @@ export default async function HomePage() {
   const user = await getServerUser(supabase)
 
   if (!user) {
-    // Guest dashboard: real People carousel (anon-granted columns only) plus a
-    // blurred placeholder opportunities section. No member-only data fetched.
-    const { data: guestPeople } = await supabase
-      .from("profiles")
-      .select("id, full_name, avatar_url, grad_year, interests, club_roles")
-      .not("full_name", "is", null)
-      .limit(12)
+    // Guest dashboard: real People carousel and real FEATURED national
+    // opportunities — both queries touch only anon-granted columns, and the
+    // anon opportunities policy is scoped to featured/national/unexpired rows.
+    const [{ data: guestPeople }, { data: guestFeatured }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url, grad_year, interests, club_roles")
+        .not("full_name", "is", null)
+        .limit(12),
+      supabase
+        .from("opportunities")
+        .select("id, title, description, category, organization, url, deadline")
+        .eq("is_featured", true)
+        .is("chapter_id", null)
+        .or(activeFilter())
+        .order("created_at", { ascending: false })
+        .limit(4),
+    ])
 
     const carouselPeople = (guestPeople ?? []).map(p => ({
       ...p,
@@ -56,40 +67,62 @@ export default async function HomePage() {
           </section>
         )}
 
-        <section className="relative">
-          <div className="blur-[6px] pointer-events-none select-none opacity-70" aria-hidden="true">
-            <div className="flex flex-col gap-4">
+        {(guestFeatured?.length ?? 0) > 0 && (
+          <section className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold tracking-tight">Opportunities of the Month</h2>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {["Summer Research Program", "Software Engineering Internship", "Community Volunteering Day", "National Math Competition"].map(title => (
-                  <Card key={title} size="sm">
-                    <CardHeader className="pb-0">
-                      <CardTitle className="text-sm font-semibold leading-snug">{title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-2">
-                      <div className="h-3.5 w-full rounded bg-muted" />
-                      <div className="h-3.5 w-2/3 rounded bg-muted" />
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground" asChild>
+                <Link href="/opportunities">
+                  See all featured <ArrowRight className="size-4" />
+                </Link>
+              </Button>
             </div>
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Card className="w-full max-w-sm mx-4 shadow-lg">
-              <CardContent className="pt-6 flex flex-col items-center gap-3 text-center">
-                <p className="font-semibold">Members see every opportunity</p>
-                <p className="text-sm text-muted-foreground">
-                  Peek at this month&apos;s <Link href="/opportunities" className="text-primary hover:underline">featured picks</Link> — or sign up free to browse them all.
-                </p>
-                <div className="flex gap-2">
-                  <Button asChild><Link href="/signup">Sign up</Link></Button>
-                  <Button variant="outline" asChild><Link href="/login">Log in</Link></Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {(guestFeatured ?? []).map(opp => (
+                <Card key={opp.id} size="sm" className="transition-shadow hover:shadow-md">
+                  <CardHeader className="pb-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <CardTitle className="text-sm font-semibold leading-snug">{opp.title}</CardTitle>
+                      <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${categoryChip(opp.category)}`}>
+                        {opp.category}
+                      </span>
+                    </div>
+                    {opp.organization && (
+                      <CardDescription className="text-xs">{opp.organization}</CardDescription>
+                    )}
+                  </CardHeader>
+                  <CardContent className="flex flex-col gap-3">
+                    <p className="text-xs text-muted-foreground line-clamp-2">{opp.description}</p>
+                    <div className="flex items-center justify-between">
+                      {opp.deadline && (
+                        <span className="text-xs text-muted-foreground">
+                          Due {new Date(opp.deadline).toLocaleDateString()}
+                        </span>
+                      )}
+                      {opp.url && (
+                        <Button size="sm" variant="outline" className="text-xs h-7" asChild>
+                          <a href={opp.url} target="_blank" rel="noopener noreferrer">Learn more</a>
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <Card>
+          <CardContent className="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              Members see every opportunity — not just the featured picks — plus community posts and messaging.
+            </p>
+            <div className="flex gap-2 shrink-0">
+              <Button size="sm" asChild><Link href="/signup">Sign up</Link></Button>
+              <Button size="sm" variant="outline" asChild><Link href="/login">Log in</Link></Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
