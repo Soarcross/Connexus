@@ -48,7 +48,7 @@ export function PeopleCarousel({ people, currentUserId }: Props) {
                 {currentPage.map(person => (
                     <Card
                         key={person.id}
-                        className="cursor-pointer transition-colors hover:bg-secondary"
+                        className="cursor-pointer card-lift"
                         onClick={() => router.push(`/profile/${person.id}`)}
                     >
                         <CardContent className="pt-6 flex flex-col items-center gap-3 text-center">

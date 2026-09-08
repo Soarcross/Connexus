@@ -97,14 +97,14 @@ export default async function ChaptersPage() {
             )}
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {sortedChapters.map(chapter => {
+                {sortedChapters.map((chapter, i) => {
                     const memberCount = memberCounts?.get(chapter.id) ?? 0
                     const isHome = chapter.id === viewerChapterId
                     const location = [chapter.city, chapter.state].filter(Boolean).join(", ")
 
                     return (
-                        <Link key={chapter.id} href={`/chapters/${chapter.slug}`}>
-                            <Card className="h-full transition-colors hover:bg-secondary">
+                        <Link key={chapter.id} href={`/chapters/${chapter.slug}`} className="animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out" style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "both" }}>
+                            <Card className="h-full card-lift">
                                 <CardContent className="pt-6 flex flex-col gap-4">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="size-12">
@@ -145,7 +145,7 @@ export default async function ChaptersPage() {
                 })}
 
                 <Link href="/apply">
-                    <Card className="h-full border-dashed transition-colors hover:bg-secondary">
+                    <Card className="h-full border-dashed card-lift">
                         <CardContent className="pt-6 h-full flex flex-col items-center justify-center gap-2 text-center text-muted-foreground">
                             <Plus className="size-6" />
                             <p className="text-sm font-medium">Don&apos;t see your school?</p>

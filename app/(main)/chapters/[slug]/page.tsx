@@ -135,8 +135,8 @@ export default async function ChapterDetailPage({
                                         <span className="text-sm text-muted-foreground">({(posts ?? []).length})</span>
                                     </div>
                                     <div className="grid gap-4 sm:grid-cols-2">
-                                        {(posts ?? []).map(post => (
-                                            <Card key={post.id} className="transition-colors hover:bg-secondary">
+                                        {(posts ?? []).map((post, i) => (
+                                            <Card key={post.id} className="card-lift animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out" style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "both" }}>
                                                 <CardHeader className="pb-2">
                                                     <div className="flex items-start justify-between gap-2">
                                                         <CardTitle className="text-sm font-semibold leading-snug">{post.title}</CardTitle>
@@ -176,8 +176,8 @@ export default async function ChapterDetailPage({
                                         <span className="text-sm text-muted-foreground">({opps.length})</span>
                                     </div>
                                     <div className="grid gap-4 sm:grid-cols-2">
-                                        {opps.map(opp => (
-                                            <Card key={opp.id} className="transition-colors hover:bg-secondary">
+                                        {opps.map((opp, i) => (
+                                            <Card key={opp.id} className="card-lift animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out" style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "both" }}>
                                                 <CardHeader className="pb-2">
                                                     <div className="flex items-start justify-between gap-2">
                                                         <CardTitle className="text-sm font-semibold leading-snug">{opp.title}</CardTitle>

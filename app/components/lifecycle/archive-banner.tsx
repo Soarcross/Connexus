@@ -36,7 +36,7 @@ export function ArchiveBanner({ expiresAt, canExtend = true, onExtend, extension
     })
 
     return (
-        <div className="flex flex-col gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3">
+        <div className="flex flex-col gap-2 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 animate-in fade-in-0 slide-in-from-top-1 duration-200 ease-out">
             <div className="flex items-start gap-2">
                 <AlertTriangle className="size-4 shrink-0 text-destructive mt-0.5" />
                 <div className="flex flex-col gap-0.5 text-xs">

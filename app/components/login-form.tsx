@@ -112,7 +112,9 @@ export function LoginForm({
                 </div>
 
                 {error && (
-                    <p className="text-sm text-red-500 text-center">{error}</p>
+                    <div key={error} className="shake">
+                        <p className="text-sm text-red-500 text-center animate-in fade-in-0 duration-150">{error}</p>
+                    </div>
                 )}
 
                 {showSignupHint && (

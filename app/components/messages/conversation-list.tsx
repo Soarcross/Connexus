@@ -46,10 +46,11 @@ export function ConversationList({ conversations, currentUserId }: Props) {
 
     return (
         <Card className="py-0 gap-0 divide-y divide-border">
-            {conversations.map((conv) => (
+            {conversations.map((conv, i) => (
                 <div
                     key={conv.id}
-                    className={`cursor-pointer transition-colors hover:bg-secondary ${conv.unreadCount > 0 ? "bg-secondary" : ""}`}
+                    className={`cursor-pointer transition-colors hover:bg-secondary animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out ${conv.unreadCount > 0 ? "bg-secondary" : ""}`}
+                    style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "both" }}
                     onClick={() => router.push(`/messages/${conv.id}`)}
                 >
                     <CardContent className="py-4 flex items-center gap-4">

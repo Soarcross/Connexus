@@ -292,10 +292,11 @@ export function PeopleClient({ profiles, initialSearch, viewerChapterId, isGuest
                 </Card>
             ) : (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {filtered.map(profile => (
+                    {filtered.map((profile, i) => (
                         <Card
                             key={profile.id}
-                            className="cursor-pointer transition-colors hover:bg-secondary"
+                            className="cursor-pointer card-lift animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out"
+                            style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "both" }}
                             onClick={() => router.push(`/profile/${profile.id}`)}
                         >
                             <CardContent className="pt-6 flex flex-col gap-4">
