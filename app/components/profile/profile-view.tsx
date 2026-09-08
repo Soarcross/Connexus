@@ -129,28 +129,80 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
         setEditingSection(null)
     }
 
+    // Formats that can carry an alpha channel. JPEG can't, so it never needs
+    // flattening. A transparent avatar otherwise shows the page background
+    // through it (the Avatar component's bg-secondary is a fallback safety
+    // net, not a substitute for fixing the stored file).
+    const ALPHA_CAPABLE_TYPES = ["image/png", "image/webp", "image/gif"]
+
+    // Draws the image onto an opaque cream background and re-encodes as JPEG.
+    // Returns the original file if the source has no alpha channel, or if
+    // canvas encoding fails for any reason — upload should never hard-break
+    // over this.
+    async function flattenTransparency(file: File): Promise<File> {
+        if (!ALPHA_CAPABLE_TYPES.includes(file.type)) return file
+
+        try {
+            const objectUrl = URL.createObjectURL(file)
+            try {
+                const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+                    const image = new window.Image()
+                    image.onload = () => resolve(image)
+                    image.onerror = reject
+                    image.src = objectUrl
+                })
+
+                const canvas = document.createElement("canvas")
+                canvas.width = img.naturalWidth
+                canvas.height = img.naturalHeight
+                const ctx = canvas.getContext("2d")
+                if (!ctx) return file
+
+                // Same cream the fallback background uses (--secondary, light
+                // value) — the flattened file can't follow the viewer's theme,
+                // so this is a fixed neutral rather than a per-theme match.
+                ctx.fillStyle = "#f4ecd6"
+                ctx.fillRect(0, 0, canvas.width, canvas.height)
+                ctx.drawImage(img, 0, 0)
+
+                const blob = await new Promise<Blob | null>((resolve) =>
+                    canvas.toBlob(resolve, "image/jpeg", 0.92)
+                )
+                if (!blob) return file
+
+                const newName = file.name.replace(/\.[^.]+$/, "") + ".jpg"
+                return new File([blob], newName, { type: "image/jpeg" })
+            } finally {
+                URL.revokeObjectURL(objectUrl)
+            }
+        } catch {
+            return file
+        }
+    }
+
     // auto saves avatar immediately on file select
     async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-        const file = e.target.files?.[0]
-        if (!file) return
+        const rawFile = e.target.files?.[0]
+        if (!rawFile) return
 
-        if (!file.type.startsWith("image/")) {
+        if (!rawFile.type.startsWith("image/")) {
             setError("Please upload an image file.")
             e.target.value = ""
             return
         }
-        if (file.size > 2 * 1024 * 1024) {
+        if (rawFile.size > 2 * 1024 * 1024) {
             setError("Image must be under 2MB.")
             e.target.value = ""
             return
         }
         setError(null)
 
-        setAvatarUrl(URL.createObjectURL(file))
+        setAvatarUrl(URL.createObjectURL(rawFile))
         setLoading(true)
         const supabase = getSupaBrowserClient()
 
         try {
+            const file = await flattenTransparency(rawFile)
             const fileExt = file.name.split(".").pop()
             const filePath = `${profile.id}/avatar-${Date.now()}.${fileExt}`
 

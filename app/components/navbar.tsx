@@ -109,9 +109,9 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
     }
 
     function tabClass(active: boolean) {
-        return `relative flex h-14 flex-col items-center justify-center gap-0.5 px-3 text-[11px] font-medium transition-colors whitespace-nowrap ${
+        return `relative flex h-14 items-center text-sm font-medium transition-colors whitespace-nowrap ${
             active
-                ? "text-foreground after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:bg-foreground"
+                ? "text-foreground after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-foreground"
                 : "text-muted-foreground hover:text-foreground"
         }`
     }
@@ -154,31 +154,31 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                     </div>
                 </form>
 
-                {/* Desktop tabs */}
-                <nav className="hidden md:flex items-stretch ml-auto">
-                    {NAV_TABS.map(({ label, href, icon: Icon }) => (
+                {/* Desktop tabs — plain text links, one even gap between every
+                    item (navbar.gallery style, not the old icon+label rail).
+                    Needs the full label at all times, so it only takes over
+                    at `lg`; the mobile Sheet below covers everything under
+                    that, including the old md-lg icon-only tablet range. */}
+                <nav className="hidden lg:flex items-center gap-6 ml-auto">
+                    {NAV_TABS.map(({ label, href }) => (
                         <Link key={href} href={href} className={tabClass(pathname === href)}>
-                            <Icon className="size-5" />
-                            <span className="hidden lg:block">{label}</span>
+                            {label}
                         </Link>
                     ))}
                     {userId && (
                         <Link href="/messages" className={tabClass(pathname.startsWith("/messages"))}>
-                            <span className="relative">
-                                <MessageCircle className="size-5" />
-                                {unreadCount > 0 && (
-                                    <span className="absolute -top-1 -right-1.5 size-4 rounded-none bg-accent text-accent-foreground text-[10px] font-bold flex items-center justify-center">
-                                        {unreadCount > 9 ? "9+" : unreadCount}
-                                    </span>
-                                )}
-                            </span>
-                            <span className="hidden lg:block">Messages</span>
+                            Messages
+                            {unreadCount > 0 && (
+                                <span className="ml-1.5 inline-flex size-4 rounded-none bg-accent text-accent-foreground text-[10px] font-bold items-center justify-center align-middle">
+                                    {unreadCount > 9 ? "9+" : unreadCount}
+                                </span>
+                            )}
                         </Link>
                     )}
                 </nav>
 
                 {/* Right side */}
-                <div className="shrink-0 flex items-center gap-1.5 md:ml-2 ml-auto">
+                <div className="shrink-0 flex items-center gap-1.5 lg:ml-2 ml-auto">
                     <ThemeToggle />
 
                     {/* Account dropdown (members) / auth buttons (guests) */}
@@ -247,7 +247,7 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                     <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                         <SheetTrigger asChild>
                             <button
-                                className="md:hidden p-1.5 rounded-md hover:bg-muted transition-colors"
+                                className="lg:hidden p-1.5 rounded-md hover:bg-muted transition-colors"
                                 aria-label="Open menu"
                             >
                                 <Menu className="size-5" />

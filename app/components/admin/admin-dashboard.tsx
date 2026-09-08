@@ -1146,7 +1146,7 @@ export function AdminDashboard({
                                     <div className="flex items-center gap-3 min-w-0">
                                         <Avatar className="size-10 shrink-0">
                                             <AvatarImage src={user.avatar_url ?? ""} />
-                                            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">{user.full_name?.[0] ?? "?"}</AvatarFallback>
+                                            <AvatarFallback className="bg-secondary text-foreground font-semibold text-sm">{user.full_name?.[0] ?? "?"}</AvatarFallback>
                                         </Avatar>
                                         <div className="flex flex-col min-w-0">
                                             <div className="flex items-center gap-2">
@@ -1193,7 +1193,7 @@ export function AdminDashboard({
                                     <div key={user.id} className="flex items-center gap-3">
                                         <Avatar className="size-8">
                                             <AvatarImage src={user.avatar_url ?? ""} />
-                                            <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">{user.full_name?.[0] ?? "?"}</AvatarFallback>
+                                            <AvatarFallback className="bg-secondary text-foreground text-xs font-semibold">{user.full_name?.[0] ?? "?"}</AvatarFallback>
                                         </Avatar>
                                         <div className="flex flex-col">
                                             <p className="text-sm font-medium">{user.full_name ?? "No name"}</p>
@@ -1325,7 +1325,7 @@ export function AdminDashboard({
                                                 <div className="flex items-center gap-2">
                                                     <Avatar className="size-5">
                                                         <AvatarImage src={req.profiles?.avatar_url ?? ""} />
-                                                        <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                                                        <AvatarFallback className="text-xs bg-secondary text-foreground">
                                                             {req.profiles?.full_name?.[0] ?? "?"}
                                                         </AvatarFallback>
                                                     </Avatar>
@@ -1420,7 +1420,7 @@ export function AdminDashboard({
                                                 <div className="flex items-center gap-2">
                                                     <Avatar className="size-5">
                                                         <AvatarImage src={post.profiles?.avatar_url ?? ""} />
-                                                        <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                                                        <AvatarFallback className="text-xs bg-secondary text-foreground">
                                                             {post.profiles?.full_name?.[0] ?? "?"}
                                                         </AvatarFallback>
                                                     </Avatar>
@@ -1523,7 +1523,7 @@ export function AdminDashboard({
                                                                     <button key={u.id} type="button" className="flex items-center gap-3 px-3 py-2 rounded hover:bg-accent text-left transition-colors" onClick={() => setSelectedProfileForTeam(u)}>
                                                                         <Avatar className="size-7 shrink-0">
                                                                             <AvatarImage src={u.avatar_url ?? ""} />
-                                                                            <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">{u.full_name?.[0]}</AvatarFallback>
+                                                                            <AvatarFallback className="text-xs bg-secondary text-foreground font-semibold">{u.full_name?.[0]}</AvatarFallback>
                                                                         </Avatar>
                                                                         <span className="text-sm truncate">{u.full_name}</span>
                                                                     </button>
@@ -1535,7 +1535,7 @@ export function AdminDashboard({
                                                     <div className="flex items-center gap-3 p-2 border rounded-md bg-accent/30">
                                                         <Avatar className="size-8 shrink-0">
                                                             <AvatarImage src={selectedProfileForTeam.avatar_url ?? ""} />
-                                                            <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">{selectedProfileForTeam.full_name?.[0]}</AvatarFallback>
+                                                            <AvatarFallback className="text-xs bg-secondary text-foreground font-semibold">{selectedProfileForTeam.full_name?.[0]}</AvatarFallback>
                                                         </Avatar>
                                                         <span className="text-sm flex-1">{selectedProfileForTeam.full_name}</span>
                                                         <Button size="sm" variant="ghost" onClick={() => { setSelectedProfileForTeam(null); setProfileSearch("") }}><X className="size-4" /></Button>
@@ -1554,7 +1554,7 @@ export function AdminDashboard({
                                                             <button key={u.id} type="button" className="flex items-center gap-3 px-3 py-2 rounded hover:bg-accent text-left transition-colors" onClick={() => setSelectedProfileForTeam(u)}>
                                                                 <Avatar className="size-8 shrink-0">
                                                                     <AvatarImage src={u.avatar_url ?? ""} />
-                                                                    <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">{u.full_name?.[0]}</AvatarFallback>
+                                                                    <AvatarFallback className="text-xs bg-secondary text-foreground font-semibold">{u.full_name?.[0]}</AvatarFallback>
                                                                 </Avatar>
                                                                 <div className="flex flex-col min-w-0">
                                                                     <span className="text-sm font-medium truncate">{u.full_name}</span>
@@ -1572,7 +1572,7 @@ export function AdminDashboard({
                                                     <div className="flex items-center gap-3 p-3 border rounded-md bg-accent/30">
                                                         <Avatar className="size-10 shrink-0">
                                                             <AvatarImage src={selectedProfileForTeam.avatar_url ?? ""} />
-                                                            <AvatarFallback className="text-sm bg-primary/10 text-primary font-semibold">{selectedProfileForTeam.full_name?.[0]}</AvatarFallback>
+                                                            <AvatarFallback className="text-sm bg-secondary text-foreground font-semibold">{selectedProfileForTeam.full_name?.[0]}</AvatarFallback>
                                                         </Avatar>
                                                         <div className="flex flex-col min-w-0 flex-1">
                                                             <span className="text-sm font-semibold">{selectedProfileForTeam.full_name}</span>
@@ -1609,7 +1609,7 @@ export function AdminDashboard({
                                             <div className="flex items-center gap-3 min-w-0">
                                                 <Avatar className="size-10 shrink-0">
                                                     <AvatarImage src={member.image_url ?? ""} />
-                                                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">{member.name?.[0]}</AvatarFallback>
+                                                    <AvatarFallback className="bg-secondary text-foreground font-semibold text-sm">{member.name?.[0]}</AvatarFallback>
                                                 </Avatar>
                                                 <div className="flex flex-col min-w-0">
                                                     <p className="text-sm font-semibold">{member.name}</p>
