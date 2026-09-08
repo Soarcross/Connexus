@@ -421,7 +421,7 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
                                         <div className="flex items-center gap-2">
                                             <Avatar className="size-6">
                                                 <AvatarImage src={req.profiles?.avatar_url ?? ""} />
-                                                <AvatarFallback className="text-xs bg-primary/10 text-primary">{req.profiles?.full_name?.[0] ?? "?"}</AvatarFallback>
+                                                <AvatarFallback className="text-xs bg-secondary text-foreground">{req.profiles?.full_name?.[0] ?? "?"}</AvatarFallback>
                                             </Avatar>
                                             <p className="text-xs text-muted-foreground">
                                                 {req.profiles?.full_name ?? "Unknown"} requesting extension for &quot;{req.community_posts?.title}&quot;
@@ -485,7 +485,7 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
                                         <div className="flex items-center gap-2">
                                             <Avatar className="size-5">
                                                 <AvatarImage src={post.profiles?.avatar_url ?? ""} />
-                                                <AvatarFallback className="text-xs bg-primary/10 text-primary">{post.profiles?.full_name?.[0] ?? "?"}</AvatarFallback>
+                                                <AvatarFallback className="text-xs bg-secondary text-foreground">{post.profiles?.full_name?.[0] ?? "?"}</AvatarFallback>
                                             </Avatar>
                                             <p className="text-xs text-muted-foreground">
                                                 {post.profiles?.full_name ?? "Unknown"} &middot; {post.created_at ? new Date(post.created_at).toLocaleDateString() : ""}
@@ -535,7 +535,7 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
                                     <div className="flex items-center gap-3 min-w-0">
                                         <Avatar className="size-9">
                                             <AvatarImage src={member.avatar_url ?? ""} />
-                                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">{member.full_name?.[0] ?? "?"}</AvatarFallback>
+                                            <AvatarFallback className="bg-secondary text-foreground font-semibold">{member.full_name?.[0] ?? "?"}</AvatarFallback>
                                         </Avatar>
                                         <div className="flex flex-col min-w-0">
                                             <p className="text-sm font-semibold truncate">{member.full_name ?? "Unnamed"}</p>
@@ -674,7 +674,7 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
                             <div className="relative shrink-0 self-center sm:self-start">
                                 <Avatar className="size-24 ring-4 ring-card">
                                     <AvatarImage src={logoUrl ?? ""} alt={chapterName ?? "Chapter"} />
-                                    <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+                                    <AvatarFallback className="text-2xl bg-secondary text-foreground">
                                         {chapterName?.[0] ?? "?"}
                                     </AvatarFallback>
                                 </Avatar>

@@ -56,7 +56,8 @@
   --foreground: #1a1712;
   --card: #fff9eb;
   --card-foreground: #1a1712;
-  --popover: #fffdf5;
+  --popover: #fff9eb;
+  /* matches --card exactly — separation is the keyline border, not a tint */
   --popover-foreground: #1a1712;
   --primary: #1a1712;
   /* black is the action colour now — not violet */
@@ -101,7 +102,7 @@
   --foreground: #f5eedd;
   --card: #17140f;
   --card-foreground: #f5eedd;
-  --popover: #201c15;
+  --popover: #17140f;
   --popover-foreground: #f5eedd;
   --primary: #f5eedd;
   --primary-foreground: #17140f;
