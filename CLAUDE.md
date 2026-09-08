@@ -86,11 +86,42 @@ Rate limiting is Postgres-backed (`rate_limits` + `check_rate_limit()`), not Ups
 - Path alias is `@/*` from the repo root. Components live under `app/components/`, so imports read `@/app/components/...` — **not** the `@/components` alias `components.json` advertises. `shadcn add` output needs moving.
 - Existing code casts Supabase results through `as any` liberally (heavily in `admin-dashboard.tsx`). The generated types are complete — prefer typed access in new code rather than propagating casts.
 - Dynamic APIs are async in this Next version: `params`, `searchParams`, and `cookies()` are Promises and must be awaited.
-- Theming is `next-themes` via `app/components/theme-provider.tsx`, with `suppressHydrationWarning` on `<html>`/`<body>` in the root layout — keep both.
+- Theming is `next-themes` via `app/components/theme-provider.tsx`, with `suppressHydrationWarning` on `<html>`/`<body>` in the root layout — keep both. Visual language is the "Cream & Black" identity — see **Design system** below.
 - **Never fall back to `?? ""` for a value feeding a `uuid` column or filter** (`.eq("chapter_id", x ?? "")`). Postgres rejects an empty string as an invalid uuid — it *errors* rather than matching zero rows, and since most destructuring here reads only `{ data }` and ignores `error`, it just looks like an empty result. Branch on whether the id is known (see `app/(main)/opportunities/page.tsx`).
 - **A "your chapter by default, all chapters on request" query must not fetch the unscoped version server-side "just in case."** The people directory used to ship every chapter's profiles to every browser and filter client-side for display. RLS allowed it, so it wasn't a policy bug — but every visitor received the whole platform's PII regardless. The scoped fetch is the default; the broader one is a separate fetch triggered by the user action (see `people-client.tsx`'s `handleToggleAllChapters`).
 - **Category values have no single source.** `lib/category-colors.tsx`'s `CATEGORY_META` supplies only display (chip color/icon); `app/(main)/home/page.tsx`, `opportunities-client.tsx`, `create-post-button.tsx`, and `admin-dashboard.tsx` each hand-maintain their own `CATEGORIES` allowlist. Adding to `CATEGORY_META` makes a category appear nowhere, and one missing from a page's own list silently never shows there — the 2026-07 rebrand added `"Programs"` everywhere except the home page, so featured Programs opportunities never appeared there. Adding a category means editing every list — **including `opportunities_category_check` in the database**, a CHECK constraint allowlist that silently rejected every "Programs" insert for a month after the rebrand added it to the UI only (see `supabase/sql/004_opportunity_category_field_checks.sql`).
-- The 2026-07 rebrand deleted the decorative full-bleed canvas components (`particle-background`, `symbol-rain`, `aurora-background`, `constellation-background`, `geo-background`) for a flatter, content-first look. `wireframe-globe` survives on the public `/login` page only.
+- The 2026-07 rebrand deleted the decorative full-bleed canvas components (`particle-background`, `symbol-rain`, `aurora-background`, `constellation-background`, `geo-background`) for a flatter, content-first look. `wireframe-globe` survives on the public `/login` page only. The 2026-09 "Cream & Black" pass went further — hard corners, no shadows, no blur (see **Design system**).
+
+## Design system — "Cream & Black" (2026-09)
+
+The white + violet UI was replaced with a cream-and-black identity, in both
+light and dark. All of it is token-driven from `app/globals.css` (`:root` +
+`.dark`) plus two font loaders in `app/layout.tsx` — restyling is retokenising,
+not per-component work.
+
+- **Palette:** cream `#FFF9EB` ground; warm near-black `#1A1712` for **both text
+  and borders/rules**. `--primary` is **black** — it is the primary action
+  colour, *not* violet. Violet `#7D53DE` is `--accent` only: the focus ring
+  (`--ring`), links (`text-accent`), and the rare solid badge. `.dark` is a warm
+  near-black ground `#17140F` with cream text, violet lifted to `#A98BEE`, and
+  **solid** borders (no alpha).
+- **Shape:** `--radius: 0` — hard 90° corners everywhere; this alone flattens
+  every derived `rounded-*` utility. Cards, inputs, badges and avatars are
+  square. No `shadow-*`, no `backdrop-blur`, no translucent/tinted panels —
+  separation is a keyline: `border border-border`, or `border-2 border-border`
+  for heroes / dialogs / the navbar rule.
+- **Type:** headings use **Fraunces** (`--font-serif`, standing in for Marion,
+  which has no free web licence) via a base `h1–h4` rule in `globals.css`;
+  everything else uses **Google Sans Code** (bound to `--font-sans` *and*
+  `--font-mono`). Both load via `next/font/google` in `app/layout.tsx`. Plus
+  Jakarta Sans is gone. `next dev` logs one harmless "Failed to find font
+  override values for Google Sans Code" warning.
+- **Category labels** (`lib/category-colors.tsx`): flat lowercase monospace,
+  grouped by kind — work = ink outline, events = teal, social = magenta wash,
+  announcements = violet. The `chip` string carries all its classes now; call
+  sites just spread `categoryChip(cat)` (no more `rounded-full px-2 …`).
+- `--chart-*` / `--chart-cat-*` were rebuilt on the same secondary set
+  (black / violet / magenta / teal / gold).
 
 ## Working against this database
 

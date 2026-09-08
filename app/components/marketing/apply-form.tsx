@@ -158,7 +158,7 @@ export function ApplyForm() {
                 <div className="flex flex-col gap-2">
                     <label className="text-sm font-semibold">School name</label>
                     <Input
-                        placeholder="e.g. Bronx High School of Science"
+                        placeholder="e.g. Stuyvesant High School"
                         value={schoolName}
                         onChange={(e) => setSchoolName(e.target.value)}
                         className="h-11"

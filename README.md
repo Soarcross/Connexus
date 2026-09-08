@@ -25,6 +25,10 @@ There is no test framework in this project.
 
 See [`CLAUDE.md`](./CLAUDE.md) for a full architecture and conventions reference: auth gating, the chapter-subdomain routing (`proxy.ts`), Supabase client usage, the community post and chapter-application lifecycles, and the database schema.
 
+## Design
+
+The UI runs the **"Cream & Black"** identity (2026-09): a cream `#FFF9EB` ground with warm near-black used for both text and rules, violet `#7D53DE` as a sparing accent, hard 90° corners, and no shadows or blur. Headings are set in Fraunces (serif); everything else is Google Sans Code (monospace). It's fully token-driven — see `app/globals.css` (`:root` and `.dark`) and the fonts in `app/layout.tsx`. The `CLAUDE.md` **Design system** section has the details.
+
 ## Deploy
 
 Deployed on [Vercel](https://vercel.com). Chapter subdomains are resolved per-request via `proxy.ts` and forwarded as an `x-chapter-slug` header.
