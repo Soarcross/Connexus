@@ -358,10 +358,14 @@ export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer, pe
                         </CardContent>
                     </Card>
                 ) : (
-                    posts.map(post => {
+                    posts.map((post, i) => {
                         const daysLeft = getDaysLeft(post.expires_at)
                         return (
-                            <Card key={post.id} className="py-0 gap-0 overflow-hidden">
+                            <Card
+                                key={post.id}
+                                className="py-0 gap-0 overflow-hidden animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out"
+                                style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "both" }}
+                            >
                                 <div className="p-4 flex flex-col gap-3">
 
                                     {/* Poster row */}

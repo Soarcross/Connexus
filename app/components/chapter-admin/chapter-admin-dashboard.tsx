@@ -529,8 +529,8 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
                     {members.length === 0 ? (
                         <Card><CardContent className="py-12 text-center text-muted-foreground text-sm">No members yet.</CardContent></Card>
                     ) : (
-                        members.map(member => (
-                            <Card key={member.id}>
+                        members.map((member, i) => (
+                            <Card key={member.id} className="animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out" style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "both" }}>
                                 <CardContent className="py-3 flex items-center justify-between gap-4">
                                     <div className="flex items-center gap-3 min-w-0">
                                         <Avatar className="size-9">
@@ -645,8 +645,8 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
                     {opportunities.length === 0 ? (
                         <Card><CardContent className="py-8 text-center text-muted-foreground text-sm">No opportunities yet.</CardContent></Card>
                     ) : (
-                        opportunities.map(opp => (
-                            <Card key={opp.id}>
+                        opportunities.map((opp, i) => (
+                            <Card key={opp.id} className="animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out" style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "both" }}>
                                 <CardContent className="py-4 flex items-center justify-between gap-4">
                                     <div className="flex flex-col min-w-0">
                                         <p className="text-sm font-semibold truncate">{opp.title}</p>

@@ -93,8 +93,10 @@ export function ApplyForm() {
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
                 {error && (
-                    <div className="bg-destructive/10 text-destructive text-sm rounded-xl px-4 py-3 border border-destructive/20">
-                        {error}
+                    <div key={error} className="shake">
+                        <div className="bg-destructive/10 text-destructive text-sm rounded-xl px-4 py-3 border border-destructive/20 animate-in fade-in-0 duration-150">
+                            {error}
+                        </div>
                     </div>
                 )}
 

@@ -277,11 +277,12 @@ export function OpportunitiesClient({
                                     <span className="text-sm text-muted-foreground">({opps.length})</span>
                                 </div>
                                 <div className="grid gap-4 sm:grid-cols-2">
-                                    {opps.map(opp => (
+                                    {opps.map((opp, i) => (
                                         <Card
                                             key={opp.id}
                                             size="sm"
-                                            className="transition-colors hover:bg-secondary"
+                                            className="card-lift animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out"
+                                            style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "both" }}
                                         >
                                             <CardHeader className="pb-2">
                                                 <div className="flex items-start justify-between gap-2">

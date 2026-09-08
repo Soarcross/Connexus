@@ -1,0 +1,115 @@
+/* ==========================================================================
+   Connexus motion system — "Cream & Black"
+   Imported from app/globals.css. See app/components/motion/MOTION.md for the
+   utility-class string to apply per surface.
+
+   Entrances, staggers, hover/press, crossfades, toasts, and Radix data-state
+   animations ride on tw-animate-css / core Tailwind utilities at the call
+   site. Only what a utility can't express lives here:
+     - .animate-enter  — the reveal class useRevealOnScroll toggles
+     - .badge-pop      — the one-shot count pop <BadgeCount> applies
+     - .shake          — form-error nudge (tw-animate-css has no shake)
+     - .collapse       — height reveal (grid-template-rows has no utility)
+     - the global prefers-reduced-motion kill switch (must be unconditional)
+   ========================================================================== */
+
+:root {
+  --motion-fast: 120ms;
+  --motion: 180ms;
+  --motion-slow: 260ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Content entrance — fade + 6px rise. Toggled by useRevealOnScroll once the
+   element scrolls into view; also fine to apply directly on first paint. */
+@keyframes motion-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-enter {
+  animation: motion-enter var(--motion-slow) var(--ease) both;
+}
+
+/* Card hover / focus lift — 2px rise + keyline turns accent. No shadow, no
+   fill change (design system: separation is a keyline). Apply `card-lift` to
+   any clickable Card that navigates. Safe to combine with the tw-animate-css
+   entrance utilities — this touches `transition`, they touch `animation`. */
+.card-lift {
+  transition: transform var(--motion-fast) var(--ease),
+    border-color var(--motion-fast) var(--ease);
+}
+.card-lift:hover,
+.card-lift:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+/* Badge pop — one-shot scale bump. <BadgeCount> remounts via key={count} to
+   re-fire it whenever the number changes. */
+@keyframes motion-badge-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.badge-pop {
+  animation: motion-badge-pop 220ms var(--ease);
+}
+
+/* Form-error nudge. */
+@keyframes motion-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+.shake {
+  animation: motion-shake 200ms var(--ease);
+}
+
+/* Height reveal (<Collapse open>) — grid-template-rows 0fr -> 1fr, never
+   height, so it works with unknown/dynamic content. */
+.collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--motion-slow) var(--ease);
+  overflow: hidden;
+}
+.collapse.open {
+  grid-template-rows: 1fr;
+}
+.collapse > div {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Reduced motion: one global kill switch. Covers the tw-animate-css utilities
+   too — they're plain animation/transition underneath. The hooks additionally
+   short-circuit via matchMedia so nothing is left invisible or mid-count. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

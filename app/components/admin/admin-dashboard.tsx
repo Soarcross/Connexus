@@ -12,6 +12,7 @@ import {
 } from "@/lib/lifecycle"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app/components/ui/card"
+import { CountUp } from "@/app/components/motion/CountUp"
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -923,28 +924,28 @@ export function AdminDashboard({
                         <Card>
                             <CardContent className="pt-6 flex flex-col gap-2">
                                 <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><Users className="size-5" /></div>
-                                <p className="text-3xl font-bold">{stats.totalUsers}</p>
+                                <CountUp value={stats.totalUsers} className="text-3xl font-bold" />
                                 <p className="text-sm text-muted-foreground">Total Users</p>
                             </CardContent>
                         </Card>
                         <Card>
                             <CardContent className="pt-6 flex flex-col gap-2">
                                 <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><Briefcase className="size-5" /></div>
-                                <p className="text-3xl font-bold">{stats.totalOpportunities}</p>
+                                <CountUp value={stats.totalOpportunities} className="text-3xl font-bold" />
                                 <p className="text-sm text-muted-foreground">Opportunities</p>
                             </CardContent>
                         </Card>
                         <Card>
                             <CardContent className="pt-6 flex flex-col gap-2">
                                 <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><MessageCircle className="size-5" /></div>
-                                <p className="text-3xl font-bold">{stats.totalConversations}</p>
+                                <CountUp value={stats.totalConversations} className="text-3xl font-bold" />
                                 <p className="text-sm text-muted-foreground">Conversations</p>
                             </CardContent>
                         </Card>
                         <Card>
                             <CardContent className="pt-6 flex flex-col gap-2">
                                 <div className="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center"><BarChart3 className="size-5" /></div>
-                                <p className="text-3xl font-bold">{stats.totalMessages}</p>
+                                <CountUp value={stats.totalMessages} className="text-3xl font-bold" />
                                 <p className="text-sm text-muted-foreground">Messages Sent</p>
                             </CardContent>
                         </Card>
@@ -1108,8 +1109,8 @@ export function AdminDashboard({
                         </Card>
                     )}
                     <div className="flex flex-col gap-3">
-                        {opportunities.map(opp => (
-                            <Card key={opp.id} className={opp.is_featured ? "border-primary/30 bg-primary/5" : ""}>
+                        {opportunities.map((opp, i) => (
+                            <Card key={opp.id} className={`animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out ${opp.is_featured ? "border-primary/30 bg-primary/5" : ""}`} style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "both" }}>
                                 <CardContent className="py-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                                     <div className="flex flex-col gap-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
@@ -1140,8 +1141,8 @@ export function AdminDashboard({
                 <TabsContent value="users" className="mt-6 flex flex-col gap-4">
                     <p className="text-sm text-muted-foreground">{users.length} total users</p>
                     <div className="flex flex-col gap-3">
-                        {users.map(user => (
-                            <Card key={user.id}>
+                        {users.map((user, i) => (
+                            <Card key={user.id} className="animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out" style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "both" }}>
                                 <CardContent className="py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                                     <div className="flex items-center gap-3 min-w-0">
                                         <Avatar className="size-10 shrink-0">

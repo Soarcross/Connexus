@@ -169,7 +169,7 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                         <Link href="/messages" className={tabClass(pathname.startsWith("/messages"))}>
                             Messages
                             {unreadCount > 0 && (
-                                <span className="ml-1.5 inline-flex size-4 rounded-none bg-accent text-accent-foreground text-[10px] font-bold items-center justify-center align-middle">
+                                <span key={unreadCount} className="badge-pop ml-1.5 inline-flex size-4 rounded-none bg-accent text-accent-foreground text-[10px] font-bold items-center justify-center align-middle">
                                     {unreadCount > 9 ? "9+" : unreadCount}
                                 </span>
                             )}
@@ -305,7 +305,7 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                                         <MessageCircle className="size-4" />
                                         Messages
                                         {unreadCount > 0 && (
-                                            <span className="ml-auto size-5 rounded-none bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">
+                                            <span key={unreadCount} className="badge-pop ml-auto size-5 rounded-none bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">
                                                 {unreadCount > 9 ? "9+" : unreadCount}
                                             </span>
                                         )}

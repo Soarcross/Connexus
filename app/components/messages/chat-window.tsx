@@ -157,7 +157,7 @@ export function ChatWindow({ conversationId, currentUserId, otherProfile, initia
                     return (
                         <div
                             key={msg.id}
-                            className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
+                            className={`flex animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out ${isOwn ? "justify-end" : "justify-start"}`}
                         >
                             <div
                                 className={`max-w-[75%] min-w-0 break-words px-4 py-2.5 rounded-none border text-sm

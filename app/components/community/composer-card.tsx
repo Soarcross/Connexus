@@ -19,7 +19,7 @@ export function ComposerCard({ userId, chapterId, avatarUrl, fullName }: Props) 
             userId={userId}
             chapterId={chapterId}
             trigger={
-                <Card className="py-3 cursor-pointer transition-colors hover:bg-secondary">
+                <Card className="py-3 cursor-pointer card-lift">
                     <CardContent className="px-4 flex items-center gap-3">
                         <Avatar className="size-10 shrink-0">
                             <AvatarImage src={avatarUrl ?? ""} />
