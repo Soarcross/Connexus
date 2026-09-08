@@ -321,16 +321,16 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
             )}
 
             {success && (
-                <div className="bg-primary/10 text-primary text-sm rounded-lg px-4 py-3 text-center">
+                <div className="border border-border bg-secondary text-foreground text-sm px-4 py-3 text-center">
                     Profile updated successfully!
                 </div>
             )}
 
             {/* Common Interests Banner */}
             {!isOwnProfile && commonInterests.length > 0 && (
-                <Card className="border-primary/40 bg-primary/5">
+                <Card className="border-2 border-accent">
                     <CardContent className="py-4 flex flex-col gap-3">
-                        <div className="flex items-center gap-2 text-primary">
+                        <div className="flex items-center gap-2 text-accent">
                             <Sparkles className="size-4 shrink-0" />
                             <span className="text-sm font-semibold">
                                 {commonInterests.length} interest{commonInterests.length > 1 ? "s" : ""} in common
@@ -338,7 +338,7 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {commonInterests.map(interest => (
-                                <Badge key={interest} className="bg-primary/15 text-primary border border-primary/30 hover:bg-primary/20">
+                                <Badge key={interest} variant="outline" className="border-accent text-accent">
                                     {interest}
                                 </Badge>
                             ))}
@@ -349,13 +349,13 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
 
             {/* Header Card */}
             <Card className="pt-0 overflow-hidden">
-                <div className="h-24 bg-primary/80 -mb-16" />
+                <div className="h-24 bg-primary -mb-16" />
                 <CardContent className="pt-0">
                     <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-5">
                         <div className="relative shrink-0">
                             <Avatar className="size-24 ring-4 ring-card">
                                 <AvatarImage src={avatarUrl} />
-                                <AvatarFallback className="text-2xl bg-primary/10 text-primary font-semibold">
+                                <AvatarFallback className="text-2xl bg-secondary text-foreground font-semibold">
                                     {fullName?.[0] ?? "?"}
                                 </AvatarFallback>
                             </Avatar>
@@ -363,7 +363,7 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
                                 <>
                                     <label
                                         htmlFor="avatar"
-                                        className="absolute -bottom-1 -right-1 size-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
+                                        className="absolute -bottom-1 -right-1 size-7 rounded-none bg-primary text-primary-foreground flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
                                     >
                                         <Camera className="size-3.5" />
                                     </label>

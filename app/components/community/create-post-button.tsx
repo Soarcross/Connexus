@@ -180,8 +180,8 @@ export function CreatePostButton({ userId, chapterId, trigger }: Props) {
 
                     {submitted ? (
                         <div className="flex flex-col items-center gap-4 py-8 text-center">
-                            <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
-                                <Check className="size-6 text-primary" />
+                            <div className="size-12 border border-border flex items-center justify-center">
+                                <Check className="size-6 text-accent" />
                             </div>
                             <div className="flex flex-col gap-1">
                                 <p className="font-semibold">Post submitted!</p>
@@ -210,7 +210,7 @@ export function CreatePostButton({ userId, chapterId, trigger }: Props) {
                                         <button
                                             type="button"
                                             onClick={() => { setImageFile(null); setImagePreview(null) }}
-                                            className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                                            className="absolute top-2 right-2 bg-foreground/70 hover:bg-foreground text-background rounded-none p-1 transition-colors"
                                         >
                                             <X className="size-4" />
                                         </button>

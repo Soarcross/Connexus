@@ -49,13 +49,13 @@ export function ConversationList({ conversations, currentUserId }: Props) {
             {conversations.map((conv) => (
                 <div
                     key={conv.id}
-                    className={`cursor-pointer transition-colors hover:bg-muted/50 ${conv.unreadCount > 0 ? "bg-primary/5" : ""}`}
+                    className={`cursor-pointer transition-colors hover:bg-secondary ${conv.unreadCount > 0 ? "bg-secondary" : ""}`}
                     onClick={() => router.push(`/messages/${conv.id}`)}
                 >
                     <CardContent className="py-4 flex items-center gap-4">
                         <Avatar className="size-12 shrink-0">
                             <AvatarImage src={conv.otherProfile?.avatar_url ?? ""} />
-                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                            <AvatarFallback className="bg-secondary text-foreground font-semibold">
                                 {conv.otherProfile?.full_name?.[0] ?? "?"}
                             </AvatarFallback>
                         </Avatar>
@@ -80,7 +80,7 @@ export function ConversationList({ conversations, currentUserId }: Props) {
                                     }
                                 </p>
                                 {conv.unreadCount > 0 && (
-                                    <Badge className="shrink-0 size-5 rounded-full p-0 flex items-center justify-center text-[10px]">
+                                    <Badge className="shrink-0 size-5 rounded-none p-0 flex items-center justify-center text-[10px] bg-accent text-accent-foreground">
                                         {conv.unreadCount > 9 ? "9+" : conv.unreadCount}
                                     </Badge>
                                 )}

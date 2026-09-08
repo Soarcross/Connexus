@@ -213,25 +213,25 @@ export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer, pe
                 </div>
                 <div className="flex items-center gap-1.5 flex-wrap">
                     {isPending && (
-                        <Badge variant="outline" className="text-xs gap-1 text-yellow-600 border-yellow-400">
+                        <Badge variant="outline" className="text-xs gap-1 text-accent border-accent">
                             <Clock className="size-3" />
                             Pending
                         </Badge>
                     )}
                     {isApproved && (
-                        <Badge variant="outline" className="text-xs gap-1 text-green-600 border-green-500">
+                        <Badge variant="outline" className="text-xs gap-1">
                             <Check className="size-3" />
                             Approved
                         </Badge>
                     )}
                     {isRejected && (
-                        <Badge variant="outline" className="text-xs gap-1 text-destructive border-destructive/50">
+                        <Badge variant="outline" className="text-xs gap-1 text-destructive border-destructive">
                             <XCircle className="size-3" />
                             Rejected
                         </Badge>
                     )}
                     {isApproved && daysLeft !== null && (
-                        <span className={`text-xs ${daysLeft <= 7 ? "text-orange-600" : "text-muted-foreground"}`}>
+                        <span className={`text-xs ${daysLeft <= 7 ? "text-destructive" : "text-muted-foreground"}`}>
                             Expires {daysLeft > 0 ? `in ${daysLeft}d` : "today"}
                         </span>
                     )}
@@ -372,7 +372,7 @@ export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer, pe
                                                 onClick={() => router.push(`/profile/${post.profiles?.id}`)}
                                             >
                                                 <AvatarImage src={post.profiles?.avatar_url ?? ""} />
-                                                <AvatarFallback className="text-sm bg-primary/10 text-primary font-semibold">
+                                                <AvatarFallback className="text-sm bg-secondary text-foreground font-semibold">
                                                     {post.profiles?.full_name?.[0] ?? "?"}
                                                 </AvatarFallback>
                                             </Avatar>
@@ -417,14 +417,14 @@ export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer, pe
 
                                     {/* Chips */}
                                     <div className="flex items-center gap-1.5 flex-wrap">
-                                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${categoryChip(post.category)}`}>
+                                        <span className={categoryChip(post.category)}>
                                             {post.category}
                                         </span>
                                         {post.field && (
                                             <Badge variant="outline" className="text-xs">{post.field}</Badge>
                                         )}
                                         {daysLeft !== null && daysLeft <= 7 && (
-                                            <Badge variant="outline" className="text-xs text-orange-600 border-orange-400">
+                                            <Badge variant="outline" className="text-xs text-destructive border-destructive">
                                                 Expires in {daysLeft}d
                                             </Badge>
                                         )}

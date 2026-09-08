@@ -5,7 +5,6 @@ import { OpportunitiesClient } from "@/app/components/opportunities/opportunitie
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app/components/ui/card"
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
-import { ExternalLink } from "lucide-react"
 import { categoryChip } from "@/lib/category-colors"
 import { activeFilter, getPurgeCutoff } from "@/lib/lifecycle"
 
@@ -38,13 +37,13 @@ export default async function OpportunitiesPage() {
                 {(featured?.length ?? 0) > 0 && (
                     <div className="grid gap-4 sm:grid-cols-2">
                         {(featured ?? []).map(opp => (
-                            <Card key={opp.id} className="transition-shadow hover:shadow-md">
+                            <Card key={opp.id} className="transition-colors hover:bg-secondary">
                                 <CardHeader className="pb-2">
                                     <div className="flex items-start justify-between gap-2">
                                         <CardTitle className="text-sm font-semibold leading-snug">{opp.title}</CardTitle>
                                         <div className="flex flex-col items-end gap-1 shrink-0">
                                             <Badge className="text-xs">Featured</Badge>
-                                            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${categoryChip(opp.category)}`}>
+                                            <span className={categoryChip(opp.category)}>
                                                 {opp.category}
                                             </span>
                                         </div>
@@ -65,9 +64,9 @@ export default async function OpportunitiesPage() {
                                             </span>
                                         ) : <span />}
                                         {opp.url && (
-                                            <Button size="sm" variant="outline" className="text-xs h-7 gap-1" asChild>
+                                            <Button size="sm" variant="outline" className="text-xs h-7" asChild>
                                                 <a href={opp.url} target="_blank" rel="noopener noreferrer">
-                                                    Apply <ExternalLink className="size-3" />
+                                                    Apply --&gt;
                                                 </a>
                                             </Button>
                                         )}
@@ -95,7 +94,7 @@ export default async function OpportunitiesPage() {
                         </div>
                     </div>
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <Card className="w-full max-w-sm mx-4 shadow-lg">
+                        <Card className="w-full max-w-sm mx-4 border-2 border-border">
                             <CardContent className="pt-6 flex flex-col items-center gap-3 text-center">
                                 <p className="font-semibold">There&apos;s more where that came from</p>
                                 <p className="text-sm text-muted-foreground">
@@ -169,7 +168,7 @@ export default async function OpportunitiesPage() {
                 <p className="text-sm text-muted-foreground">
                     Browse internships, jobs, research positions and more, open to every chapter.
                     {" "}Looking for your school&apos;s events?{" "}
-                    <Link href="/chapters" className="text-primary hover:underline">Visit your chapter page</Link>.
+                    <Link href="/chapters" className="text-accent hover:underline">Visit your chapter page</Link>.
                 </p>
             </div>
             <OpportunitiesClient

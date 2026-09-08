@@ -25,8 +25,9 @@ export default async function SignupPage() {
                     </div>
                 </div>
             </div>
-            <div className="relative hidden lg:flex lg:items-center lg:justify-center bg-gradient-to-br from-primary/90 to-primary/60 dark:from-primary/30 dark:to-background">
-                <img src="/brand/connexus-logomark-white.svg" alt="" aria-hidden="true" className="size-40 opacity-90" />
+            <div className="relative hidden lg:flex lg:items-center lg:justify-center bg-primary">
+                <img src="/brand/connexus-logomark-white.svg" alt="" aria-hidden="true" className="size-40 dark:hidden" />
+                <img src="/brand/connexus-logomark-black.svg" alt="" aria-hidden="true" className="size-40 hidden dark:block" />
             </div>
         </div>
     )

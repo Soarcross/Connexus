@@ -130,14 +130,14 @@ export function ChatWindow({ conversationId, currentUserId, otherProfile, initia
                 </Button>
                 <Avatar className="size-9">
                     <AvatarImage src={otherProfile?.avatar_url ?? ""} />
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                    <AvatarFallback className="bg-secondary text-foreground font-semibold text-sm">
                         {otherProfile?.full_name?.[0] ?? "?"}
                     </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0">
                     <p className="font-semibold text-sm truncate">{otherProfile?.full_name ?? "Unknown"}</p>
                     <p
-                        className="text-xs text-primary cursor-pointer hover:underline"
+                        className="text-xs text-accent cursor-pointer hover:underline"
                         onClick={() => router.push(`/profile/${otherProfile?.id}`)}
                     >
                         View profile
@@ -160,10 +160,10 @@ export function ChatWindow({ conversationId, currentUserId, otherProfile, initia
                             className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
                         >
                             <div
-                                className={`max-w-[75%] min-w-0 break-words px-4 py-2.5 rounded-2xl text-sm
+                                className={`max-w-[75%] min-w-0 break-words px-4 py-2.5 rounded-none border text-sm
                                     ${isOwn
-                                        ? "bg-primary text-primary-foreground rounded-br-sm"
-                                        : "bg-muted text-foreground rounded-bl-sm"
+                                        ? "bg-primary text-primary-foreground border-primary"
+                                        : "bg-secondary text-foreground border-border"
                                     }`}
                             >
                                 <p>{msg.content}</p>

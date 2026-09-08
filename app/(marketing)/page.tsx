@@ -38,7 +38,7 @@ export default async function MarketingHomePage() {
             <section className="max-w-5xl mx-auto px-4 pb-24 grid gap-6 sm:grid-cols-3">
                 <Card>
                     <CardContent className="pt-6 flex flex-col items-center text-center gap-3">
-                        <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                        <div className="size-10 border border-border flex items-center justify-center text-accent">
                             <Users className="size-5" />
                         </div>
                         <p className="font-semibold">Find your people</p>
@@ -49,7 +49,7 @@ export default async function MarketingHomePage() {
                 </Card>
                 <Card>
                     <CardContent className="pt-6 flex flex-col items-center text-center gap-3">
-                        <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                        <div className="size-10 border border-border flex items-center justify-center text-accent">
                             <Briefcase className="size-5" />
                         </div>
                         <p className="font-semibold">Discover opportunities</p>
@@ -60,7 +60,7 @@ export default async function MarketingHomePage() {
                 </Card>
                 <Card>
                     <CardContent className="pt-6 flex flex-col items-center text-center gap-3">
-                        <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                        <div className="size-10 border border-border flex items-center justify-center text-accent">
                             <Newspaper className="size-5" />
                         </div>
                         <p className="font-semibold">Share with your community</p>

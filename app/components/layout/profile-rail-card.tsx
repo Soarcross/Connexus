@@ -12,17 +12,17 @@ type Props = {
     gradYear?: number | null
 }
 
-// LinkedIn-style identity card for the left rail: violet cover strip,
+// LinkedIn-style identity card for the left rail: black cover strip,
 // overlapping avatar, identity lines, quick links.
 export function ProfileRailCard({ userId, fullName, avatarUrl, chapterName, gradYear }: Props) {
     return (
         <Card className="py-0 gap-0">
-            <div className="h-14 bg-primary/80" />
+            <div className="h-14 bg-primary" />
             <div className="px-4 pb-4 flex flex-col items-center text-center">
                 <Link href={`/profile/${userId}`} className="-mt-8">
                     <Avatar className="size-16 ring-4 ring-card">
                         <AvatarImage src={avatarUrl ?? ""} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-xl font-semibold">
+                        <AvatarFallback className="bg-secondary text-foreground text-xl font-semibold">
                             {fullName?.[0] ?? "?"}
                         </AvatarFallback>
                     </Avatar>
@@ -37,7 +37,7 @@ export function ProfileRailCard({ userId, fullName, avatarUrl, chapterName, grad
                 )}
                 <Link
                     href={`/profile/${userId}`}
-                    className="mt-2 text-xs font-medium text-primary hover:underline"
+                    className="mt-2 text-xs font-medium text-accent hover:underline"
                 >
                     View profile
                 </Link>

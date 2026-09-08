@@ -33,9 +33,9 @@ export default async function HomePage() {
 
     return (
       <div className="flex flex-col gap-8">
-        <Card className="bg-primary/5 border-primary/15">
-          <CardContent className="flex flex-col gap-1">
-            <h1 className="text-2xl font-semibold tracking-tight">Welcome, guest</h1>
+        <Card className="border-2 border-border">
+          <CardContent className="flex flex-col gap-2">
+            <h1 className="text-3xl sm:text-4xl font-medium tracking-tight">Welcome, guest</h1>
             <p className="text-sm text-muted-foreground">
               You&apos;re browsing Connexus as a guest. Sign up to unlock opportunities, community posts and messaging.
             </p>
@@ -166,9 +166,9 @@ export default async function HomePage() {
     <div className="flex flex-col gap-8">
 
       {/* Welcome banner */}
-      <Card className="bg-primary/5 border-primary/15">
-        <CardContent className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">
+      <Card className="border-2 border-border">
+        <CardContent className="flex flex-col gap-2">
+          <h1 className="text-3xl sm:text-4xl font-medium tracking-tight">
             Welcome back{firstName ? `, ${firstName}` : ""}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -204,20 +204,20 @@ export default async function HomePage() {
               return (
                 <div key={category} className="flex flex-col gap-3">
                   <div className="flex items-center gap-2">
-                    <div className={`size-7 rounded-md flex items-center justify-center ${categoryChip(category)}`}>
+                    <div className="size-7 rounded-none border border-border flex items-center justify-center text-foreground">
                       {categoryIcon(category)}
                     </div>
                     <h3 className="font-semibold text-base">{category}</h3>
                   </div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     {opps.map((opp) => (
-                      <Card key={opp.id} size="sm" className="transition-shadow hover:shadow-md">
+                      <Card key={opp.id} size="sm" className="transition-colors hover:bg-secondary">
                         <CardHeader className="pb-0">
                           <div className="flex items-start justify-between gap-2">
                             <CardTitle className="text-sm font-semibold leading-snug">
                               {opp.title}
                             </CardTitle>
-                            <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${categoryChip(opp.category)}`}>
+                            <span className={`shrink-0 ${categoryChip(opp.category)}`}>
                               {opp.category}
                             </span>
                           </div>
@@ -236,7 +236,7 @@ export default async function HomePage() {
                             {opp.url && (
                               <a href={opp.url} target="_blank" rel="noopener noreferrer">
                                 <Button size="sm" variant="outline" className="text-xs h-7">
-                                  Learn more
+                                  Learn More --&gt;
                                 </Button>
                               </a>
                             )}

@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app
 import { Button } from "@/app/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs"
 import { PeopleClient } from "@/app/components/people/people-client"
-import { ExternalLink } from "lucide-react"
 import { categoryChip, categoryIcon } from "@/lib/category-colors"
 import { activeFilter } from "@/lib/lifecycle"
 
@@ -50,7 +49,7 @@ export default async function ChapterDetailPage({
         notFound()
     }
 
-    const [{ data: profiles }, { data: items }] = await Promise.all([
+    const [{ data: profiles }, { data: items }, { data: posts }] = await Promise.all([
         supabase
             .from("profiles")
             .select("id, full_name, avatar_url, grad_year, interests, looking_for, club_roles, bio, chapter_id, chapters(name)")
@@ -60,6 +59,13 @@ export default async function ChapterDetailPage({
             .from("opportunities")
             .select("*")
             .eq("chapter_id", chapter.id)
+            .or(activeFilter())
+            .order("created_at", { ascending: false }),
+        supabase
+            .from("community_posts")
+            .select("id, title, description, category, url, created_at, profiles(id, full_name, avatar_url, grad_year)")
+            .eq("chapter_id", chapter.id)
+            .eq("status", "Approved")
             .or(activeFilter())
             .order("created_at", { ascending: false }),
     ])
@@ -82,7 +88,7 @@ export default async function ChapterDetailPage({
             <div className="flex items-center gap-3">
                 <Avatar className="size-14">
                     <AvatarImage src={chapter.logo_url ?? ""} />
-                    <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
+                    <AvatarFallback className="bg-secondary text-foreground font-semibold text-lg">
                         {chapter.name?.[0] ?? "?"}
                     </AvatarFallback>
                 </Avatar>
@@ -99,7 +105,7 @@ export default async function ChapterDetailPage({
             <Tabs defaultValue="people">
                 <TabsList>
                     <TabsTrigger value="people">People</TabsTrigger>
-                    <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
+                    <TabsTrigger value="community">Community</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="people">
@@ -110,19 +116,60 @@ export default async function ChapterDetailPage({
                     />
                 </TabsContent>
 
-                <TabsContent value="opportunities">
-                    {Object.keys(grouped).length === 0 ? (
+                <TabsContent value="community">
+                    {Object.keys(grouped).length === 0 && (posts ?? []).length === 0 ? (
                         <Card>
                             <CardContent className="py-12 text-center text-muted-foreground text-sm">
-                                Nothing here yet — this chapter&apos;s admins haven&apos;t posted any events or opportunities.
+                                Nothing here yet — no one in this chapter has posted to the community board.
                             </CardContent>
                         </Card>
                     ) : (
                         <div className="flex flex-col gap-8">
+                            {(posts ?? []).length > 0 && (
+                                <div className="flex flex-col gap-3">
+                                    <div className="flex items-center gap-2">
+                                        <div className="size-7 rounded-none border border-border flex items-center justify-center text-foreground">
+                                            {categoryIcon("Announcements")}
+                                        </div>
+                                        <h2 className="font-semibold text-base">Community board</h2>
+                                        <span className="text-sm text-muted-foreground">({(posts ?? []).length})</span>
+                                    </div>
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        {(posts ?? []).map(post => (
+                                            <Card key={post.id} className="transition-colors hover:bg-secondary">
+                                                <CardHeader className="pb-2">
+                                                    <div className="flex items-start justify-between gap-2">
+                                                        <CardTitle className="text-sm font-semibold leading-snug">{post.title}</CardTitle>
+                                                        <span className={`shrink-0 ${categoryChip(post.category)}`}>
+                                                            {post.category}
+                                                        </span>
+                                                    </div>
+                                                    <CardDescription className="text-xs">
+                                                        {post.profiles?.full_name ?? "Anonymous"}
+                                                        {post.profiles?.grad_year ? ` · ’${String(post.profiles.grad_year).slice(-2)}` : ""}
+                                                    </CardDescription>
+                                                </CardHeader>
+                                                <CardContent className="flex flex-col gap-3">
+                                                    <p className="text-xs text-muted-foreground">{post.description}</p>
+                                                    {post.url && (
+                                                        <div className="flex justify-end">
+                                                            <Button size="sm" variant="outline" className="text-xs h-7" asChild>
+                                                                <a href={post.url} target="_blank" rel="noopener noreferrer">
+                                                                    Details --&gt;
+                                                                </a>
+                                                            </Button>
+                                                        </div>
+                                                    )}
+                                                </CardContent>
+                                            </Card>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                             {Object.entries(grouped).map(([category, opps]) => (
                                 <div key={category} className="flex flex-col gap-3">
                                     <div className="flex items-center gap-2">
-                                        <div className={`size-7 rounded-md flex items-center justify-center ${categoryChip(category)}`}>
+                                        <div className="size-7 rounded-none border border-border flex items-center justify-center text-foreground">
                                             {categoryIcon(category)}
                                         </div>
                                         <h2 className="font-semibold text-base">{category}</h2>
@@ -130,11 +177,11 @@ export default async function ChapterDetailPage({
                                     </div>
                                     <div className="grid gap-4 sm:grid-cols-2">
                                         {opps.map(opp => (
-                                            <Card key={opp.id} className="transition-shadow hover:shadow-md">
+                                            <Card key={opp.id} className="transition-colors hover:bg-secondary">
                                                 <CardHeader className="pb-2">
                                                     <div className="flex items-start justify-between gap-2">
                                                         <CardTitle className="text-sm font-semibold leading-snug">{opp.title}</CardTitle>
-                                                        <span className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${categoryChip(opp.category)}`}>
+                                                        <span className={`shrink-0 ${categoryChip(opp.category)}`}>
                                                             {opp.category}
                                                         </span>
                                                     </div>
@@ -154,9 +201,9 @@ export default async function ChapterDetailPage({
                                                             </span>
                                                         ) : <span />}
                                                         {opp.url && (
-                                                            <Button size="sm" variant="outline" className="text-xs h-7 gap-1" asChild>
+                                                            <Button size="sm" variant="outline" className="text-xs h-7" asChild>
                                                                 <a href={opp.url} target="_blank" rel="noopener noreferrer">
-                                                                    Details <ExternalLink className="size-3" />
+                                                                    Details --&gt;
                                                                 </a>
                                                             </Button>
                                                         )}

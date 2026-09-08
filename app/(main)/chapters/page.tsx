@@ -62,7 +62,7 @@ export default async function ChaptersPage() {
             </div>
 
             {!user && (
-                <Card className="border-primary/30 bg-primary/5">
+                <Card className="border-2 border-border">
                     <CardContent className="py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <p className="text-sm text-muted-foreground">
                             Is your school here? Create a free account to join its chapter and see what&apos;s happening inside.
@@ -76,7 +76,7 @@ export default async function ChaptersPage() {
             )}
 
             {user && !viewerChapterId && (
-                <Card className="border-primary/30 bg-primary/5">
+                <Card className="border-2 border-border">
                     <CardHeader className="pb-2">
                         <CardTitle className="text-base">You&apos;re not in a chapter yet</CardTitle>
                     </CardHeader>
@@ -104,12 +104,12 @@ export default async function ChaptersPage() {
 
                     return (
                         <Link key={chapter.id} href={`/chapters/${chapter.slug}`}>
-                            <Card className="h-full transition-shadow hover:shadow-md">
+                            <Card className="h-full transition-colors hover:bg-secondary">
                                 <CardContent className="pt-6 flex flex-col gap-4">
                                     <div className="flex items-center gap-3">
                                         <Avatar className="size-12">
                                             <AvatarImage src={chapter.logo_url ?? ""} />
-                                            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                            <AvatarFallback className="bg-secondary text-foreground font-semibold">
                                                 {chapter.name?.[0] ?? "?"}
                                             </AvatarFallback>
                                         </Avatar>
@@ -145,7 +145,7 @@ export default async function ChaptersPage() {
                 })}
 
                 <Link href="/apply">
-                    <Card className="h-full border-dashed transition-shadow hover:shadow-md">
+                    <Card className="h-full border-dashed transition-colors hover:bg-secondary">
                         <CardContent className="pt-6 h-full flex flex-col items-center justify-center gap-2 text-center text-muted-foreground">
                             <Plus className="size-6" />
                             <p className="text-sm font-medium">Don&apos;t see your school?</p>

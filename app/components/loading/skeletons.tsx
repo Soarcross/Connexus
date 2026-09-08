@@ -44,14 +44,14 @@ export function PersonCardSkeleton() {
     return (
         <Card>
             <CardContent className="pt-6 flex flex-col items-center gap-3 text-center">
-                <Skeleton className="size-14 rounded-full" />
+                <Skeleton className="size-14 rounded-none" />
                 <div className="flex flex-col gap-1.5 items-center w-full">
                     <Skeleton className="h-4 w-24" />
                     <Skeleton className="h-3 w-16" />
                 </div>
                 <div className="flex flex-wrap gap-1 justify-center">
-                    <Skeleton className="h-5 w-16 rounded-full" />
-                    <Skeleton className="h-5 w-12 rounded-full" />
+                    <Skeleton className="h-5 w-16 rounded-none" />
+                    <Skeleton className="h-5 w-12 rounded-none" />
                 </div>
             </CardContent>
         </Card>
@@ -82,7 +82,7 @@ export function FilterBarSkeleton() {
 export function ConversationRowSkeleton() {
     return (
         <div className="px-6 py-4 flex items-center gap-4">
-            <Skeleton className="size-10 rounded-full shrink-0" />
+            <Skeleton className="size-10 rounded-none shrink-0" />
             <div className="flex flex-col gap-2 min-w-0 flex-1">
                 <Skeleton className="h-4 w-32" />
                 <Skeleton className="h-3 w-48 max-w-full" />

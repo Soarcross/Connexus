@@ -69,7 +69,7 @@ export default function ContactForm({ userEmail, userName }: Props) {
             <>
             <div className="relative z-10 min-h-[60vh] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-6 text-center max-w-md">
-                    <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center">
+                    <div className="size-20 border border-border flex items-center justify-center text-accent">
                         <CheckCircle className="size-10 text-primary" />
                     </div>
                     <div className="flex flex-col gap-2">

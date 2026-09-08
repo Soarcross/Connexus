@@ -9,7 +9,7 @@ export default function MarketingLayout({
 }) {
     return (
         <div className="min-h-svh bg-background flex flex-col">
-            <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <header className="sticky top-0 z-50 w-full border-b-2 border-foreground bg-background">
                 <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-3">
                     <Link href="/" className="flex items-center gap-2 shrink-0">
                         <Image

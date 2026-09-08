@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app
 import { Input } from "@/app/components/ui/input"
 import { Switch } from "@/app/components/ui/switch"
 import { PageShell } from "@/app/components/layout/page-shell"
-import { Search, X, ExternalLink, ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react"
+import { Search, X, ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react"
 import { categoryChip, categoryIcon } from "@/lib/category-colors"
 import { ArchiveBanner } from "@/app/components/lifecycle/archive-banner"
 import { ExpiryBadge } from "@/app/components/lifecycle/expiry-badge"
@@ -238,7 +238,7 @@ export function OpportunitiesClient({
                     <SlidersHorizontal className="size-4" />
                     Filters
                     {hasActiveFilters && (
-                        <span className="size-4 rounded-full bg-primary-foreground text-primary text-xs flex items-center justify-center font-bold">
+                        <span className="size-4 rounded-none bg-primary-foreground text-primary text-xs flex items-center justify-center font-bold">
                             !
                         </span>
                     )}
@@ -270,7 +270,7 @@ export function OpportunitiesClient({
                         return (
                             <div key={category} className="flex flex-col gap-4">
                                 <div className="flex items-center gap-2">
-                                    <div className={`size-7 rounded-md flex items-center justify-center ${categoryChip(category)}`}>
+                                    <div className="size-7 rounded-none border border-border flex items-center justify-center text-foreground">
                                         {categoryIcon(category)}
                                     </div>
                                     <h2 className="font-semibold text-lg">{category}</h2>
@@ -281,7 +281,7 @@ export function OpportunitiesClient({
                                         <Card
                                             key={opp.id}
                                             size="sm"
-                                            className="transition-shadow hover:shadow-md"
+                                            className="transition-colors hover:bg-secondary"
                                         >
                                             <CardHeader className="pb-2">
                                                 <div className="flex items-start justify-between gap-2">
@@ -295,7 +295,7 @@ export function OpportunitiesClient({
                                                         {!opp.chapter_id && (
                                                             <Badge variant="outline" className="text-xs">National</Badge>
                                                         )}
-                                                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${categoryChip(opp.category)}`}>
+                                                        <span className={categoryChip(opp.category)}>
                                                             {opp.category}
                                                         </span>
                                                     </div>
@@ -341,9 +341,8 @@ export function OpportunitiesClient({
                                                     )}
                                                     {opp.url && (
                                                         <a href={opp.url} target="_blank" rel="noopener noreferrer">
-                                                            <Button size="sm" variant="outline" className="text-xs h-7 gap-1">
-                                                                Apply
-                                                                <ExternalLink className="size-3" />
+                                                            <Button size="sm" variant="outline" className="text-xs h-7">
+                                                                Apply --&gt;
                                                             </Button>
                                                         </a>
                                                     )}

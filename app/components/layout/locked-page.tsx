@@ -101,7 +101,7 @@ export function LockedPage({ variant, title, description }: {
             <div className="absolute inset-0 flex items-start justify-center pt-16 sm:pt-24">
                 <Card className="w-full max-w-sm mx-4 shadow-lg">
                     <CardContent className="pt-6 flex flex-col items-center gap-4 text-center">
-                        <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <div className="size-12 border border-border flex items-center justify-center text-accent">
                             <Lock className="size-6" />
                         </div>
                         <div className="flex flex-col gap-1">
