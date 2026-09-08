@@ -1,8 +1,13 @@
 {
   "mcpServers": {
-    "supabase": {
-      "type": "http",
-      "url": "https://mcp.supabase.com/mcp?features=development%2Cdebugging%2Cdatabase%2Cdocs%2Cfunctions%2Cstorage%2Cbranching"
+    "playwright-test": {
+      "command": "cmd",
+      "args": [
+        "/c",
+        "npx",
+        "playwright",
+        "run-test-mcp-server"
+      ]
     }
   }
 }
