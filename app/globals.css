@@ -8,8 +8,9 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: ui-monospace, "Cascadia Code", "Segoe UI Mono", Menlo, monospace;
-  --font-heading: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-sans);
+  --font-heading: var(--font-serif);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,88 +50,89 @@
 }
 
 :root {
-  /* Light: white cards on a cool violet-tinted canvas */
-  --background: oklch(0.965 0.005 290);
-  --foreground: oklch(0.22 0.01 285);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.01 285);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.01 285);
-  --primary: oklch(0.541 0.281 293.009);
-  /* #7C3AED action violet — AA with white text */
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.955 0.005 290);
-  --secondary-foreground: oklch(0.28 0.01 285);
-  --muted: oklch(0.955 0.005 290);
-  --muted-foreground: oklch(0.5 0.012 286);
-  --accent: oklch(0.955 0.005 290);
-  --accent-foreground: oklch(0.28 0.01 285);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.905 0.006 290);
-  --input: oklch(0.905 0.006 290);
-  --ring: oklch(0.541 0.281 293.009);
-  --chart-1: oklch(0.541 0.281 293);
-  --chart-2: oklch(0.61 0.22 293);
-  --chart-3: oklch(0.68 0.17 293);
-  --chart-4: oklch(0.75 0.12 293);
-  --chart-5: oklch(0.82 0.08 293);
-  /* categorical slots (validated CVD-safe order, violet first) */
-  --chart-cat-1: #4a3aa7;
-  --chart-cat-2: #eda100;
-  --chart-cat-3: #1baf7a;
-  --chart-cat-4: #e34948;
-  --chart-cat-5: #2a78d6;
-  --radius: 0.625rem;
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.22 0.01 285);
-  --sidebar-primary: oklch(0.541 0.281 293.009);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.955 0.005 290);
-  --sidebar-accent-foreground: oklch(0.28 0.01 285);
-  --sidebar-border: oklch(0.905 0.006 290);
-  --sidebar-ring: oklch(0.541 0.281 293.009);
+  /* Light: cream ground, black for text AND rules, violet as a sparing accent.
+     Brand boards 1.0.0 / 1.0.1 — "Cream & Black" identity v1. */
+  --background: #fff9eb;
+  --foreground: #1a1712;
+  --card: #fff9eb;
+  --card-foreground: #1a1712;
+  --popover: #fffdf5;
+  --popover-foreground: #1a1712;
+  --primary: #1a1712;
+  /* black is the action colour now — not violet */
+  --primary-foreground: #fff9eb;
+  --secondary: #f4ecd6;
+  --secondary-foreground: #1a1712;
+  --muted: #f4ecd6;
+  --muted-foreground: #6b6455;
+  --accent: #7d53de;
+  /* #7D53DE — accent only: focus ring, links, a rare solid badge */
+  --accent-foreground: #fff9eb;
+  --destructive: #b3341f;
+  --border: #3a3428;
+  --input: #3a3428;
+  --ring: #7d53de;
+  --chart-1: #7d53de;
+  --chart-2: #1a1712;
+  --chart-3: #c01862;
+  --chart-4: #0e6e88;
+  --chart-5: #c98a00;
+  /* categorical slots — cream/black identity secondary palette */
+  --chart-cat-1: #1a1712;
+  --chart-cat-2: #7d53de;
+  --chart-cat-3: #c01862;
+  --chart-cat-4: #0e6e88;
+  --chart-cat-5: #c98a00;
+  --radius: 0rem;
+  --sidebar: #fff9eb;
+  --sidebar-foreground: #1a1712;
+  --sidebar-primary: #1a1712;
+  --sidebar-primary-foreground: #fff9eb;
+  --sidebar-accent: #f4ecd6;
+  --sidebar-accent-foreground: #1a1712;
+  --sidebar-border: #3a3428;
+  --sidebar-ring: #7d53de;
 }
 
 .dark {
-  /* Dark: neutral depth chart with a whisper of violet */
-  --background: oklch(0.21 0.006 286);
-  --foreground: oklch(0.93 0.005 286);
-  --card: oklch(0.255 0.006 286);
-  --card-foreground: oklch(0.93 0.005 286);
-  --popover: oklch(0.255 0.006 286);
-  --popover-foreground: oklch(0.93 0.005 286);
-  --primary: oklch(0.702 0.183 293.541);
-  /* #A78BFA soft violet */
-  --primary-foreground: oklch(0.283 0.141 291.089);
-  /* violet-950 — dark text on light violet for contrast */
-  --secondary: oklch(0.31 0.006 286);
-  --secondary-foreground: oklch(0.93 0.005 286);
-  --muted: oklch(0.31 0.006 286);
-  --muted-foreground: oklch(0.71 0.01 286);
-  --accent: oklch(0.31 0.006 286);
-  --accent-foreground: oklch(0.93 0.005 286);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 14%);
-  --ring: oklch(0.702 0.183 293.541);
-  --chart-1: oklch(0.702 0.183 293);
-  --chart-2: oklch(0.76 0.15 293);
-  --chart-3: oklch(0.81 0.12 293);
-  --chart-4: oklch(0.86 0.09 293);
-  --chart-5: oklch(0.9 0.06 293);
-  --chart-cat-1: #9085e9;
-  --chart-cat-2: #c98500;
-  --chart-cat-3: #199e70;
-  --chart-cat-4: #e66767;
-  --chart-cat-5: #3987e5;
-  --sidebar: oklch(0.255 0.006 286);
-  --sidebar-foreground: oklch(0.93 0.005 286);
-  --sidebar-primary: oklch(0.702 0.183 293.541);
-  --sidebar-primary-foreground: oklch(0.283 0.141 291.089);
-  --sidebar-accent: oklch(0.31 0.006 286);
-  --sidebar-accent-foreground: oklch(0.93 0.005 286);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.702 0.183 293.541);
+  /* Dark: warm near-black ground (not pure #000), cream text, violet lifted for
+     contrast. Chosen from the rebrand mockup — "Dark · warm". */
+  --background: #17140f;
+  --foreground: #f5eedd;
+  --card: #17140f;
+  --card-foreground: #f5eedd;
+  --popover: #201c15;
+  --popover-foreground: #f5eedd;
+  --primary: #f5eedd;
+  --primary-foreground: #17140f;
+  --secondary: #262117;
+  --secondary-foreground: #f5eedd;
+  --muted: #262117;
+  --muted-foreground: #a79e88;
+  --accent: #a98bee;
+  --accent-foreground: #17140f;
+  --destructive: #e06b5c;
+  --border: #4a4437;
+  --input: #4a4437;
+  --ring: #a98bee;
+  --chart-1: #a98bee;
+  --chart-2: #f5eedd;
+  --chart-3: #e8619b;
+  --chart-4: #4fb6ce;
+  --chart-5: #e0a63a;
+  --chart-cat-1: #f5eedd;
+  --chart-cat-2: #a98bee;
+  --chart-cat-3: #e8619b;
+  --chart-cat-4: #4fb6ce;
+  --chart-cat-5: #e0a63a;
+  --sidebar: #17140f;
+  --sidebar-foreground: #f5eedd;
+  --sidebar-primary: #f5eedd;
+  --sidebar-primary-foreground: #17140f;
+  --sidebar-accent: #262117;
+  --sidebar-accent-foreground: #f5eedd;
+  --sidebar-border: #4a4437;
+  --sidebar-ring: #a98bee;
 }
 
 @layer base {
@@ -140,11 +142,24 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-sans), system-ui, sans-serif;
+    font-family: var(--font-sans), ui-monospace, "Cascadia Code", "Segoe UI Mono", Menlo, monospace;
+    /* Board spec: body kerning 0 to -10. */
+    letter-spacing: -0.01em;
     /* Inherits, so one declaration keeps long URLs / unbroken tokens from
        blowing out chat bubbles, bios, and post titles on narrow screens.
        Deliberately NOT `overflow-x: hidden` — that kills the sticky headers. */
     overflow-wrap: break-word;
+  }
+
+  /* Headings are the one place the serif appears. Board spec: kerning -25.
+     Bare `text-2xl font-semibold` headings across the app pick this up without
+     per-file edits; `CardTitle` already routes through `font-heading`. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-serif), Georgia, "Times New Roman", serif;
+    letter-spacing: -0.025em;
   }
 
   img,

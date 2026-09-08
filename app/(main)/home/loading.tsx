@@ -6,9 +6,9 @@ export default function Loading() {
     return (
         <div className="flex flex-col gap-8">
             {/* Welcome banner — the greeting depends on the profile, so it pulses. */}
-            <Card className="bg-primary/5 border-primary/15">
+            <Card className="border-2 border-border">
                 <CardContent className="flex flex-col gap-2">
-                    <Skeleton className="h-7 w-56" />
+                    <Skeleton className="h-9 w-56" />
                     <Skeleton className="h-4 w-80 max-w-full" />
                 </CardContent>
             </Card>

@@ -6,14 +6,14 @@ export default function Loading() {
             {/* Mirrors chat-window.tsx's column so the composer stays put. */}
             <div className="flex flex-col h-[calc(100dvh-6.5rem)]">
                 <div className="flex items-center gap-3 pb-4 border-b mb-4">
-                    <Skeleton className="size-9 rounded-md shrink-0" />
-                    <Skeleton className="size-10 rounded-full shrink-0" />
+                    <Skeleton className="size-9 rounded-none shrink-0" />
+                    <Skeleton className="size-10 rounded-none shrink-0" />
                     <Skeleton className="h-5 w-40" />
                 </div>
                 <div className="flex-1 min-h-0 flex flex-col gap-3 pr-1">
                     {[0, 1, 2, 3, 4, 5].map((i) => (
                         <div key={i} className={`flex ${i % 2 === 0 ? "justify-start" : "justify-end"}`}>
-                            <Skeleton className={`h-10 rounded-2xl ${i % 3 === 0 ? "w-56" : i % 3 === 1 ? "w-40" : "w-64"} max-w-[75%]`} />
+                            <Skeleton className={`h-10 rounded-none ${i % 3 === 0 ? "w-56" : i % 3 === 1 ? "w-40" : "w-64"} max-w-[75%]`} />
                         </div>
                     ))}
                 </div>

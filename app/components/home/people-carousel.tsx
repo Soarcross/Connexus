@@ -48,13 +48,13 @@ export function PeopleCarousel({ people, currentUserId }: Props) {
                 {currentPage.map(person => (
                     <Card
                         key={person.id}
-                        className="cursor-pointer transition-shadow hover:shadow-md"
+                        className="cursor-pointer transition-colors hover:bg-secondary"
                         onClick={() => router.push(`/profile/${person.id}`)}
                     >
                         <CardContent className="pt-6 flex flex-col items-center gap-3 text-center">
                             <Avatar className="size-14">
                                 <AvatarImage src={person.avatar_url ?? ""} />
-                                <AvatarFallback className="bg-primary/10 text-primary font-semibold text-lg">
+                                <AvatarFallback className="bg-secondary text-foreground font-semibold text-lg">
                                     {person.full_name?.[0] ?? "?"}
                                 </AvatarFallback>
                             </Avatar>

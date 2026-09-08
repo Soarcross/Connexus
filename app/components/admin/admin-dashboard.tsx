@@ -893,7 +893,7 @@ export function AdminDashboard({
                     <TabsTrigger value="contact">
                         Contact
                         {submissions.filter(s => !s.read && !s.resolved).length > 0 && (
-                            <span className="ml-1.5 size-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold inline-flex items-center justify-center">
+                            <span className="ml-1.5 size-4 rounded-none bg-primary text-primary-foreground text-[10px] font-bold inline-flex items-center justify-center">
                                 {submissions.filter(s => !s.read && !s.resolved).length}
                             </span>
                         )}
@@ -901,7 +901,7 @@ export function AdminDashboard({
                     <TabsTrigger value="posts">
                         Posts
                         {totalPostsBadge > 0 && (
-                            <span className="ml-1.5 size-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold inline-flex items-center justify-center">
+                            <span className="ml-1.5 size-4 rounded-none bg-primary text-primary-foreground text-[10px] font-bold inline-flex items-center justify-center">
                                 {totalPostsBadge}
                             </span>
                         )}
@@ -909,7 +909,7 @@ export function AdminDashboard({
                     <TabsTrigger value="chapters">
                         Chapters
                         {pendingApplications.length > 0 && (
-                            <span className="ml-1.5 size-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold inline-flex items-center justify-center">
+                            <span className="ml-1.5 size-4 rounded-none bg-primary text-primary-foreground text-[10px] font-bold inline-flex items-center justify-center">
                                 {pendingApplications.length}
                             </span>
                         )}
@@ -1017,7 +1017,7 @@ export function AdminDashboard({
                                         <div className="flex flex-wrap gap-3 justify-center">
                                             {submissionsByType.map((s, i) => (
                                                 <div key={s.name} className="flex items-center gap-1.5">
-                                                    <div className="size-3 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                                                    <div className="size-3 rounded-none" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
                                                     <span className="text-xs text-muted-foreground">{s.name} ({s.value})</span>
                                                 </div>
                                             ))}
@@ -1093,8 +1093,8 @@ export function AdminDashboard({
                                     <Input placeholder="https://..." value={form.url} onChange={(e) => setForm(f => ({ ...f, url: e.target.value }))} />
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <button onClick={() => setForm(f => ({ ...f, is_featured: !f.is_featured }))} className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${form.is_featured ? "bg-primary" : "bg-muted"}`}>
-                                        <span className={`pointer-events-none inline-block size-4 rounded-full bg-white shadow-lg transition-transform ${form.is_featured ? "translate-x-4" : "translate-x-0"}`} />
+                                    <button onClick={() => setForm(f => ({ ...f, is_featured: !f.is_featured }))} className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-none border-2 border-transparent transition-colors ${form.is_featured ? "bg-primary" : "bg-muted"}`}>
+                                        <span className={`pointer-events-none inline-block size-4 rounded-none bg-background transition-transform ${form.is_featured ? "translate-x-4" : "translate-x-0"}`} />
                                     </button>
                                     <span className="text-sm text-muted-foreground">Feature this opportunity</span>
                                 </div>
@@ -1272,7 +1272,7 @@ export function AdminDashboard({
                         <div className="flex items-center gap-2">
                             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Extension Requests</h2>
                             {pendingExtensions.length > 0 && (
-                                <span className="size-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold inline-flex items-center justify-center">
+                                <span className="size-4 rounded-none bg-primary text-primary-foreground text-[10px] font-bold inline-flex items-center justify-center">
                                     {pendingExtensions.length}
                                 </span>
                             )}

@@ -50,17 +50,17 @@ export default async function AboutPage() {
                         </div>
                         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                             {teamMembers.map((member: any) => (
-                                <Card key={member.id} className="hover:border-primary/50 transition-colors">
+                                <Card key={member.id} className="hover:border-foreground transition-colors">
                                     <CardContent className="pt-6 flex flex-col items-center gap-4 text-center">
                                         <Avatar className="size-20">
                                             <AvatarImage src={resolveUrl(member.image_url) ?? ""} />
-                                            <AvatarFallback className="text-xl bg-primary/10 text-primary font-semibold">
+                                            <AvatarFallback className="text-xl bg-secondary text-foreground font-semibold">
                                                 {member.name?.[0]}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="flex flex-col gap-1">
                                             <p className="font-semibold">{member.name}</p>
-                                            <p className="text-sm text-primary">{member.role}</p>
+                                            <p className="text-sm text-accent">{member.role}</p>
                                             {member.bio && (
                                                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                                                     {member.bio}
@@ -85,12 +85,12 @@ export default async function AboutPage() {
                         </div>
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             {partners.map((partner: any) => (
-                                <Card key={partner.id} className="hover:border-primary/50 transition-colors">
+                                <Card key={partner.id} className="hover:border-foreground transition-colors">
                                     <CardContent className="pt-6 flex flex-col items-center gap-3 text-center">
                                         {partner.logo_url ? (
                                             <img src={partner.logo_url} alt={partner.name} className="h-12 object-contain" />
                                         ) : (
-                                            <div className="size-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
+                                            <div className="size-12 border border-border flex items-center justify-center text-accent font-bold text-lg">
                                                 {partner.name?.[0]}
                                             </div>
                                         )}
@@ -100,7 +100,7 @@ export default async function AboutPage() {
                                                 <p className="text-xs text-muted-foreground leading-relaxed">{partner.description}</p>
                                             )}
                                             {partner.website_url && (
-                                                <a href={partner.website_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center justify-center gap-1 mt-1">
+                                                <a href={partner.website_url} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:underline flex items-center justify-center gap-1 mt-1">
                                                     Visit website <ExternalLink className="size-3" />
                                                 </a>
                                             )}

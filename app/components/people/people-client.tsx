@@ -253,7 +253,7 @@ export function PeopleClient({ profiles, initialSearch, viewerChapterId, isGuest
                     <SlidersHorizontal className="size-4" />
                     Filters
                     {hasActiveFilters && (
-                        <span className="size-4 rounded-full bg-primary-foreground text-primary text-xs flex items-center justify-center font-bold">
+                        <span className="size-4 rounded-none bg-primary-foreground text-primary text-xs flex items-center justify-center font-bold">
                             !
                         </span>
                     )}
@@ -295,14 +295,14 @@ export function PeopleClient({ profiles, initialSearch, viewerChapterId, isGuest
                     {filtered.map(profile => (
                         <Card
                             key={profile.id}
-                            className="cursor-pointer transition-shadow hover:shadow-md"
+                            className="cursor-pointer transition-colors hover:bg-secondary"
                             onClick={() => router.push(`/profile/${profile.id}`)}
                         >
                             <CardContent className="pt-6 flex flex-col gap-4">
                                 <div className="flex items-center gap-3">
                                     <Avatar className="size-12">
                                         <AvatarImage src={profile.avatar_url ?? ""} />
-                                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                        <AvatarFallback className="bg-secondary text-foreground font-semibold">
                                             {profile.full_name?.[0] ?? "?"}
                                         </AvatarFallback>
                                     </Avatar>
@@ -344,7 +344,7 @@ export function PeopleClient({ profiles, initialSearch, viewerChapterId, isGuest
                                 {profile.looking_for && profile.looking_for.length > 0 && (
                                     <div className="flex flex-wrap gap-1">
                                         {profile.looking_for.map(option => (
-                                            <Badge key={option} variant="outline" className="text-xs text-primary border-primary/30">
+                                            <Badge key={option} variant="outline" className="text-xs text-accent border-accent">
                                                 {option}
                                             </Badge>
                                         ))}

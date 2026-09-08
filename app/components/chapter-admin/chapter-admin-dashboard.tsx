@@ -398,7 +398,7 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
                     <TabsTrigger value="posts">
                         Posts
                         {totalPostsBadge > 0 && (
-                            <span className="ml-1.5 size-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold inline-flex items-center justify-center">
+                            <span className="ml-1.5 size-4 rounded-none bg-primary text-primary-foreground text-[10px] font-bold inline-flex items-center justify-center">
                                 {totalPostsBadge}
                             </span>
                         )}
@@ -680,7 +680,7 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
                                 </Avatar>
                                 <label
                                     htmlFor="chapter-logo"
-                                    className={`absolute -bottom-1 -right-1 size-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center ring-2 ring-card has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring ${logoBusy ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
+                                    className={`absolute -bottom-1 -right-1 size-7 rounded-none bg-primary text-primary-foreground flex items-center justify-center ring-2 ring-card has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring ${logoBusy ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
                                 >
                                     {logoBusy ? <Loader2 className="size-3.5 animate-spin" /> : <Camera className="size-3.5" />}
                                     {/* sr-only, not `hidden`: a hidden input is not focusable, which

@@ -14,67 +14,42 @@ import {
     Megaphone,
 } from "lucide-react"
 
-// Single source of truth for category chips across home, community,
-// opportunities, and the admin dashboards. Chip classes are soft tints
-// with dark-mode variants; the same class works for badges and icon chips.
+// Single source of truth for category labels across home, community,
+// opportunities, and the admin dashboards.
+//
+// "Cream & Black" identity (2026-09): flat lowercase monospace labels, hard
+// corners, no pastel pills. Categories are grouped into four buckets so the
+// community feed still reads at a glance — work is an ink outline, events are
+// teal, social is magenta, announcements are violet. Colours come from the
+// theme's secondary palette (`--chart-cat-*` / `--accent`) via color-mix so
+// both light and dark stay correct with no `dark:` variants.
+const CHIP_BASE =
+    "inline-flex items-center font-mono lowercase tracking-tight text-[11px] leading-tight px-1.5 py-px rounded-none"
+
+const CHIP_WORK = `${CHIP_BASE} border border-border text-foreground`
+const CHIP_EVENT = `${CHIP_BASE} text-[var(--chart-cat-4)] bg-[color-mix(in_srgb,var(--chart-cat-4)_14%,var(--background))]`
+const CHIP_SOCIAL = `${CHIP_BASE} text-[var(--chart-cat-3)] bg-[color-mix(in_srgb,var(--chart-cat-3)_14%,var(--background))]`
+const CHIP_NOTE = `${CHIP_BASE} text-[var(--accent)] bg-[color-mix(in_srgb,var(--accent)_16%,var(--background))]`
+
 export const CATEGORY_META: Record<string, { icon: React.ReactNode; chip: string }> = {
-    Clubs: {
-        icon: <Users className="size-4" />,
-        chip: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300",
-    },
-    Events: {
-        icon: <Calendar className="size-4" />,
-        chip: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300",
-    },
+    Clubs: { icon: <Users className="size-4" />, chip: CHIP_SOCIAL },
+    Events: { icon: <Calendar className="size-4" />, chip: CHIP_EVENT },
     // Chapter-page-only categories (chapter admins post these; they are not in
     // the national opportunities/home category lists on purpose).
-    Meetings: {
-        icon: <CalendarClock className="size-4" />,
-        chip: "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300",
-    },
-    Trips: {
-        icon: <Bus className="size-4" />,
-        chip: "bg-lime-100 text-lime-700 dark:bg-lime-900/30 dark:text-lime-300",
-    },
-    Fundraisers: {
-        icon: <PiggyBank className="size-4" />,
-        chip: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300",
-    },
-    Announcements: {
-        icon: <Megaphone className="size-4" />,
-        chip: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300",
-    },
-    Internships: {
-        icon: <Briefcase className="size-4" />,
-        chip: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
-    },
-    Jobs: {
-        icon: <GraduationCap className="size-4" />,
-        chip: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
-    },
-    Research: {
-        icon: <FlaskConical className="size-4" />,
-        chip: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300",
-    },
-    Scholarships: {
-        icon: <BookOpen className="size-4" />,
-        chip: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300",
-    },
-    Competitions: {
-        icon: <Trophy className="size-4" />,
-        chip: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300",
-    },
-    Volunteering: {
-        icon: <Heart className="size-4" />,
-        chip: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300",
-    },
-    Programs: {
-        icon: <Layers className="size-4" />,
-        chip: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300",
-    },
+    Meetings: { icon: <CalendarClock className="size-4" />, chip: CHIP_EVENT },
+    Trips: { icon: <Bus className="size-4" />, chip: CHIP_EVENT },
+    Fundraisers: { icon: <PiggyBank className="size-4" />, chip: CHIP_SOCIAL },
+    Announcements: { icon: <Megaphone className="size-4" />, chip: CHIP_NOTE },
+    Internships: { icon: <Briefcase className="size-4" />, chip: CHIP_WORK },
+    Jobs: { icon: <GraduationCap className="size-4" />, chip: CHIP_WORK },
+    Research: { icon: <FlaskConical className="size-4" />, chip: CHIP_WORK },
+    Scholarships: { icon: <BookOpen className="size-4" />, chip: CHIP_WORK },
+    Competitions: { icon: <Trophy className="size-4" />, chip: CHIP_WORK },
+    Volunteering: { icon: <Heart className="size-4" />, chip: CHIP_SOCIAL },
+    Programs: { icon: <Layers className="size-4" />, chip: CHIP_WORK },
 }
 
-export const FALLBACK_CHIP = "bg-muted text-muted-foreground"
+export const FALLBACK_CHIP = `${CHIP_BASE} border border-border text-muted-foreground`
 
 export function categoryChip(category: string | null | undefined): string {
     return (category && CATEGORY_META[category]?.chip) || FALLBACK_CHIP

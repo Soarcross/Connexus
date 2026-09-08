@@ -117,7 +117,7 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
     }
 
     return (
-        <header className="sticky top-0 z-50 w-full border-b bg-card">
+        <header className="sticky top-0 z-50 w-full border-b-2 border-foreground bg-card">
             <div className="max-w-[1128px] mx-auto px-4 h-14 flex items-center gap-3">
 
                 {/* Logo */}
@@ -149,7 +149,7 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                             placeholder="Search people..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="pl-8 h-9 text-sm w-full border-transparent bg-muted focus-visible:bg-card"
+                            className="pl-8 h-9 text-sm w-full border-border bg-secondary focus-visible:bg-card"
                         />
                     </div>
                 </form>
@@ -167,7 +167,7 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                             <span className="relative">
                                 <MessageCircle className="size-5" />
                                 {unreadCount > 0 && (
-                                    <span className="absolute -top-1 -right-1.5 size-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                                    <span className="absolute -top-1 -right-1.5 size-4 rounded-none bg-accent text-accent-foreground text-[10px] font-bold flex items-center justify-center">
                                         {unreadCount > 9 ? "9+" : unreadCount}
                                     </span>
                                 )}
@@ -191,10 +191,10 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                     {userId && (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <button className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                            <button className="rounded-none focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                                 <Avatar className="size-8 cursor-pointer">
                                     <AvatarImage src={avatarUrl ?? ""} />
-                                    <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                                    <AvatarFallback className="bg-secondary text-foreground text-sm font-semibold">
                                         {fullName?.[0] ?? "?"}
                                     </AvatarFallback>
                                 </Avatar>
@@ -273,7 +273,7 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                                             placeholder="Search people..."
                                             value={search}
                                             onChange={(e) => setSearch(e.target.value)}
-                                            className="pl-8 h-9 text-sm bg-muted border-transparent"
+                                            className="pl-8 h-9 text-sm bg-secondary border-border"
                                         />
                                     </div>
                                 </form>
@@ -282,10 +282,10 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                                         key={href}
                                         href={href}
                                         onClick={() => setMobileOpen(false)}
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-none text-sm font-medium transition-colors ${
                                             pathname === href
-                                                ? "bg-primary/10 text-primary"
-                                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                                ? "bg-foreground text-background"
+                                                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                                         }`}
                                     >
                                         <Icon className="size-4" />
@@ -296,16 +296,16 @@ export function Navbar({ userId, avatarUrl, fullName, isAdmin, chapterName, isCh
                                     <Link
                                         href="/messages"
                                         onClick={() => setMobileOpen(false)}
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-none text-sm font-medium transition-colors ${
                                             pathname.startsWith("/messages")
-                                                ? "bg-primary/10 text-primary"
-                                                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                                ? "bg-foreground text-background"
+                                                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                                         }`}
                                     >
                                         <MessageCircle className="size-4" />
                                         Messages
                                         {unreadCount > 0 && (
-                                            <span className="ml-auto size-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
+                                            <span className="ml-auto size-5 rounded-none bg-accent text-accent-foreground text-xs font-bold flex items-center justify-center">
                                                 {unreadCount > 9 ? "9+" : unreadCount}
                                             </span>
                                         )}

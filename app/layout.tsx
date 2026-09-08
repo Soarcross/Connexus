@@ -1,14 +1,25 @@
 import type { Metadata, Viewport } from "next"
-import { Plus_Jakarta_Sans } from "next/font/google"
+import { Fraunces, Google_Sans_Code } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import "@/app/globals.css"
 import { ThemeProvider } from "@/app/components/theme-provider"
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+// Headings. Marion (the brand board's display face) has no free web licence, so
+// Fraunces — a high-contrast variable serif with optical sizing — stands in.
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-serif",
+  axes: ["opsz"],
+  display: "swap",
+})
+
+// Everything else. The board pairs the serif with a monospace body; Plus Jakarta
+// Sans is gone entirely. `--font-sans` and `--font-mono` both resolve here now.
+const googleSansCode = Google_Sans_Code({
   subsets: ["latin"],
   variable: "--font-sans",
-  weight: ["400", "500", "600", "700"],
+  display: "swap",
 })
 
 export const metadata: Metadata = {
@@ -31,7 +42,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${plusJakartaSans.variable} antialiased`} suppressHydrationWarning>
+      <body className={`${fraunces.variable} ${googleSansCode.variable} antialiased`} suppressHydrationWarning>
         <ThemeProvider>
           {children}
         </ThemeProvider>
