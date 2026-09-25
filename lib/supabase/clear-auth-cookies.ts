@@ -51,6 +51,10 @@ export function isUnrecoverableAuthError(
 ): boolean {
     if (!error) return false
     if (typeof error.status === "number") {
+        // 408 (timeout) and 429 (rate limited) are 4xx but say nothing about the
+        // session -- clearing on them logged valid users out whenever the Auth
+        // server throttled the refresh, which production has seen.
+        if (error.status === 408 || error.status === 429) return false
         return error.status >= 400 && error.status < 500
     }
     // No status at all means the failure never reached the auth server.
