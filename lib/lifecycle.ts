@@ -95,6 +95,56 @@ export function getPurgeCutoff(now: number = Date.now()): string {
 }
 
 /**
+ * Storage path of a post's image inside the `post-images` bucket, or null
+ * unless that path sits in the author's own `${userId}/` folder.
+ *
+ * `image_url` was client-supplied on insert, so a post could name another
+ * user's image; the purge cron removes paths with the service role, which no
+ * bucket policy restrains. Only ever delete what the author could have uploaded.
+ */
+export function ownedPostImagePath(imageUrl: string | null, userId: string | null): string | null {
+    if (!imageUrl || !userId) return null
+    const parts = imageUrl.split("/post-images/")
+    if (parts.length !== 2) return null
+    const path = parts[1]
+    const segments = path.split("/")
+    if (segments.length !== 2 || segments[0] !== userId || !segments[1]) return null
+    if (/[?#]|\.\./.test(segments[1])) return null
+    return path
+}
+
+/** The embeds an extension request row carries, whichever dashboard loaded it. */
+export type ExtensionRequestTargetRow = {
+    post_id: string | null
+    opportunity_id: string | null
+    community_posts: { title: string; expires_at?: string | null } | null
+    opportunities: { title: string; expires_at?: string | null } | null
+}
+
+/** Resolves which table an extension request points at, plus its current expiry. */
+export function getExtensionTarget(req: ExtensionRequestTargetRow):
+    | { entity: LifecycleEntity; id: string; title: string; expiresAt: string | null }
+    | null {
+    if (req.post_id) {
+        return {
+            entity: "post",
+            id: req.post_id,
+            title: req.community_posts?.title ?? "Untitled post",
+            expiresAt: req.community_posts?.expires_at ?? null,
+        }
+    }
+    if (req.opportunity_id) {
+        return {
+            entity: "opportunity",
+            id: req.opportunity_id,
+            title: req.opportunities?.title ?? "Untitled opportunity",
+            expiresAt: req.opportunities?.expires_at ?? null,
+        }
+    }
+    return null
+}
+
+/**
  * PostgREST `.or()` filter matching publicly visible (non-archived) rows.
  * Usage: `query.or(activeFilter())`
  */

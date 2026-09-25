@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
-import { ARCHIVE_WINDOW_DAYS, getPurgeCutoff } from "@/lib/lifecycle"
+import { ARCHIVE_WINDOW_DAYS, getPurgeCutoff, ownedPostImagePath } from "@/lib/lifecycle"
 
 export const dynamic = "force-dynamic"
 
@@ -30,7 +30,15 @@ export async function GET(req: NextRequest) {
         .from("extension_requests")
         .select("post_id, opportunity_id")
         .eq("status", "Pending")
-    if (pendingError) errors.push(`pending requests: ${pendingError.message}`)
+    if (pendingError) {
+        // Without the reprieve list every expired item with a waiting request
+        // would be hard-deleted. Purging a day late is harmless; this is not.
+        console.error("purge-expired aborted: could not load pending requests", pendingError)
+        return NextResponse.json(
+            { cutoff, errors: [`pending requests: ${pendingError.message}`] },
+            { status: 500 }
+        )
+    }
 
     const reprievedPosts = new Set(
         (pendingRequests ?? []).map(r => r.post_id).filter(Boolean) as string[]
@@ -41,7 +49,7 @@ export async function GET(req: NextRequest) {
 
     const { data: expiredPosts, error: postSelectError } = await supabase
         .from("community_posts")
-        .select("id, image_url")
+        .select("id, user_id, image_url")
         .lt("expires_at", cutoff)
     if (postSelectError) errors.push(`select posts: ${postSelectError.message}`)
 
@@ -49,7 +57,7 @@ export async function GET(req: NextRequest) {
 
     if (postsToPurge.length > 0) {
         const imagePaths = postsToPurge
-            .map(p => p.image_url?.split("/post-images/")[1])
+            .map(p => ownedPostImagePath(p.image_url, p.user_id))
             .filter((path): path is string => Boolean(path))
 
         if (imagePaths.length > 0) {
