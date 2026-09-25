@@ -1,14 +1,15 @@
 "use client"
 
+import { errorMessage } from "@/lib/error-message"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
 import {
     EXTENSION_DAYS,
     extendedExpiry,
+    getExtensionTarget,
     getLifecycleState,
     initialExpiry,
-    type LifecycleEntity,
 } from "@/lib/lifecycle"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/app/components/ui/card"
@@ -173,29 +174,6 @@ type ChapterApplication = {
     status: string
     rejection_reason: string | null
     created_at: string
-}
-
-/** Resolves which table an extension request points at, plus its current expiry. */
-function getExtensionTarget(req: ExtensionRequest):
-    | { entity: LifecycleEntity; id: string; title: string; expiresAt: string | null }
-    | null {
-    if (req.post_id) {
-        return {
-            entity: "post",
-            id: req.post_id,
-            title: req.community_posts?.title ?? "Untitled post",
-            expiresAt: req.community_posts?.expires_at ?? null,
-        }
-    }
-    if (req.opportunity_id) {
-        return {
-            entity: "opportunity",
-            id: req.opportunity_id,
-            title: req.opportunities?.title ?? "Untitled opportunity",
-            expiresAt: req.opportunities?.expires_at ?? null,
-        }
-    }
-    return null
 }
 
 type Props = {
@@ -437,7 +415,7 @@ export function AdminDashboard({
             showSuccess("Opportunity deleted.")
             router.refresh()
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to delete.")
+            setError(errorMessage(err, "Failed to delete."))
         } finally {
             setLoading(false)
         }
@@ -451,7 +429,7 @@ export function AdminDashboard({
             setOpportunities(prev => prev.map(o => o.id === opp.id ? { ...o, is_featured: !o.is_featured } : o))
             showSuccess(`${opp.title} ${!opp.is_featured ? "featured" : "unfeatured"}.`)
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to update.")
+            setError(errorMessage(err, "Failed to update."))
         }
     }
 
@@ -468,7 +446,7 @@ export function AdminDashboard({
             setUsers(prev => prev.map(u => u.id === user.id ? { ...u, is_admin: !u.is_admin } : u))
             showSuccess(`Site-admin access ${!user.is_admin ? "granted" : "removed"} for ${user.full_name}.`)
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to update.")
+            setError(errorMessage(err, "Failed to update."))
         }
     }
 
@@ -485,7 +463,7 @@ export function AdminDashboard({
             setUsers(prev => prev.filter(u => u.id !== user.id))
             showSuccess(`${user.full_name ?? "User"} has been removed.`)
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to remove user.")
+            setError(errorMessage(err, "Failed to remove user."))
         }
     }
 
@@ -496,7 +474,7 @@ export function AdminDashboard({
             if (error) throw error
             setSubmissions(prev => prev.map(s => s.id === id ? { ...s, read: true } : s))
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to mark as read.")
+            setError(errorMessage(err, "Failed to mark as read."))
         }
     }
 
@@ -508,7 +486,7 @@ export function AdminDashboard({
             setSubmissions(prev => prev.map(s => s.id === id ? { ...s, read: true, resolved: true } : s))
             showSuccess("Submission marked as resolved.")
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to resolve.")
+            setError(errorMessage(err, "Failed to resolve."))
         }
     }
 
@@ -540,7 +518,7 @@ export function AdminDashboard({
             showSuccess("About content updated!")
             router.refresh()
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to update.")
+            setError(errorMessage(err, "Failed to update."))
         }
     }
 
@@ -582,7 +560,7 @@ export function AdminDashboard({
             setProfileSearch("")
             showSuccess("Team member saved!")
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to save.")
+            setError(errorMessage(err, "Failed to save."))
         }
     }
 
@@ -595,7 +573,7 @@ export function AdminDashboard({
             setTeamMembers(prev => prev.filter(t => t.id !== id))
             showSuccess("Team member deleted.")
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to delete.")
+            setError(errorMessage(err, "Failed to delete."))
         }
     }
 
@@ -620,7 +598,7 @@ export function AdminDashboard({
             setPartnerForm({ name: "", description: "", logo_url: "", website_url: "" })
             showSuccess("Partner saved!")
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to save.")
+            setError(errorMessage(err, "Failed to save."))
         }
     }
 
@@ -633,7 +611,7 @@ export function AdminDashboard({
             setPartners(prev => prev.filter(p => p.id !== id))
             showSuccess("Partner deleted.")
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to delete.")
+            setError(errorMessage(err, "Failed to delete."))
         }
     }
 
@@ -648,7 +626,7 @@ export function AdminDashboard({
             setCommunityPosts(prev => prev.map(p => p.id === id ? { ...p, status: "Approved" } : p))
             showSuccess("Post approved!")
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to approve.")
+            setError(errorMessage(err, "Failed to approve."))
         }
     }
 
@@ -668,7 +646,7 @@ export function AdminDashboard({
             setCommunityPosts(prev => prev.map(p => p.id === id ? { ...p, status: "Rejected", rejection_reason: reason } : p))
             showSuccess("Post rejected.")
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to reject.")
+            setError(errorMessage(err, "Failed to reject."))
         }
     }
 
@@ -710,7 +688,7 @@ export function AdminDashboard({
             setExtensionRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: "Approved" } : r))
             showSuccess(`Extension approved — ${target.entity} extended by ${EXTENSION_DAYS} days!`)
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to approve extension.")
+            setError(errorMessage(err, "Failed to approve extension."))
         }
     }
 
@@ -730,7 +708,7 @@ export function AdminDashboard({
             setExtensionRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: "Rejected", rejection_reason: reason } : r))
             showSuccess("Extension rejected.")
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to reject extension.")
+            setError(errorMessage(err, "Failed to reject extension."))
         }
     }
 
@@ -777,7 +755,7 @@ export function AdminDashboard({
                 showSuccess(`${json.chapter.name} chapter created — invite sent to ${application.applicant_email}.`)
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to approve application.")
+            setError(errorMessage(err, "Failed to approve application."))
         } finally {
             setApprovingApplicationId(null)
         }
@@ -792,15 +770,20 @@ export function AdminDashboard({
         setRejectingApplicationId(application.id)
         const supabase = getSupaBrowserClient()
         try {
-            const { error } = await supabase
+            // Only a still-Pending application may be rejected -- mirrors the
+            // approve route's compare-and-swap so a stale tab cannot flip an
+            // already-approved chapter to Rejected.
+            const { error, count } = await supabase
                 .from("chapter_applications")
-                .update({ status: "Rejected", rejection_reason: reason })
+                .update({ status: "Rejected", rejection_reason: reason }, { count: "exact" })
                 .eq("id", application.id)
+                .eq("status", "Pending")
             if (error) throw error
+            if (!count) throw new Error("This application was already reviewed. Reload to see its current status.")
             setChapterApplications(prev => prev.map(a => a.id === application.id ? { ...a, status: "Rejected", rejection_reason: reason } : a))
             showSuccess("Application rejected.")
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to reject application.")
+            setError(errorMessage(err, "Failed to reject application."))
         } finally {
             setRejectingApplicationId(null)
         }
@@ -815,7 +798,7 @@ export function AdminDashboard({
             setChapters(prev => prev.map(c => c.id === chapter.id ? { ...c, status: nextStatus } : c))
             showSuccess(`${chapter.name} is now ${nextStatus.toLowerCase()}.`)
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to update chapter.")
+            setError(errorMessage(err, "Failed to update chapter."))
         }
     }
 
@@ -845,7 +828,7 @@ export function AdminDashboard({
             setChapterAdminSelection(prev => ({ ...prev, [chapter.id]: "" }))
             showSuccess(`${assignedUser?.full_name ?? "User"} is now an admin for ${chapter.name}.`)
         } catch (err) {
-            setChapterAdminError(prev => ({ ...prev, [chapter.id]: err instanceof Error ? err.message : "Failed to assign chapter admin." }))
+            setChapterAdminError(prev => ({ ...prev, [chapter.id]: errorMessage(err, "Failed to assign chapter admin.") }))
         } finally {
             setAssigningChapterAdminId(null)
         }
@@ -867,7 +850,7 @@ export function AdminDashboard({
             setUsers(prev => prev.map(u => u.id === user.id ? { ...u, chapter_role: "member" } : u))
             showSuccess(`${user.full_name ?? "User"} is no longer an admin for ${chapter.name}.`)
         } catch (err) {
-            setChapterAdminError(prev => ({ ...prev, [chapter.id]: err instanceof Error ? err.message : "Failed to remove chapter admin." }))
+            setChapterAdminError(prev => ({ ...prev, [chapter.id]: errorMessage(err, "Failed to remove chapter admin.") }))
         } finally {
             setRemovingChapterAdminId(null)
         }

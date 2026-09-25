@@ -1,8 +1,10 @@
 "use client"
 
+import { errorMessage } from "@/lib/error-message"
 import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
+import { EXTENSION_DAYS, extendedExpiry, getExtensionTarget } from "@/lib/lifecycle"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs"
 import { Card, CardContent } from "@/app/components/ui/card"
 import { Badge } from "@/app/components/ui/badge"
@@ -27,12 +29,15 @@ type CommunityPost = {
 
 type ExtensionRequest = {
     id: string
+    /** Exactly one of post_id / opportunity_id is set. */
     post_id: string | null
+    opportunity_id: string | null
     reason: string
     status: string | null
     rejection_reason: string | null
     created_at: string | null
-    community_posts: { title: string } | null
+    community_posts: { title: string; expires_at: string | null } | null
+    opportunities: { title: string; expires_at: string | null } | null
     profiles: { full_name: string | null; avatar_url: string | null } | null
 }
 
@@ -145,7 +150,7 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
                     : `${member.full_name ?? "Member"} is no longer a chapter admin.`
             )
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to update role.")
+            setError(errorMessage(err, "Failed to update role."))
         } finally {
             setRoleBusyId(null)
         }
@@ -196,7 +201,7 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
         } catch (err) {
             setLogoUrl(chapterLogoUrl)
             releasePreview()
-            setError(err instanceof Error ? err.message : "Failed to upload the logo.")
+            setError(errorMessage(err, "Failed to upload the logo."))
         } finally {
             setLogoBusy(false)
         }
@@ -215,7 +220,7 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
             showSuccess("Chapter picture removed.")
             router.refresh()
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to remove the logo.")
+            setError(errorMessage(err, "Failed to remove the logo."))
         } finally {
             setLogoBusy(false)
         }
@@ -229,7 +234,7 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
             setCommunityPosts(prev => prev.map(p => p.id === id ? { ...p, status: "Approved" } : p))
             showSuccess("Post approved!")
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to approve.")
+            setError(errorMessage(err, "Failed to approve."))
         }
     }
 
@@ -246,31 +251,41 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
             setCommunityPosts(prev => prev.map(p => p.id === id ? { ...p, status: "Rejected", rejection_reason: reason } : p))
             showSuccess("Post rejected.")
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to reject.")
+            setError(errorMessage(err, "Failed to reject."))
         }
     }
 
     async function handleApproveExtension(req: ExtensionRequest) {
-        if (!req.post_id) {
-            setError("This extension request isn't linked to a post and can't be approved.")
+        const target = getExtensionTarget(req)
+        if (!target) {
+            setError("This request is not attached to a post or opportunity.")
             return
         }
         const supabase = getSupaBrowserClient()
         try {
-            const { error: postError, count } = await supabase
-                .from("community_posts")
-                .update({ expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() }, { count: "exact" })
-                .eq("id", req.post_id)
-            if (postError) throw postError
-            if (!count) throw new Error("No matching post was found to extend.")
+            // extendedExpiry() counts from whichever is later -- now or the
+            // current expiry -- so approving never shortens an item that was
+            // already more than 30 days out.
+            const nextExpiry = extendedExpiry(target.expiresAt)
+            const { error: targetError, count } = target.entity === "post"
+                ? await supabase
+                    .from("community_posts")
+                    .update({ expires_at: nextExpiry }, { count: "exact" })
+                    .eq("id", target.id)
+                : await supabase
+                    .from("opportunities")
+                    .update({ expires_at: nextExpiry }, { count: "exact" })
+                    .eq("id", target.id)
+            if (targetError) throw targetError
+            if (!count) throw new Error(`No matching ${target.entity} was found to extend.`)
 
             const { error: reqError } = await supabase.from("extension_requests").update({ status: "Approved" }).eq("id", req.id)
             if (reqError) throw reqError
 
             setExtensionRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: "Approved" } : r))
-            showSuccess("Extension approved — post extended by 1 month!")
+            showSuccess(`Extension approved — ${target.entity} extended by ${EXTENSION_DAYS} days!`)
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to approve extension.")
+            setError(errorMessage(err, "Failed to approve extension."))
         }
     }
 
@@ -287,7 +302,7 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
             setExtensionRequests(prev => prev.map(r => r.id === req.id ? { ...r, status: "Rejected", rejection_reason: reason } : r))
             showSuccess("Extension rejected.")
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to reject extension.")
+            setError(errorMessage(err, "Failed to reject extension."))
         }
     }
 
@@ -369,7 +384,7 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
             setOpportunities(prev => prev.filter(o => o.id !== id))
             showSuccess("Opportunity deleted.")
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to delete.")
+            setError(errorMessage(err, "Failed to delete."))
         }
     }
 
@@ -380,7 +395,7 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
             if (error) throw error
             setOpportunities(prev => prev.map(o => o.id === opp.id ? { ...o, is_featured: !o.is_featured } : o))
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to update.")
+            setError(errorMessage(err, "Failed to update."))
         }
     }
 
@@ -424,7 +439,7 @@ export function ChapterAdminDashboard({ chapterId, chapterName, chapterLogoUrl, 
                                                 <AvatarFallback className="text-xs bg-secondary text-foreground">{req.profiles?.full_name?.[0] ?? "?"}</AvatarFallback>
                                             </Avatar>
                                             <p className="text-xs text-muted-foreground">
-                                                {req.profiles?.full_name ?? "Unknown"} requesting extension for &quot;{req.community_posts?.title}&quot;
+                                                {req.profiles?.full_name ?? "Unknown"} requesting extension for &quot;{getExtensionTarget(req)?.title}&quot;
                                             </p>
                                         </div>
                                         <div className="bg-muted rounded-md px-3 py-2">

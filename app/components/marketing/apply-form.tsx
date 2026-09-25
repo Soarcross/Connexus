@@ -1,5 +1,6 @@
 "use client"
 
+import { errorMessage } from "@/lib/error-message"
 import { useState } from "react"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -58,7 +59,7 @@ export function ApplyForm() {
 
             setSubmitted(true)
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
+            setError(errorMessage(err, "Something went wrong. Please try again."))
         } finally {
             setLoading(false)
         }

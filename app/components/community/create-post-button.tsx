@@ -1,5 +1,6 @@
 "use client"
 
+import { errorMessage } from "@/lib/error-message"
 import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
@@ -130,7 +131,7 @@ export function CreatePostButton({ userId, chapterId, trigger }: Props) {
             setSubmitted(true)
             router.refresh()
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Something went wrong.")
+            setError(errorMessage(err, "Something went wrong."))
         } finally {
             setLoading(false)
         }

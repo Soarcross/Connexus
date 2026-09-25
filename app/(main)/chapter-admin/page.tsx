@@ -32,10 +32,12 @@ export default async function ChapterAdminPage() {
             .select("*, profiles(id, full_name, avatar_url)")
             .eq("chapter_id", chapterId)
             .order("created_at", { ascending: false }),
+        // A request targets a post OR an opportunity, so neither embed can be
+        // !inner. Chapter scoping happens below: RLS already limits a chapter
+        // admin to their own chapter, but a platform admin would see all.
         supabase
             .from("extension_requests")
-            .select("*, community_posts!inner(title, chapter_id), profiles(full_name, avatar_url)")
-            .eq("community_posts.chapter_id", chapterId)
+            .select("*, community_posts(title, chapter_id, expires_at), opportunities(title, chapter_id, expires_at), profiles(full_name, avatar_url)")
             .order("created_at", { ascending: false }),
         supabase
             .from("profiles")
@@ -62,7 +64,9 @@ export default async function ChapterAdminPage() {
                 chapterName={profile?.chapters?.name ?? null}
                 chapterLogoUrl={profile?.chapters?.logo_url ?? null}
                 communityPosts={communityPosts ?? []}
-                extensionRequests={extensionRequests ?? []}
+                extensionRequests={(extensionRequests ?? []).filter(r =>
+                    (r.community_posts?.chapter_id ?? r.opportunities?.chapter_id) === chapterId
+                )}
                 members={(members ?? []).map(m => ({ ...m, is_admin: m.is_admin ?? false }))}
                 currentUserId={user.id}
                 opportunities={opportunities ?? []}
