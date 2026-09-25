@@ -1,6 +1,6 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Card, CardContent } from "@/app/components/ui/card"
 import { Badge } from "@/app/components/ui/badge"
@@ -29,7 +29,6 @@ type Props = {
 }
 
 export function ConversationList({ conversations, currentUserId }: Props) {
-    const router = useRouter()
 
     if (conversations.length === 0) {
         return (
@@ -47,11 +46,11 @@ export function ConversationList({ conversations, currentUserId }: Props) {
     return (
         <Card className="py-0 gap-0 divide-y divide-border">
             {conversations.map((conv, i) => (
-                <div
+                <Link
                     key={conv.id}
-                    className={`cursor-pointer transition-colors hover:bg-secondary animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out ${conv.unreadCount > 0 ? "bg-secondary" : ""}`}
+                    href={`/messages/${conv.id}`}
+                    className={`block outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors hover:bg-secondary animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out ${conv.unreadCount > 0 ? "bg-secondary" : ""}`}
                     style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "both" }}
-                    onClick={() => router.push(`/messages/${conv.id}`)}
                 >
                     <CardContent className="py-4 flex items-center gap-4">
                         <Avatar className="size-12 shrink-0">
@@ -88,7 +87,7 @@ export function ConversationList({ conversations, currentUserId }: Props) {
                             </div>
                         </div>
                     </CardContent>
-                </div>
+                </Link>
             ))}
         </Card>
     )

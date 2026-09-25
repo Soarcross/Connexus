@@ -2,6 +2,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
+import { validateFullName } from "@/lib/name-validation"
 
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,30}$/
 
@@ -81,18 +82,24 @@ export async function POST(req: NextRequest) {
         .update({ chapter_id: chapter.id })
         .eq("id", applicationId)
 
+    // Not fatal: the chapter exists and its id is known, so the invite can
+    // still go out. Returning here used to strand the applicant -- the claim
+    // was already taken, so a retry answered 409 and no invite was ever sent.
     if (linkError) {
         console.error("approve-chapter: failed to link application to chapter", linkError)
-        return NextResponse.json({ error: "Chapter created, but failed to link the application to it." }, { status: 500 })
     }
 
     const { origin } = new URL(req.url)
+    const inviteName = validateFullName(application.applicant_name ?? "")
     const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
         application.applicant_email,
         {
             redirectTo: `${origin}/auth/callback`,
+            // The application form only length-checks the name. One that fails
+            // the profiles.full_name_sane rules is left out; the new-user
+            // trigger then uses a placeholder the leader fixes on first login.
             data: {
-                full_name: application.applicant_name,
+                ...(inviteName.ok ? { full_name: inviteName.value } : {}),
                 chapter_id: chapter.id,
             },
         }
@@ -104,7 +111,7 @@ export async function POST(req: NextRequest) {
         console.error("approve-chapter: failed to send invite email", inviteError)
         return NextResponse.json({
             chapter,
-            error: `Chapter created, but the invite email failed to send. If ${application.applicant_email} already has an account, ask them to log in and set their chapter manually.`,
+            error: `Chapter created, but the invite email failed to send. If ${application.applicant_email} already has an account, a platform admin must move that account into the new chapter (members cannot change their own chapter once set).`,
         }, { status: 207 })
     }
 
@@ -113,6 +120,13 @@ export async function POST(req: NextRequest) {
     // new chapter has no chapter_admin until a platform admin explicitly
     // assigns one via /api/chapter-admin/set-role. This is intentional:
     // don't assume the applicant is who should run moderation for the chapter.
+
+    if (linkError) {
+        return NextResponse.json({
+            chapter,
+            error: "Chapter created and invite sent, but the application could not be linked to the chapter.",
+        }, { status: 207 })
+    }
 
     return NextResponse.json({ success: true, chapter })
 }

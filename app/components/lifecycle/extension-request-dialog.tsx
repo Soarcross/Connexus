@@ -1,5 +1,6 @@
 "use client"
 
+import { errorMessage } from "@/lib/error-message"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
@@ -51,7 +52,7 @@ export function ExtensionRequestDialog({ target, currentUserId, onClose }: Props
             onClose()
             router.refresh()
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Could not submit your request.")
+            setError(errorMessage(err, "Could not submit your request."))
         } finally {
             setLoading(false)
         }

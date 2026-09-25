@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
@@ -26,7 +26,6 @@ type Props = {
 }
 
 export function PeopleCarousel({ people, currentUserId }: Props) {
-    const router = useRouter()
     const [index, setIndex] = useState(0)
 
     // show 3 at a time
@@ -46,11 +45,8 @@ export function PeopleCarousel({ people, currentUserId }: Props) {
         <div className="flex flex-col gap-3">
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {currentPage.map(person => (
-                    <Card
-                        key={person.id}
-                        className="cursor-pointer card-lift"
-                        onClick={() => router.push(`/profile/${person.id}`)}
-                    >
+                    <Link key={person.id} href={`/profile/${person.id}`} className="block outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    <Card className="h-full card-lift">
                         <CardContent className="pt-6 flex flex-col items-center gap-3 text-center">
                             <Avatar className="size-14">
                                 <AvatarImage src={person.avatar_url ?? ""} />
@@ -82,6 +78,7 @@ export function PeopleCarousel({ people, currentUserId }: Props) {
                             )}
                         </CardContent>
                     </Card>
+                    </Link>
                 ))}
             </div>
 

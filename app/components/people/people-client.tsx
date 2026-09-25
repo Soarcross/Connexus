@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
 import { Input } from "@/app/components/ui/input"
 import { Badge } from "@/app/components/ui/badge"
@@ -45,7 +45,6 @@ const LOOKING_FOR_OPTIONS = [
 ]
 
 export function PeopleClient({ profiles, initialSearch, viewerChapterId, isGuest = false }: Props) {
-    const router = useRouter()
     const [search, setSearch] = useState(initialSearch)
     const [selectedInterests, setSelectedInterests] = useState<string[]>([])
     const [selectedLookingFor, setSelectedLookingFor] = useState<string[]>([])
@@ -293,11 +292,10 @@ export function PeopleClient({ profiles, initialSearch, viewerChapterId, isGuest
             ) : (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {filtered.map((profile, i) => (
+                        <Link key={profile.id} href={`/profile/${profile.id}`} className="block outline-none focus-visible:ring-2 focus-visible:ring-ring">
                         <Card
-                            key={profile.id}
-                            className="cursor-pointer card-lift animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out"
+                            className="h-full card-lift animate-in fade-in-0 slide-in-from-bottom-1 duration-200 ease-out"
                             style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, animationFillMode: "both" }}
-                            onClick={() => router.push(`/profile/${profile.id}`)}
                         >
                             <CardContent className="pt-6 flex flex-col gap-4">
                                 <div className="flex items-center gap-3">
@@ -353,6 +351,7 @@ export function PeopleClient({ profiles, initialSearch, viewerChapterId, isGuest
                                 )}
                             </CardContent>
                         </Card>
+                        </Link>
                     ))}
                 </div>
             )}

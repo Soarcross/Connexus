@@ -123,8 +123,11 @@ export async function proxy(request: NextRequest) {
                 // Write into the forwarded request too, so a server component
                 // rendering later in this same pass reads the refreshed token
                 // rather than the expired one.
+                // Mutating request.cookies alone is not enough: Next forwards the
+                // modified request headers only when the request is passed back
+                // through NextResponse.next({ request }).
                 cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-                response = NextResponse.next()
+                response = NextResponse.next({ request })
                 cookiesToSet.forEach(({ name, value, options }) =>
                     response.cookies.set(name, value, options)
                 )

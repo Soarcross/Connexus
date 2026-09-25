@@ -1,5 +1,6 @@
 "use client"
 
+import { errorMessage } from "@/lib/error-message"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
@@ -206,16 +207,6 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
             const fileExt = file.name.split(".").pop()
             const filePath = `${profile.id}/avatar-${Date.now()}.${fileExt}`
 
-            // delete old avatar files to free up storage
-            const { data: existingFiles } = await supabase.storage
-                .from("avatars")
-                .list(profile.id)
-
-            if (existingFiles && existingFiles.length > 0) {
-                const filesToDelete = existingFiles.map(f => `${profile.id}/${f.name}`)
-                await supabase.storage.from("avatars").remove(filesToDelete)
-            }
-
             // upload new avatar
             const { error: uploadError } = await supabase.storage
                 .from("avatars")
@@ -234,13 +225,27 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
 
             if (updateError) throw updateError
 
+            // Only now remove the old files: deleting them first left
+            // avatar_url pointing at nothing whenever the upload failed.
+            // Best-effort -- a leftover file costs storage, not correctness.
+            const { data: existingFiles } = await supabase.storage
+                .from("avatars")
+                .list(profile.id)
+            const newFileName = filePath.slice(profile.id.length + 1)
+            const filesToDelete = (existingFiles ?? [])
+                .filter(f => f.name !== newFileName)
+                .map(f => `${profile.id}/${f.name}`)
+            if (filesToDelete.length > 0) {
+                await supabase.storage.from("avatars").remove(filesToDelete)
+            }
+
             setAvatarUrl(publicUrl)
             setSuccess(true)
             setTimeout(() => setSuccess(false), 3000)
             router.refresh()
 
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Failed to upload photo.")
+            setError(errorMessage(err, "Failed to upload photo."))
         } finally {
             setLoading(false)
         }
@@ -334,7 +339,7 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
             router.refresh()
 
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Something went wrong.")
+            setError(errorMessage(err, "Something went wrong."))
         } finally {
             setLoading(false)
         }

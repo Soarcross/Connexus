@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
+import { errorMessage } from "@/lib/error-message"
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Button } from "@/app/components/ui/button"
 import { Input } from "@/app/components/ui/input"
@@ -35,6 +36,7 @@ export function ChatWindow({ conversationId, currentUserId, otherProfile, initia
     const [messages, setMessages] = useState<Message[]>(initialMessages)
     const [input, setInput] = useState("")
     const [sending, setSending] = useState(false)
+    const [sendError, setSendError] = useState<string | null>(null)
     const bottomRef = useRef<HTMLDivElement>(null)
 
     // scroll to bottom on new messages
@@ -58,7 +60,9 @@ export function ChatWindow({ conversationId, currentUserId, otherProfile, initia
                 },
                 async (payload) => {
                     const newMessage = payload.new as Message
-                    setMessages(prev => [...prev, newMessage])
+                    // The sender already appended their own row from the insert
+                    // response, so the realtime echo must not add it twice.
+                    setMessages(prev => prev.some(m => m.id === newMessage.id) ? prev : [...prev, newMessage])
 
                     // mark as read if from other person
                     if (newMessage.sender_id !== currentUserId) {
@@ -82,18 +86,25 @@ export function ChatWindow({ conversationId, currentUserId, otherProfile, initia
         if (!trimmed || sending) return
 
         setSending(true)
+        setSendError(null)
         const supabase = getSupaBrowserClient()
 
         try {
-            const { error } = await supabase
+            // Append from the insert response rather than waiting on the
+            // realtime echo, which never arrives if the channel has not
+            // subscribed yet or has dropped -- the message looked unsent.
+            const { data: sent, error } = await supabase
                 .from("messages")
                 .insert({
                     conversation_id: conversationId,
                     sender_id: currentUserId,
                     content: trimmed,
                 })
+                .select()
+                .single()
 
             if (error) throw error
+            setMessages(prev => prev.some(m => m.id === sent.id) ? prev : [...prev, sent as Message])
 
             // update last_message_at on conversation
             await supabase
@@ -103,6 +114,7 @@ export function ChatWindow({ conversationId, currentUserId, otherProfile, initia
 
             setInput("")
         } catch (err) {
+            setSendError(errorMessage(err, "Failed to send message."))
             // Supabase error objects can carry message/details/hint/code;
             // only surface the full object to the console in development.
             if (process.env.NODE_ENV === "development") {
@@ -178,6 +190,9 @@ export function ChatWindow({ conversationId, currentUserId, otherProfile, initia
             </div>
 
             {/* Input */}
+            {sendError && (
+                <p role="alert" className="text-sm text-destructive pt-2">{sendError}</p>
+            )}
             <form onSubmit={handleSend} className="flex gap-2 pt-4 border-t mt-4">
                 <Input
                     placeholder="Type a message..."

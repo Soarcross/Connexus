@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
+import { errorMessage } from "@/lib/error-message"
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
@@ -109,23 +110,35 @@ export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer, pe
     const [extendingPostId, setExtendingPostId] = useState<string | null>(null)
     const [extendReason, setExtendReason] = useState("")
     const [extendLoading, setExtendLoading] = useState(false)
+    const [actionError, setActionError] = useState<string | null>(null)
+    const [extendError, setExtendError] = useState<string | null>(null)
 
     async function handleDelete(id: string, imageUrl: string | null) {
         if (!confirm("Delete this post?")) return
         setDeletingId(id)
+        setActionError(null)
         const supabase = getSupaBrowserClient()
         try {
-            if (imageUrl) {
-                const path = imageUrl.split("/post-images/")[1]
-                if (path) await supabase.storage.from("post-images").remove([path])
-            }
-            const { error } = await supabase
+            // Row first: if it fails (or RLS matches nothing, which is not an
+            // error) the post must keep its image rather than lose it.
+            const { error, count } = await supabase
                 .from("community_posts")
-                .delete()
+                .delete({ count: "exact" })
                 .eq("id", id)
             if (error) throw error
+            if (!count) throw new Error("This post could not be deleted.")
+
+            if (imageUrl) {
+                const path = imageUrl.split("/post-images/")[1]
+                if (path) {
+                    // An orphaned image is harmless; the post is already gone.
+                    const { error: storageError } = await supabase.storage.from("post-images").remove([path])
+                    if (storageError) console.error("Post deleted, but its image was not removed.")
+                }
+            }
             router.refresh()
         } catch (err) {
+            setActionError(errorMessage(err, "Failed to delete post."))
             // Supabase error objects can carry message/details/hint/code;
             // only surface the full object to the console in development.
             if (process.env.NODE_ENV === "development") {
@@ -141,6 +154,7 @@ export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer, pe
     async function handleSubmitExtension() {
         if (!extendReason.trim()) return
         setExtendLoading(true)
+        setExtendError(null)
         const supabase = getSupaBrowserClient()
         try {
             const { error } = await supabase
@@ -154,7 +168,11 @@ export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer, pe
             if (error) throw error
             setExtendingPostId(null)
             setExtendReason("")
+            // Re-fetch so the post shows its pending request and stops offering
+            // another one; without this every click filed a duplicate.
+            router.refresh()
         } catch (err) {
+            setExtendError(errorMessage(err, "Failed to submit extension request."))
             // Supabase error objects can carry message/details/hint/code;
             // only surface the full object to the console in development.
             if (process.env.NODE_ENV === "development") {
@@ -278,6 +296,11 @@ export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer, pe
             rightMobileInline
         >
             <div className="max-w-[560px] mx-auto w-full flex flex-col gap-4">
+                {actionError && (
+                    <p role="alert" className="text-sm text-destructive border border-destructive px-3 py-2">
+                        {actionError}
+                    </p>
+                )}
 
                 {/* Image lightbox */}
                 <Dialog open={!!expandedImage} onOpenChange={(open) => !open && setExpandedImage(null)}>
@@ -300,6 +323,7 @@ export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer, pe
                         if (!open) {
                             setExtendingPostId(null)
                             setExtendReason("")
+                            setExtendError(null)
                         }
                     }}
                 >
@@ -316,6 +340,9 @@ export function PostsFeed({ posts, myPosts, currentUserId, chapterId, viewer, pe
                             onChange={(e) => setExtendReason(e.target.value)}
                             rows={4}
                         />
+                        {extendError && (
+                            <p role="alert" className="text-sm text-destructive">{extendError}</p>
+                        )}
                         <div className="flex gap-2">
                             <Button
                                 className="flex-1"
