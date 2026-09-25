@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextRequest, NextResponse } from "next/server"
 import { resolveCookieDomain } from "@/lib/supabase/cookie-domain"
+import { canonicalRedirectHost } from "@/lib/canonical-host"
 import { AUTH_COOKIE_PREFIX, clearAuthCookies, isUnrecoverableAuthError } from "@/lib/supabase/clear-auth-cookies"
 
 // Chapter subdomain resolution used to live here (x-chapter-slug); chapters
@@ -63,6 +64,17 @@ function readAccessTokenExp(cookies: { name: string; value: string }[]): number 
 }
 
 export async function proxy(request: NextRequest) {
+    // Before anything touches cookies: sign-in only works on the canonical
+    // host (see lib/canonical-host.ts). 308 keeps the method, path and query.
+    const canonicalHost = canonicalRedirectHost(request.headers.get("host"))
+    if (canonicalHost) {
+        const url = request.nextUrl.clone()
+        url.protocol = "https:"
+        url.host = canonicalHost
+        url.port = ""
+        return NextResponse.redirect(url, 308)
+    }
+
     let response = NextResponse.next()
 
     // Refreshing the session is the only place in the app that can actually
