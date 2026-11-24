@@ -69,8 +69,10 @@ export function LoginForm({
                 .eq("id", user.id)
                 .single()
 
+            // Same rule as auth/callback: an incomplete profile goes through
+            // the welcome flow; a complete one goes straight home.
             const destinationPath = (!profile?.grad_year || !profile?.interests?.length)
-                ? `/profile/${user.id}`
+                ? "/welcome"
                 : "/home"
 
             router.push(destinationPath)

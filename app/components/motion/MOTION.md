@@ -15,6 +15,8 @@ things a utility can't express live in `app/motion.css`:
 | `.badge-pop` | one-shot scale bump | `<BadgeCount>` |
 | `.shake` | form-error nudge (200ms translateX) | login / signup / apply error blocks |
 | `.collapse` / `.collapse.open` | height reveal (`grid-template-rows` 0fr→1fr) | `<Collapse>` |
+| `.confetti-piece` | one-shot burst: flat squares rise, spin, fall, fade | `<Confetti>` |
+| `.stamp-in` | completion mark drops in from 1.6× and tilted, overshoots, settles (360 ms) | welcome flow's done state |
 
 Plus the global `@media (prefers-reduced-motion: reduce)` kill switch, also in
 `app/motion.css`.
@@ -27,6 +29,7 @@ Plus the global `@media (prefers-reduced-motion: reduce)` kill switch, also in
 - `app/components/motion/CountUp.tsx` — `<CountUp value={n} className="…" />` wrapper around `useCountUp`.
 - `app/components/motion/useRevealOnScroll.ts` — IntersectionObserver reveal hook; returns `{ ref, className }`.
 - `app/components/motion/useCountUp.ts` — single-RAF count-up hook.
+- `app/components/motion/Confetti.tsx` — `<Confetti />` one-shot celebration burst in the secondary palette (accent / ink / magenta / teal / gold). Renders nothing under reduced motion; unmounts itself after ~1.8 s. Its ancestors must not clip (`overflow-visible` on a Card).
 
 ## Wired
 
@@ -47,6 +50,7 @@ Plus the global `@media (prefers-reduced-motion: reduce)` kill switch, also in
 | Admin opportunities & users lists | `admin/admin-dashboard.tsx` | entrance stagger (plays once on tab mount, not on row mutation) |
 | Chapter-admin members & opps lists | `chapter-admin/chapter-admin-dashboard.tsx` | entrance stagger |
 | All tab panels | `components/ui/tabs.tsx` (`TabsContent`) | 150 ms fade on `data-[state=active]` — covers admin, chapter-admin, chapter pages |
+| Welcome flow | `welcome/welcome-flow.tsx` | per-step entrance, segmented progress bar (`scale-x` transition), `.shake` errors, `<Confetti>` + `.stamp-in` on completion |
 | Login / signup / apply errors | `login-form.tsx`, `signup-form.tsx`, `marketing/apply-form.tsx` | `.shake` wrapper (keyed on `error`) + `animate-in fade-in-0` on the message |
 | Archive banner | `lifecycle/archive-banner.tsx` | slide-in-from-top on render |
 | Dialog / Sheet | `components/ui/dialog.tsx`, `sheet.tsx` | already baked in (`data-open:` / `data-closed:` fade/zoom/slide) — untouched |
@@ -87,6 +91,7 @@ utility string.
 | Height reveal | `<Collapse open={…}>…</Collapse>` |
 | Form error | wrap the message in `<div key={error} className="shake">`, message gets `animate-in fade-in-0 duration-150` |
 | Count-up | `<CountUp value={n} className="…" />` or `const n = useCountUp(target)` |
+| Celebration | `<div className="relative"><Confetti /><div className="stamp-in">…</div></div>` — once, for a real milestone |
 
 ## Reduced motion
 

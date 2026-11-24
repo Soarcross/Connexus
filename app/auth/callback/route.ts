@@ -92,12 +92,15 @@ export async function GET(request: NextRequest) {
                 profile = created
             }
 
-            // OAuth signups (e.g. Google) can't carry the signup form's chapter
-            // choice, so they land chapterless — the profile page offers a
-            // one-time chapter join. (The subdomain backfill that used to live
-            // here went away with per-chapter subdomains.)
+            // A profile missing its class year or interests goes through the
+            // /welcome flow, which asks for both (plus a photo) and drives the
+            // suggested connections. OAuth signups (e.g. Google) can't carry
+            // the signup form's chapter choice, so they land chapterless —
+            // /welcome adds a school step for them. Complete profiles are
+            // never redirected there. (The subdomain backfill that used to
+            // live here went away with per-chapter subdomains.)
             const destinationPath = (!profile?.grad_year || !profile?.interests?.length)
-                ? `/profile/${user.id}`
+                ? "/welcome"
                 : "/home"
 
             return NextResponse.redirect(`${origin}${destinationPath}`)
