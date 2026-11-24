@@ -5,6 +5,8 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { getSupaBrowserClient } from "@/lib/supabase/client"
 import { formatFullName, validateFullName } from "@/lib/name-validation"
+import { INTEREST_OPTIONS } from "@/lib/profile-options"
+import { uploadAvatar, validateAvatarFile } from "@/lib/avatar-upload"
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Badge } from "@/app/components/ui/badge"
 import { Button } from "@/app/components/ui/button"
@@ -41,13 +43,6 @@ type Props = {
     currentUserInterests?: string[]
     availableChapters?: ChapterOption[]
 }
-
-const INTEREST_OPTIONS = [
-    "Software Engineering", "Finance", "Medicine", "Law",
-    "Research", "Design", "Entrepreneurship", "Data Science",
-    "Cybersecurity", "Journalism", "Education", "Consulting",
-    "Architecture", "Biology", "Physics", "Mathematics"
-]
 
 const LOOKING_FOR_OPTIONS = [
     "Internships", "Jobs", "Mentorship", "Networking", "Collaborators", "Leadership"
@@ -130,69 +125,14 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
         setEditingSection(null)
     }
 
-    // Formats that can carry an alpha channel. JPEG can't, so it never needs
-    // flattening. A transparent avatar otherwise shows the page background
-    // through it (the Avatar component's bg-secondary is a fallback safety
-    // net, not a substitute for fixing the stored file).
-    const ALPHA_CAPABLE_TYPES = ["image/png", "image/webp", "image/gif"]
-
-    // Draws the image onto an opaque cream background and re-encodes as JPEG.
-    // Returns the original file if the source has no alpha channel, or if
-    // canvas encoding fails for any reason — upload should never hard-break
-    // over this.
-    async function flattenTransparency(file: File): Promise<File> {
-        if (!ALPHA_CAPABLE_TYPES.includes(file.type)) return file
-
-        try {
-            const objectUrl = URL.createObjectURL(file)
-            try {
-                const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-                    const image = new window.Image()
-                    image.onload = () => resolve(image)
-                    image.onerror = reject
-                    image.src = objectUrl
-                })
-
-                const canvas = document.createElement("canvas")
-                canvas.width = img.naturalWidth
-                canvas.height = img.naturalHeight
-                const ctx = canvas.getContext("2d")
-                if (!ctx) return file
-
-                // Same cream the fallback background uses (--secondary, light
-                // value) — the flattened file can't follow the viewer's theme,
-                // so this is a fixed neutral rather than a per-theme match.
-                ctx.fillStyle = "#f4ecd6"
-                ctx.fillRect(0, 0, canvas.width, canvas.height)
-                ctx.drawImage(img, 0, 0)
-
-                const blob = await new Promise<Blob | null>((resolve) =>
-                    canvas.toBlob(resolve, "image/jpeg", 0.92)
-                )
-                if (!blob) return file
-
-                const newName = file.name.replace(/\.[^.]+$/, "") + ".jpg"
-                return new File([blob], newName, { type: "image/jpeg" })
-            } finally {
-                URL.revokeObjectURL(objectUrl)
-            }
-        } catch {
-            return file
-        }
-    }
-
     // auto saves avatar immediately on file select
     async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
         const rawFile = e.target.files?.[0]
         if (!rawFile) return
 
-        if (!rawFile.type.startsWith("image/")) {
-            setError("Please upload an image file.")
-            e.target.value = ""
-            return
-        }
-        if (rawFile.size > 2 * 1024 * 1024) {
-            setError("Image must be under 2MB.")
+        const invalid = validateAvatarFile(rawFile)
+        if (invalid) {
+            setError(invalid)
             e.target.value = ""
             return
         }
@@ -200,45 +140,9 @@ export function ProfileView({ profile, isOwnProfile, userId, currentUserInterest
 
         setAvatarUrl(URL.createObjectURL(rawFile))
         setLoading(true)
-        const supabase = getSupaBrowserClient()
 
         try {
-            const file = await flattenTransparency(rawFile)
-            const fileExt = file.name.split(".").pop()
-            const filePath = `${profile.id}/avatar-${Date.now()}.${fileExt}`
-
-            // upload new avatar
-            const { error: uploadError } = await supabase.storage
-                .from("avatars")
-                .upload(filePath, file)
-
-            if (uploadError) throw uploadError
-
-            const { data: { publicUrl } } = supabase.storage
-                .from("avatars")
-                .getPublicUrl(filePath)
-
-            const { error: updateError } = await supabase
-                .from("profiles")
-                .update({ avatar_url: publicUrl } as any)
-                .eq("id", profile.id)
-
-            if (updateError) throw updateError
-
-            // Only now remove the old files: deleting them first left
-            // avatar_url pointing at nothing whenever the upload failed.
-            // Best-effort -- a leftover file costs storage, not correctness.
-            const { data: existingFiles } = await supabase.storage
-                .from("avatars")
-                .list(profile.id)
-            const newFileName = filePath.slice(profile.id.length + 1)
-            const filesToDelete = (existingFiles ?? [])
-                .filter(f => f.name !== newFileName)
-                .map(f => `${profile.id}/${f.name}`)
-            if (filesToDelete.length > 0) {
-                await supabase.storage.from("avatars").remove(filesToDelete)
-            }
-
+            const publicUrl = await uploadAvatar(getSupaBrowserClient(), profile.id, rawFile)
             setAvatarUrl(publicUrl)
             setSuccess(true)
             setTimeout(() => setSuccess(false), 3000)
